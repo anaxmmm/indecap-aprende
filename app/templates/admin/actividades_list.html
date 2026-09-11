@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Actividades de {{ trastorno.name }} — Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Actividades de {{ trastorno.name }}</h1>
+  <a href="{{ url_for('admin.actividad_new', trastorno_id=trastorno.id) }}" class="btn btn-primary btn-sm">+ Nueva actividad</a>
+</div>
+<table class="table">
+  <thead><tr><th>Orden</th><th>Título</th><th>Minutos</th><th>Componente</th><th></th></tr></thead>
+  <tbody>
+    {% for actividad in actividades %}
+    <tr>
+      <td>{{ actividad.order_index }}</td>
+      <td>{{ actividad.title }}</td>
+      <td>{{ actividad.estimated_minutes }}</td>
+      <td>{{ actividad.interactive_widget.value }}</td>
+      <td>
+        <a href="{{ url_for('modules.lesson_detail', actividad_id=actividad.id) }}" class="btn btn-sm btn-outline-secondary" target="_blank">Ver</a>
+        <a href="{{ url_for('admin.actividad_edit', actividad_id=actividad.id) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
+        <form method="post" action="{{ url_for('admin.actividad_delete', actividad_id=actividad.id) }}" style="display:inline" onsubmit="return confirm('¿Eliminar esta actividad?');">
+          <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="text-muted">Todavía no hay actividades en este trastorno.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<a href="{{ url_for('admin.trastornos_list') }}">← Volver a trastornos</a>
+{% endblock %}

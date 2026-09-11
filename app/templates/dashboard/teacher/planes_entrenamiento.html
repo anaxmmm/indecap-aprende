@@ -1,0 +1,33 @@
+{% extends "dashboard/teacher/base_teacher.html" %}
+{% block title %}Planes de entrenamiento — indecap-aprende{% endblock %}
+{% block teacher_content %}
+<h1 class="h4 mb-1">Planes de entrenamiento</h1>
+<p class="text-muted mb-3">Cada trastorno se traduce en un plan: la secuencia ordenada de actividades que recorre el estudiante.</p>
+
+{% if not planes %}
+<p class="text-muted">Aún no hay planes configurados.</p>
+{% endif %}
+
+<div class="table-responsive">
+<table class="table teacher-table">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Área</th>
+      <th>N.º actividades</th>
+      <th>Duración estimada</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for plan in planes %}
+    <tr>
+      <td>Plan {{ plan.trastorno.name }}</td>
+      <td><span class="badge bg-info-subtle text-info-emphasis">{{ plan.trastorno.name|upper }}</span></td>
+      <td>{{ plan.actividades|length }}</td>
+      <td>{{ plan.actividades|sum(attribute="estimated_minutes") }} min</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

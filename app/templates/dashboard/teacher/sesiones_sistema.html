@@ -1,0 +1,28 @@
+{% extends "dashboard/teacher/base_teacher.html" %}
+{% block title %}Sesiones del sistema — indecap-aprende{% endblock %}
+{% block teacher_content %}
+<h1 class="h4 mb-1">Sesiones del sistema</h1>
+<p class="text-muted mb-3">Consulta el contenido de cada actividad y asigna sesiones sueltas a tus estudiantes.</p>
+
+{% if not trastornos %}
+<p class="text-muted">Todavía no hay trastornos ni actividades cargadas en el sistema.</p>
+{% endif %}
+
+{% for trastorno in trastornos %}
+<div class="teacher-card mb-3">
+  <h2 class="h6">{{ trastorno.name }}</h2>
+  {% if trastorno.actividades %}
+  <ul class="teacher-plain-list">
+    {% for actividad in trastorno.actividades|sort(attribute="order_index") %}
+    <li>
+      <a href="{{ url_for('dashboard.actividad_detail', actividad_id=actividad.id) }}">{{ actividad.title }}</a>
+      <span class="text-muted small">— {{ actividad.estimated_minutes }} min</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-muted small mb-0">Sin actividades registradas para este trastorno.</p>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

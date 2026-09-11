@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}{{ actividad.title }} — indecap-aprende{% endblock %}
+
+{% block content %}
+{% if check %}
+<div class="alert alert-info">Nivel de apoyo actual: <strong>{{ check.nivel_apoyo.value }}</strong></div>
+{% else %}
+<div class="alert alert-info">Todavía no tienes un check previo para este trastorno — próximamente podrás hacerlo antes de empezar.</div>
+{% endif %}
+
+<div class="reader-toolbar" role="toolbar" aria-label="Herramientas de accesibilidad de lectura">
+  <button type="button" id="btn-play" class="btn btn-sm btn-primary">🔊 Leer en voz alta</button>
+  <button type="button" id="btn-pause" class="btn btn-sm btn-outline-secondary">⏸ Pausar</button>
+  <button type="button" id="btn-stop" class="btn btn-sm btn-outline-secondary">⏹ Detener</button>
+  <span class="reader-toolbar__divider"></span>
+  <button type="button" id="btn-text-smaller" class="btn btn-sm btn-outline-secondary" aria-label="Reducir tamaño de texto">A-</button>
+  <button type="button" id="btn-text-bigger" class="btn btn-sm btn-outline-secondary" aria-label="Aumentar tamaño de texto">A+</button>
+  <span class="reader-toolbar__divider"></span>
+  <label class="reader-toolbar__toggle">
+    <input type="checkbox" id="toggle-step-mode">
+    Un paso a la vez
+  </label>
+</div>
+
+<h1 class="h3 mt-3">{{ actividad.title }}</h1>
+<p class="text-muted">{{ actividad.estimated_minutes }} min aprox.</p>
+
+{% if actividad.support_image_url %}
+  <img src="{{ actividad.support_image_url }}" alt="" class="img-fluid rounded mb-3" style="max-width:320px;">
+{% endif %}
+
+<div id="lesson-content" class="lesson-content">
+  {{ actividad.content_body | safe }}
+</div>
+
+<div id="step-nav" class="step-nav" hidden>
+  <button type="button" id="btn-step-prev" class="btn btn-sm btn-outline-secondary">← Anterior</button>
+  <span id="step-progress-label"></span>
+  <button type="button" id="btn-step-next" class="btn btn-sm btn-outline-secondary">Siguiente →</button>
+</div>
+
+{% if actividad.lsc_video_url %}
+  <div class="mt-4">
+    <p class="fw-semibold">Video en Lengua de Señas Colombiana</p>
+    <video controls style="max-width:400px;" src="{{ actividad.lsc_video_url }}"></video>
+  </div>
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/accessible-reader.js') }}"></script>
+<script>
+  const contentEl = document.getElementById("lesson-content");
+  const reader = new AccessibleReader(contentEl);
+  const textSize = new TextSizeControl();
+  const stepMode = new StepMode(contentEl);
+
+  document.getElementById("btn-play").addEventListener("click", () => reader.play());
+  document.getElementById("btn-pause").addEventListener("click", () => reader.pause());
+  document.getElementById("btn-stop").addEventListener("click", () => reader.stop());
+  document.getElementById("btn-text-bigger").addEventListener("click", () => textSize.increase());
+  document.getElementById("btn-text-smaller").addEventListener("click", () => textSize.decrease());
+
+  const stepNav = document.getElementById("step-nav");
+  const stepLabel = document.getElementById("step-progress-label");
+
+  function refreshStepLabel() {
+    stepLabel.textContent = stepMode.progressLabel;
+  }
+
+  document.getElementById("toggle-step-mode").addEventListener("change", (e) => {
+    if (e.target.checked) {
+      stepMode.enable();
+      stepNav.hidden = false;
+      refreshStepLabel();
+    } else {
+      stepMode.disable();
+      stepNav.hidden = true;
+    }
+  });
+
+  document.getElementById("btn-step-prev").addEventListener("click", () => {
+    stepMode.previous();
+    refreshStepLabel();
+  });
+  document.getElementById("btn-step-next").addEventListener("click", () => {
+    stepMode.next();
+    refreshStepLabel();
+  });
+</script>
+{% endblock %}

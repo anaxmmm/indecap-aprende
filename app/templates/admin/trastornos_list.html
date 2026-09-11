@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Trastornos — Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Trastornos</h1>
+  <a href="{{ url_for('admin.trastorno_new') }}" class="btn btn-primary btn-sm">+ Nuevo trastorno</a>
+</div>
+<table class="table">
+  <thead><tr><th>Nombre</th><th>Slug</th><th>Actividades</th><th></th></tr></thead>
+  <tbody>
+    {% for trastorno in trastornos %}
+    <tr>
+      <td>{{ trastorno.name }}</td>
+      <td><code>{{ trastorno.slug }}</code></td>
+      <td><a href="{{ url_for('admin.actividades_list', trastorno_id=trastorno.id) }}">{{ trastorno.actividades|length }} actividades</a></td>
+      <td>
+        <a href="{{ url_for('admin.trastorno_edit', trastorno_id=trastorno.id) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
+        <form method="post" action="{{ url_for('admin.trastorno_delete', trastorno_id=trastorno.id) }}" style="display:inline" onsubmit="return confirm('¿Eliminar este trastorno y todas sus actividades?');">
+          <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" class="text-muted">Todavía no hay trastornos creados.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "dashboard/teacher/base_teacher.html" %}
+{% block title %}{{ actividad.title }} — indecap-aprende{% endblock %}
+{% block teacher_content %}
+<a href="{{ url_for('dashboard.sesiones_sistema') }}" class="text-muted small d-inline-block mb-2">← Volver a Sesiones del sistema</a>
+<h1 class="h4 mb-1">{{ actividad.title }}</h1>
+<p class="text-muted mb-3">
+  {{ actividad.trastorno.name }} · {{ actividad.estimated_minutes }} min
+</p>
+
+<div class="teacher-card mb-3">
+  <h2 class="h6 mb-2">Contenido de la actividad</h2>
+  {% if actividad.content_body %}
+  <p style="white-space: pre-line;">{{ actividad.content_body }}</p>
+  {% else %}
+  <p class="text-muted small mb-0">Esta actividad todavía no tiene contenido cargado (edítalo desde /admin).</p>
+  {% endif %}
+
+  {% if actividad.support_image_url %}
+  <p class="mb-1"><strong>Imagen de apoyo:</strong></p>
+  <img src="{{ actividad.support_image_url }}" alt="Imagen de apoyo" style="max-width: 320px; border-radius: 8px;">
+  {% endif %}
+
+  {% if actividad.lsc_video_url %}
+  <p class="mb-1 mt-3"><strong>Video en LSC:</strong> <a href="{{ actividad.lsc_video_url }}" target="_blank" rel="noopener">{{ actividad.lsc_video_url }}</a></p>
+  {% endif %}
+
+  {% if actividad.interactive_widget and actividad.interactive_widget.value != 'none' %}
+  <p class="text-muted small mt-3 mb-0">Componente interactivo asociado: {{ actividad.interactive_widget.value }}</p>
+  {% endif %}
+</div>
+
+<div class="teacher-card mb-3">
+  <h2 class="h6 mb-3">Asignar esta sesión a un estudiante</h2>
+  {% if assign_form.student_id.choices %}
+  <form method="post">
+    {{ assign_form.hidden_tag() }}
+    <div class="row g-2 align-items-end">
+      <div class="col-md-4">
+        {{ assign_form.student_id.label(class_="form-label small") }}
+        {{ assign_form.student_id(class_="form-select") }}
+      </div>
+      <div class="col-md-3">
+        {{ assign_form.start_date.label(class_="form-label small") }}
+        {{ assign_form.start_date(class_="form-control", type="date") }}
+      </div>
+      <div class="col-md-3">
+        {{ assign_form.end_date.label(class_="form-label small") }}
+        {{ assign_form.end_date(class_="form-control", type="date") }}
+      </div>
+      <div class="col-md-2">
+        {{ assign_form.submit_assign(class_="btn btn-teacher-primary w-100") }}
+      </div>
+    </div>
+  </form>
+  {% else %}
+  <p class="text-muted small mb-0">No tienes estudiantes activos todavía para asignarles una sesión.</p>
+  {% endif %}
+</div>
+
+<div class="teacher-card">
+  <h2 class="h6 mb-3">Asignaciones de esta actividad</h2>
+  {% if not asignaciones %}
+  <p class="text-muted small mb-0">Todavía no has asignado esta actividad a ningún estudiante.</p>
+  {% endif %}
+  {% for asignacion in asignaciones %}
+  <div class="teacher-group">
+    <div class="teacher-group__header">
+      <span class="teacher-group__name">{{ asignacion.student.full_name }}</span>
+      <span class="badge bg-secondary">{{ asignacion.status.value }}</span>
+      <span class="text-muted small ms-auto">{{ asignacion.start_date }} → {{ asignacion.end_date }}</span>
+    </div>
+    <form method="post" action="{{ url_for('dashboard.actualizar_notas_sesion', asignacion_id=asignacion.id) }}">
+      <label class="form-label small">Notas / observaciones clínicas</label>
+      <textarea name="clinical_notes" class="form-control mb-2" rows="2">{{ asignacion.clinical_notes or '' }}</textarea>
+      <button type="submit" class="btn btn-sm btn-outline-secondary">Guardar notas</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

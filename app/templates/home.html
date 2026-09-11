@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>indecap-aprende</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+  <nav class="home-nav">
+    <div class="home-nav__brand-group">
+      <img src="{{ url_for('static', filename='images/logo-indecap-aprende.png') }}" alt="INDECAP — indecap-aprende" class="home-nav__logo">
+    </div>
+    <div class="home-nav__links">
+      <a href="#solucion" data-section="solucion">Solución</a>
+      <a href="#trastornos" data-section="trastornos">Trastornos</a>
+      <a href="#como-funciona" data-section="como-funciona">Cómo funciona</a>
+      <a href="#metodologia" data-section="metodologia">Metodología</a>
+      <a href="#quienes-somos" data-section="quienes-somos">Quiénes somos</a>
+      <a href="#novedades" data-section="novedades">Novedades</a>
+    </div>
+    <div class="home-nav__access">
+      <button type="button" class="btn btn-primary btn-sm btn-acceder">Acceder</button>
+    </div>
+  </nav>
+
+  <header class="home-hero" id="inicio">
+    <div class="home-hero__shape"></div>
+    <h1 class="home-hero__title">
+      Aquí podrás aprender <em>y mejorar cognitivamente</em>, a tu propio ritmo
+    </h1>
+    <p class="home-hero__subtitle">
+      Actividades de intervención educativa por trastorno, con acompañamiento
+      inclusivo real para cada estudiante de INDECAP.
+    </p>
+    <div class="home-scroll-hint">
+      <span>↓</span>
+      <small>Conoce indecap-aprende</small>
+    </div>
+  </header>
+
+  <section id="solucion" class="home-section home-reveal">
+    <p class="home-section__eyebrow">Solución</p>
+    <h2 class="home-section__title">Intervención por trastorno, no contenido genérico</h2>
+    <p class="home-section__text">
+      Cada actividad se diseña alrededor de un trastorno específico —dislexia,
+      discalculia, TDAH, TEA, trastorno opositor desafiante, discapacidad visual
+      y auditiva— con acompañamiento inclusivo desde el diseño, no como un
+      anexo de accesibilidad agregado al final.
+    </p>
+  </section>
+
+  <section id="trastornos" class="home-section home-section--alt home-reveal">
+    <p class="home-section__eyebrow">Trastornos que trabajamos</p>
+    <h2 class="home-section__title">Necesidades reales del instituto</h2>
+    <div class="home-grid">
+      <div class="home-grid__card">
+        <p class="home-grid__card-title">Dislexia</p>
+        <p class="home-grid__card-text">Lectura en voz alta con resaltado de palabra en tiempo real.</p>
+      </div>
+      <div class="home-grid__card">
+        <p class="home-grid__card-title">Discalculia</p>
+        <p class="home-grid__card-text">Recta numérica y bloques visuales, no solo cifras.</p>
+      </div>
+      <div class="home-grid__card">
+        <p class="home-grid__card-title">TDAH</p>
+        <p class="home-grid__card-text">Micro-actividades de 20-30 min con checkpoints visibles.</p>
+      </div>
+      <div class="home-grid__card">
+        <p class="home-grid__card-title">TEA</p>
+        <p class="home-grid__card-text">Rutinas predecibles y control real del entorno visual.</p>
+      </div>
+      <div class="home-grid__card">
+        <p class="home-grid__card-title">Trastorno opositor desafiante</p>
+        <p class="home-grid__card-text">Autonomía real de avance, sin límites de tiempo impuestos.</p>
+      </div>
+      <div class="home-grid__card">
+        <p class="home-grid__card-title">Discapacidad visual</p>
+        <p class="home-grid__card-text">Navegación por teclado, lector de pantalla, alto contraste.</p>
+      </div>
+      <div class="home-grid__card">
+        <p class="home-grid__card-title">Discapacidad auditiva</p>
+        <p class="home-grid__card-text">Subtítulos y biblioteca de video en LSC.</p>
+      </div>
+      <div class="home-grid__card">
+        <p class="home-grid__card-title">Discapacidad cognitiva</p>
+        <p class="home-grid__card-text">Perfil de accesibilidad configurable por docente.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="como-funciona" class="home-section home-reveal">
+    <p class="home-section__eyebrow">Cómo funciona</p>
+    <h2 class="home-section__title">Tres pasos, sin fricción para el estudiante</h2>
+    <div class="home-steps">
+      <div class="home-steps__item">
+        <span class="home-steps__number">1</span>
+        <p class="home-steps__title">Perfil de accesibilidad</p>
+        <p class="home-steps__text">Un docente lo configura al ingreso: contraste, tamaño de texto, apoyo cognitivo.</p>
+      </div>
+      <div class="home-steps__item">
+        <span class="home-steps__number">2</span>
+        <p class="home-steps__title">Check previo, sin diagnóstico</p>
+        <p class="home-steps__text">Un check corto calibra el nivel de apoyo de la actividad — nunca mide avance clínico.</p>
+      </div>
+      <div class="home-steps__item">
+        <span class="home-steps__number">3</span>
+        <p class="home-steps__title">Seguimiento docente</p>
+        <p class="home-steps__text">Docentes y administración ven el progreso real desde el panel institucional.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="metodologia" class="home-section home-section--alt home-reveal">
+    <p class="home-section__eyebrow">Metodología</p>
+    <h2 class="home-section__title">Diseño Universal para el Aprendizaje (DUA)</h2>
+    <p class="home-section__text">
+      Tres principios rigen cada actividad: múltiples formas de representación,
+      múltiples formas de acción/expresión, múltiples formas de motivación. Los
+      requisitos se levantaron con el área de psicología del instituto y se
+      complementan con literatura especializada (Gallego Codes, <em>Trastornos
+      del Aprendizaje</em>). El nivel de apoyo que ajusta cada actividad es
+      pedagógico, no un instrumento diagnóstico.
+    </p>
+  </section>
+
+  <section id="quienes-somos" class="home-section home-reveal">
+    <p class="home-section__eyebrow">Quiénes somos</p>
+    <h2 class="home-section__title">Un proyecto de INDECAP, para INDECAP</h2>
+    <div class="home-about">
+      <div class="home-about__block">
+        <p class="home-about__heading">La institución</p>
+        <p class="home-section__text">
+          INDECAP — Instituto de Ciencias Aplicadas, sede Envigado, forma
+          técnicos en Antioquia hace más de una década.
+        </p>
+      </div>
+      <div class="home-about__block">
+        <p class="home-about__heading">La desarrolladora</p>
+        <p class="home-section__text">
+          indecap-aprende es el proyecto de grado de Ana, estudiante del
+          programa de Desarrollo de Software de INDECAP, construido junto al
+          área de psicología del instituto.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="novedades" class="home-section home-section--alt home-reveal">
+    <p class="home-section__eyebrow">Novedades</p>
+    <h2 class="home-section__title">Proyecto en desarrollo activo</h2>
+    <p class="home-section__text">
+      Sin novedades publicadas todavía — esta sección reunirá avances reales
+      a medida que se completen los módulos.
+    </p>
+  </section>
+
+  <footer class="home-footer">
+    <div class="home-footer__col">
+      <p class="home-footer__brand">indecap-aprende</p>
+      <p>Corporación Educativa INDECAP — Instituto de Ciencias Aplicadas.</p>
+    </div>
+    <div class="home-footer__col">
+      <p class="home-footer__heading">Contacto</p>
+      <p>indecap@indecap.edu.co</p>
+      <p>(604) 448 4794</p>
+    </div>
+    <div class="home-footer__col">
+      <p class="home-footer__heading">Síguenos</p>
+      <p>Facebook · Instagram · YouTube</p>
+    </div>
+  </footer>
+  <p class="home-footer__copyright">© 2026 Corporación Educativa INDECAP. Todos los derechos reservados.</p>
+
+  <!-- Panel de ingreso con superposición: login / registro / olvidé contraseña -->
+  <div id="login-overlay" class="login-overlay" hidden>
+    <div class="login-panel">
+      <div class="login-panel__header">
+        <img src="{{ url_for('static', filename='images/logo-indecap-aprende.png') }}" alt="INDECAP — indecap-aprende" class="login-panel__logo">
+        <button type="button" id="btn-cerrar-login" class="login-panel__close" aria-label="Cerrar">×</button>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Vista: iniciar sesión -->
+      <div id="view-login" class="login-panel__view">
+        <p class="login-panel__title">Ingresa a tu cuenta</p>
+        <p class="login-panel__subtitle">Corporación Educativa INDECAP</p>
+
+        <div class="btn-group w-100 mb-3" role="group" aria-label="Tipo de acceso">
+          <input type="radio" class="btn-check" name="login_role_toggle" id="login-role-estudiante" autocomplete="off" checked>
+          <label class="btn btn-outline-primary" for="login-role-estudiante">Estudiante</label>
+
+          <input type="radio" class="btn-check" name="login_role_toggle" id="login-role-docente" autocomplete="off">
+          <label class="btn btn-outline-primary" for="login-role-docente">Docente</label>
+        </div>
+
+        <form method="post" action="{{ url_for('auth.login') }}">
+          {{ form.hidden_tag() }}
+          <input type="hidden" name="next" value="{{ next }}">
+          {{ form.portal_role(id="portal-role-input") }}
+          <div class="mb-3">
+            {{ form.email.label(class_="login-panel__label") }}
+            {{ form.email(class_="form-control", placeholder="nombre@indecap.edu.co") }}
+          </div>
+          <div class="mb-3">
+            {{ form.password.label(class_="login-panel__label") }}
+            {{ form.password(class_="form-control", placeholder="Tu contraseña") }}
+          </div>
+          <div class="form-check mb-3">
+            {{ form.remember_me(class_="form-check-input") }}
+            {{ form.remember_me.label(class_="form-check-label") }}
+          </div>
+          {{ form.submit(class_="btn btn-primary w-100", value="Ingresar") }}
+        </form>
+
+        <div class="login-panel__links mt-3 d-flex justify-content-between">
+          <a href="#" data-panel="forgot">¿Olvidaste tu contraseña?</a>
+          <a href="#" data-panel="register">Regístrate</a>
+        </div>
+        <p class="login-panel__help">¿Problemas para ingresar? Contacta a tu docente o al administrador.</p>
+      </div>
+
+      <!-- Vista: registrarse -->
+      <div id="view-register" class="login-panel__view" hidden>
+        <p class="login-panel__title">Crea tu cuenta</p>
+        <p class="login-panel__subtitle">Corporación Educativa INDECAP</p>
+
+        <form method="post" action="{{ url_for('auth.register') }}">
+          {{ register_form.hidden_tag() }}
+          <input type="hidden" name="next" value="{{ next }}">
+          <div class="mb-3">
+            {{ register_form.full_name.label(class_="login-panel__label") }}
+            {{ register_form.full_name(class_="form-control", placeholder="Nombre y apellidos") }}
+          </div>
+          <div class="mb-3">
+            {{ register_form.email.label(class_="login-panel__label") }}
+            {{ register_form.email(class_="form-control", placeholder="nombre@indecap.edu.co") }}
+          </div>
+          <div class="mb-3">
+            <span class="login-panel__label">{{ register_form.role.label.text }}</span>
+            <div class="d-flex gap-3 mt-1">
+              {% for subfield in register_form.role %}
+                <div class="form-check">
+                  {{ subfield(class_="form-check-input") }}
+                  {{ subfield.label(class_="form-check-label") }}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="mb-3">
+            {{ register_form.password.label(class_="login-panel__label") }}
+            {{ register_form.password(class_="form-control", placeholder="Mínimo 8 caracteres") }}
+          </div>
+          <div class="mb-3">
+            {{ register_form.confirm_password.label(class_="login-panel__label") }}
+            {{ register_form.confirm_password(class_="form-control", placeholder="Repite tu contraseña") }}
+          </div>
+          {{ register_form.submit(class_="btn btn-primary w-100", value="Crear cuenta") }}
+        </form>
+
+        <div class="login-panel__links mt-3">
+          <a href="#" data-panel="login">¿Ya tienes cuenta? Inicia sesión</a>
+        </div>
+      </div>
+
+      <!-- Vista: olvidé mi contraseña -->
+      <div id="view-forgot" class="login-panel__view" hidden>
+        <p class="login-panel__title">Recuperar contraseña</p>
+        <p class="login-panel__subtitle">Te enviaremos instrucciones a tu correo.</p>
+
+        <form method="post" action="{{ url_for('auth.forgot_password') }}">
+          {{ forgot_form.hidden_tag() }}
+          <div class="mb-3">
+            {{ forgot_form.email.label(class_="login-panel__label") }}
+            {{ forgot_form.email(class_="form-control", placeholder="nombre@indecap.edu.co") }}
+          </div>
+          {{ forgot_form.submit(class_="btn btn-primary w-100", value="Enviar enlace") }}
+        </form>
+
+        <div class="login-panel__links mt-3">
+          <a href="#" data-panel="login">Volver a inicio de sesión</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const overlay = document.getElementById("login-overlay");
+    const views = {
+      login: document.getElementById("view-login"),
+      register: document.getElementById("view-register"),
+      forgot: document.getElementById("view-forgot"),
+    };
+    const portalRoleInput = document.getElementById("portal-role-input");
+    const roleEstudiante = document.getElementById("login-role-estudiante");
+    const roleDocente = document.getElementById("login-role-docente");
+
+    function showPanel(name) {
+      Object.entries(views).forEach(([key, el]) => {
+        if (el) el.hidden = key !== name;
+      });
+    }
+
+    function setPortalRole(role) {
+      if (!portalRoleInput) return;
+      portalRoleInput.value = role;
+      if (role === "docente" && roleDocente) roleDocente.checked = true;
+      if (role === "estudiante" && roleEstudiante) roleEstudiante.checked = true;
+    }
+
+    document.querySelectorAll(".btn-acceder").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        overlay.hidden = false;
+        showPanel("login");
+        setPortalRole(btn.dataset.role || "estudiante");
+      });
+    });
+
+    document.getElementById("btn-cerrar-login").addEventListener("click", () => {
+      overlay.hidden = true;
+    });
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) overlay.hidden = true;
+    });
+
+    document.querySelectorAll("[data-panel]").forEach((link) => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        showPanel(link.dataset.panel);
+      });
+    });
+
+    if (roleEstudiante) roleEstudiante.addEventListener("change", () => setPortalRole("estudiante"));
+    if (roleDocente) roleDocente.addEventListener("change", () => setPortalRole("docente"));
+
+    {% if auto_open_login %}
+    overlay.hidden = false;
+    {% endif %}
+
+    {% set open_panel = request.args.get('panel') %}
+    {% if open_panel in ['login', 'register', 'forgot'] %}
+    overlay.hidden = false;
+    showPanel("{{ open_panel }}");
+    {% endif %}
+
+    // Enlace activo del menú, según la sección visible
+    const navLinks = document.querySelectorAll(".home-nav__links a");
+    const sections = document.querySelectorAll("section[id]");
+    const linkObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            navLinks.forEach((link) => link.classList.remove("active"));
+            const active = document.querySelector(
+              `.home-nav__links a[data-section="${entry.target.id}"]`
+            );
+            if (active) active.classList.add("active");
+          }
+        });
+      },
+      { rootMargin: "-40% 0px -55% 0px" }
+    );
+    sections.forEach((s) => linkObserver.observe(s));
+
+    // Aparición suave de cada sección al hacer scroll
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+    document.querySelectorAll(".home-reveal").forEach((el) => revealObserver.observe(el));
+  </script>
+</body>
+</html>

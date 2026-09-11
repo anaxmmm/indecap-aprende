@@ -1,0 +1,41 @@
+{% extends "dashboard/teacher/base_teacher.html" %}
+{% block title %}Perfil de {{ student.full_name }} — indecap-aprende{% endblock %}
+{% block teacher_content %}
+<h1 class="h4 mb-1">{{ student.full_name }}</h1>
+<p class="text-muted mb-3">{{ student.email }}</p>
+
+<div class="teacher-card mb-3">
+  <h2 class="h6 mb-3">Trastornos asignados</h2>
+  <p class="text-muted small">
+    Marca los trastornos que este estudiante debe trabajar. Esto define qué
+    actividades verá en su dashboard.
+  </p>
+  <form method="post">
+    {{ trastornos_form.hidden_tag() }}
+    <div class="d-flex flex-wrap gap-3 mb-3">
+      {% for value, label in trastornos_form.trastornos.choices %}
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          name="{{ trastornos_form.trastornos.name }}"
+          value="{{ value }}"
+          id="trastorno-{{ value }}"
+          {% if value in trastornos_form.trastornos.data %}checked{% endif %}
+        >
+        <label class="form-check-label" for="trastorno-{{ value }}">{{ label }}</label>
+      </div>
+      {% endfor %}
+    </div>
+    {{ trastornos_form.submit_trastornos(class_="btn btn-teacher-primary") }}
+  </form>
+</div>
+
+<div class="teacher-card">
+  <h2 class="h6 mb-2">Progreso</h2>
+  <p class="text-muted small mb-0">
+    El histórico de sesiones y evolución se conecta en la siguiente
+    iteración, junto con el reproductor de actividades.
+  </p>
+</div>
+{% endblock %}

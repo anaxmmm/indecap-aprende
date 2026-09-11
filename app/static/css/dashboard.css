@@ -1,0 +1,296 @@
+:root {
+  --teacher-navy: #10204a;
+  --teacher-navy-light: #1c2f63;
+  --teacher-gold: #c9a24a;
+  --teacher-bg: #f4f6fb;
+}
+
+html, body.teacher-body {
+  height: 100%;
+}
+
+body.teacher-body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', sans-serif;
+  background: var(--teacher-bg);
+}
+
+/* Ningún título dentro del dashboard usa Playfair Display: todo Inter,
+   sobreescribiendo la regla global de main.css (h1, h2, h3, .h1...). */
+.teacher-body h1, .teacher-body h2, .teacher-body h3,
+.teacher-body h4, .teacher-body h5, .teacher-body h6,
+.teacher-body .h1, .teacher-body .h2, .teacher-body .h3,
+.teacher-body .h4, .teacher-body .h5, .teacher-body .h6 {
+  font-family: 'Inter', sans-serif;
+  color: var(--teacher-navy);
+}
+
+/* Topbar: mismo navy que el sidebar, para que ambos se lean como una sola
+   superficie en L en vez de dos barras con estilos distintos. */
+.teacher-topbar {
+  height: 72px;
+  flex-shrink: 0;
+  background: var(--teacher-navy);
+  border-bottom: 1px solid var(--teacher-navy-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+}
+
+.teacher-topbar__brand {
+  display: flex;
+  align-items: center;
+}
+
+.teacher-topbar__logo {
+  height: 36px;
+  width: auto;
+}
+
+.teacher-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.teacher-topbar__user {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.teacher-topbar__logout {
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 0.35rem 0.9rem;
+  border-radius: 6px;
+}
+.teacher-topbar__logout:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.teacher-lang-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-radius: 20px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.teacher-lang-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.teacher-topbar__icon-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  color: #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.teacher-topbar__icon-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.teacher-topbar__badge {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e05555;
+}
+
+.teacher-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--teacher-gold);
+  color: var(--teacher-navy);
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+}
+
+.teacher-notifications-menu {
+  width: 320px;
+  border: 1px solid #e6e9f2;
+  border-radius: 10px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+.teacher-notifications-menu__header {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: var(--teacher-navy);
+  border-bottom: 1px solid #eef0f6;
+}
+.teacher-notifications-menu__item {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #f3f4f8;
+  font-size: 0.88rem;
+}
+.teacher-notifications-menu__item.is-unread {
+  background: #f5f8ff;
+}
+.teacher-notifications-menu__empty {
+  padding: 1rem;
+  font-size: 0.85rem;
+  color: #5a6570;
+}
+
+/* Shell: sidebar + contenido, ocupando el resto del alto de pantalla */
+.teacher-shell {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 72px);
+}
+
+.teacher-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--teacher-navy);
+  padding: 1.5rem 1rem;
+}
+
+.teacher-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.teacher-sidebar__link {
+  display: flex;
+  align-items: center;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  color: #cfd6ea;
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+
+.teacher-sidebar__link:hover {
+  background: var(--teacher-navy-light);
+  color: #fff;
+}
+
+.teacher-sidebar__link.is-active {
+  background: var(--teacher-gold);
+  color: var(--teacher-navy);
+  font-weight: 600;
+}
+
+.teacher-content {
+  flex: 1;
+  min-width: 0;
+  padding: 2rem;
+}
+
+.student-content {
+  flex: 1;
+  padding: 2rem;
+  min-height: calc(100vh - 72px);
+}
+
+/* Tarjetas y elementos internos */
+.teacher-card {
+  background: #fff;
+  border: 1px solid #e6e9f2;
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.btn-teacher-primary {
+  background: var(--teacher-navy);
+  border-color: var(--teacher-navy);
+  color: #fff;
+}
+.btn-teacher-primary:hover {
+  background: var(--teacher-navy-light);
+  border-color: var(--teacher-navy-light);
+  color: #fff;
+}
+
+.teacher-inline-form {
+  background: var(--teacher-bg);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.teacher-group {
+  border-top: 1px solid #eef0f6;
+  padding: 1rem 0;
+}
+.teacher-group:first-of-type {
+  border-top: none;
+}
+
+.teacher-group__header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.teacher-group__name {
+  font-weight: 600;
+  color: var(--teacher-navy);
+}
+
+.teacher-group__students {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.teacher-group__students li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.75rem;
+  background: var(--teacher-bg);
+  border-radius: 8px;
+}
+
+.teacher-group__student-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.teacher-plain-list {
+  padding-left: 1.1rem;
+  margin: 0;
+}
+
+.teacher-table th {
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
