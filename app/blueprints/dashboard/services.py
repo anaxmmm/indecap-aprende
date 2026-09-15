@@ -1,6 +1,7 @@
 """Lógica de negocio del blueprint dashboard, separada de las rutas
 para mantenerlas delgadas y facilitar pruebas unitarias.
 """
+from datetime import date, timedelta
 from typing import List, Optional
 
 from sqlalchemy.exc import IntegrityError
@@ -13,7 +14,7 @@ from app.models.assignment import TrastornoAsignado
 from app.models.student_profile import StudentProfile, GeneroEnum
 from app.models.teacher_profile import TeacherProfile
 from app.models.notification import Notification
-from app.models.assigned_session import SesionAsignada
+from app.models.assigned_session import SesionAsignada, EstadoSesion
 
 
 def get_groups_for_teacher(teacher: User) -> List[Grupo]:
@@ -29,6 +30,36 @@ def create_group(teacher: User, name: str) -> Grupo:
     db.session.add(grupo)
     db.session.commit()
     return grupo
+
+
+def _auto_enroll_first_session(student_id: int, trastorno_id: int, assigned_by_id: int) -> None:
+    """Al asignar un trastorno, inscribe automáticamente al estudiante en la
+    primera actividad (capítulo 1) de ese plan, si no la tiene ya asignada.
+    No hace commit — el llamador se encarga de confirmar la transacción."""
+    primera_actividad = (
+        Actividad.query.filter_by(trastorno_id=trastorno_id)
+        .order_by(Actividad.order_index.asc())
+        .first()
+    )
+    if primera_actividad is None:
+        return
+
+    ya_existe = SesionAsignada.query.filter_by(
+        student_id=student_id, actividad_id=primera_actividad.id
+    ).first()
+    if ya_existe:
+        return
+
+    hoy = date.today()
+    db.session.add(
+        SesionAsignada(
+            student_id=student_id,
+            actividad_id=primera_actividad.id,
+            assigned_by_id=assigned_by_id,
+            start_date=hoy,
+            end_date=hoy + timedelta(days=30),
+        )
+    )
 
 
 def create_student_in_group(
@@ -84,6 +115,7 @@ def create_student_in_group(
                 assigned_by_id=teacher.id,
             )
         )
+        _auto_enroll_first_session(student.id, trastorno_id, teacher.id)
 
     db.session.commit()
     return student
@@ -139,6 +171,19 @@ def get_trastornos_overview() -> List[dict]:
     return overview
 
 
+def get_planes_overview(teacher: User) -> List[dict]:
+    """Igual que get_trastornos_overview, pero con el conteo de estudiantes
+    de este docente inscritos en cada plan (trastorno)."""
+    overview = get_trastornos_overview()
+    counts = {
+        item["trastorno"].id: item["estudiantes"]
+        for item in get_trastornos_mas_trabajados(teacher, limit=1000)
+    }
+    for plan in overview:
+        plan["estudiantes_inscritos"] = counts.get(plan["trastorno"].id, 0)
+    return overview
+
+
 def get_student_if_owned_by_teacher(teacher: User, student_id: int) -> Optional[User]:
     student = User.query.get(student_id)
     if student is None or not student.is_student:
@@ -172,6 +217,7 @@ def set_assigned_trastornos(
                     assigned_by_id=teacher.id,
                 )
             )
+            _auto_enroll_first_session(student.id, trastorno_id, teacher.id)
 
     db.session.commit()
 
@@ -185,9 +231,13 @@ def get_or_create_teacher_profile(user: User) -> TeacherProfile:
     return profile
 
 
-def update_teacher_profile(user: User, full_name: str, email: str, area: str) -> None:
+def update_teacher_profile(
+    user: User, full_name: str, email: str, area: str, new_password: str = ""
+) -> None:
     user.full_name = full_name.strip()
     user.email = email.lower().strip()
+    if new_password:
+        user.set_password(new_password)
     profile = get_or_create_teacher_profile(user)
     profile.area = (area or "").strip() or None
     db.session.commit()
@@ -259,3 +309,77 @@ def update_session_notes(teacher: User, sesion_id: int, notes: str) -> int:
     sesion.clinical_notes = notes.strip() or None
     db.session.commit()
     return sesion.actividad_id
+
+
+def get_student_ranking_by_completed_sessions(teacher: User, since_date=None) -> List[dict]:
+    """Ranking de estudiantes por sesiones completadas dentro de un ciclo.
+    Los ciclos duran 6-7 meses; el filtro 'ciclo_actual' usa 6 meses como
+    referencia por defecto cuando no se pasa since_date."""
+    if since_date is None:
+        since_date = date.today() - timedelta(days=180)
+
+    ranking = []
+    for student in get_students_for_teacher(teacher):
+        query = SesionAsignada.query.filter(
+            SesionAsignada.student_id == student.id,
+            SesionAsignada.status == EstadoSesion.COMPLETADA,
+            SesionAsignada.assigned_at >= since_date,
+        )
+        ranking.append({"student": student, "completadas": query.count()})
+    ranking.sort(key=lambda fila: fila["completadas"], reverse=True)
+    return ranking
+
+
+def get_weekly_completion_counts(teacher: User, weeks: int = 8) -> dict:
+    """Serie semanal de sesiones completadas, para el gráfico de rendimiento
+    general del panel general. Referencia temporal: los ciclos duran 6-7 meses,
+    así que 8 semanas (≈2 meses) es una vista relevante del ciclo activo."""
+    student_ids = [s.id for s in get_students_for_teacher(teacher)]
+    today = date.today()
+    labels, values = [], []
+    for i in range(weeks - 1, -1, -1):
+        week_start = today - timedelta(days=today.weekday() + i * 7)
+        week_end = week_start + timedelta(days=6)
+        count = 0
+        if student_ids:
+            count = SesionAsignada.query.filter(
+                SesionAsignada.student_id.in_(student_ids),
+                SesionAsignada.status == EstadoSesion.COMPLETADA,
+                SesionAsignada.assigned_at >= week_start,
+                SesionAsignada.assigned_at <= week_end,
+            ).count()
+        labels.append(week_start.strftime("%d/%m"))
+        values.append(count)
+    return {"labels": labels, "values": values}
+
+
+def get_trastornos_mas_trabajados(teacher: User, limit: int = 5) -> List[dict]:
+    """Cuántos estudiantes de este docente tienen cada trastorno asignado,
+    ordenado de mayor a menor. Base tanto del panel general como de
+    Planes de entrenamiento."""
+    student_ids = [s.id for s in get_students_for_teacher(teacher)]
+    if not student_ids:
+        return []
+
+    conteos: dict = {}
+    for asignacion in TrastornoAsignado.query.filter(
+        TrastornoAsignado.student_id.in_(student_ids)
+    ).all():
+        conteos[asignacion.trastorno_id] = conteos.get(asignacion.trastorno_id, 0) + 1
+
+    trastornos = {t.id: t for t in Trastorno.query.all()}
+    resultado = [
+        {"trastorno": trastornos[tid], "estudiantes": count}
+        for tid, count in conteos.items()
+        if tid in trastornos
+    ]
+    resultado.sort(key=lambda item: item["estudiantes"], reverse=True)
+    return resultado[:limit]
+
+
+def get_planes_activos(teacher: User) -> List[dict]:
+    return [
+        item
+        for item in get_trastornos_mas_trabajados(teacher, limit=1000)
+        if item["estudiantes"] > 0
+    ]

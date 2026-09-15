@@ -70,6 +70,13 @@ class ProfileForm(FlaskForm):
         "Correo electrónico", validators=[DataRequired(), Email(), Length(max=150)]
     )
     area = StringField("Área / Especialidad", validators=[Optional(), Length(max=150)])
+    new_password = PasswordField(
+        "Nueva contraseña (opcional)",
+        validators=[Optional(), Length(min=6, max=128)],
+    )
+    confirm_password = PasswordField(
+        "Confirmar nueva contraseña", validators=[Optional()]
+    )
     submit = SubmitField("Guardar cambios")
 
     def __init__(self, current_user_id=None, *args, **kwargs):
@@ -80,6 +87,16 @@ class ProfileForm(FlaskForm):
         existente = User.query.filter_by(email=field.data.lower().strip()).first()
         if existente is not None and existente.id != self.current_user_id:
             raise ValidationError("Ya existe otra cuenta con ese correo electrónico.")
+
+    def validate_confirm_password(self, field):
+        # Validación cruzada manual: si se escribió una nueva contraseña,
+        # exigimos confirmación exacta. Si ambos campos quedan vacíos, no
+        # se intenta cambiar la contraseña (queda la actual).
+        if self.new_password.data:
+            if not field.data:
+                raise ValidationError("Confirma la nueva contraseña.")
+            if field.data != self.new_password.data:
+                raise ValidationError("Las contraseñas no coinciden.")
 
 
 class AssignSessionForm(FlaskForm):

@@ -2,7 +2,7 @@
 {% block title %}Planes de entrenamiento — indecap-aprende{% endblock %}
 {% block teacher_content %}
 <h1 class="h4 mb-1">Planes de entrenamiento</h1>
-<p class="text-muted mb-3">Cada trastorno se traduce en un plan: la secuencia ordenada de actividades que recorre el estudiante.</p>
+<p class="text-muted mb-3">Cada trastorno es un plan: al asignárselo a un estudiante, queda inscrito automáticamente en la primera sesión de su secuencia ordenada de actividades.</p>
 
 {% if not planes %}
 <p class="text-muted">Aún no hay planes configurados.</p>
@@ -16,6 +16,7 @@
       <th>Área</th>
       <th>N.º actividades</th>
       <th>Duración estimada</th>
+      <th>Estudiantes inscritos</th>
     </tr>
   </thead>
   <tbody>
@@ -25,6 +26,7 @@
       <td><span class="badge bg-info-subtle text-info-emphasis">{{ plan.trastorno.name|upper }}</span></td>
       <td>{{ plan.actividades|length }}</td>
       <td>{{ plan.actividades|sum(attribute="estimated_minutes") }} min</td>
+      <td>{{ plan.estudiantes_inscritos }}</td>
     </tr>
     {% endfor %}
   </tbody>

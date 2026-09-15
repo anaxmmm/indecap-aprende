@@ -73,9 +73,21 @@
   <div class="teacher-shell">
     <aside class="teacher-sidebar">
       <nav class="teacher-sidebar__nav">
+        {% if active_nav == 'perfil' %}
+        <a href="{{ url_for('dashboard.panel_general') }}" class="teacher-sidebar__link">
+          ← Volver al panel
+        </a>
+        <a href="{{ url_for('dashboard.perfil') }}" class="teacher-sidebar__link is-active">
+          Perfil
+        </a>
+        {% else %}
         <a href="{{ url_for('dashboard.panel_general') }}"
            class="teacher-sidebar__link {{ 'is-active' if active_nav == 'panel_general' else '' }}">
           Panel general
+        </a>
+        <a href="{{ url_for('dashboard.registro_estudiantes') }}"
+           class="teacher-sidebar__link {{ 'is-active' if active_nav == 'registro_estudiantes' else '' }}">
+          Registro de estudiantes
         </a>
         <a href="{{ url_for('dashboard.sesiones_sistema') }}"
            class="teacher-sidebar__link {{ 'is-active' if active_nav == 'sesiones_sistema' else '' }}">
@@ -89,6 +101,7 @@
            class="teacher-sidebar__link {{ 'is-active' if active_nav == 'guias_uso' else '' }}">
           Guías de uso
         </a>
+        {% endif %}
       </nav>
     </aside>
 

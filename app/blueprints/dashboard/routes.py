@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 
@@ -17,7 +19,7 @@ from app.blueprints.dashboard.services import (
     deactivate_student,
     reactivate_student,
     get_sesiones_sistema,
-    get_trastornos_overview,
+    get_planes_overview,
     get_student_if_owned_by_teacher,
     get_assigned_trastorno_ids,
     set_assigned_trastornos,
@@ -30,6 +32,10 @@ from app.blueprints.dashboard.services import (
     assign_session,
     get_sesiones_asignadas_for_actividad,
     update_session_notes,
+    get_student_ranking_by_completed_sessions,
+    get_weekly_completion_counts,
+    get_trastornos_mas_trabajados,
+    get_planes_activos,
 )
 from app.models.content import Trastorno, Actividad
 
@@ -56,9 +62,37 @@ def index():
     return redirect(url_for("dashboard.panel_general"))
 
 
-@bp.route("/panel-general", methods=["GET", "POST"])
+@bp.route("/panel-general")
 @login_required
 def panel_general():
+    if not _is_teacher_or_admin():
+        return redirect(url_for("dashboard.index"))
+
+    rango = request.args.get("rango", "mes")
+    since_map = {
+        "semana": date.today() - timedelta(days=7),
+        "mes": date.today() - timedelta(days=30),
+        "2meses": date.today() - timedelta(days=60),
+        "3meses": date.today() - timedelta(days=90),
+        "todo": None,
+    }
+    since_date = since_map.get(rango, since_map["mes"])
+
+    return render_template(
+        "dashboard/teacher/panel_general.html",
+        total_estudiantes=len(get_students_for_teacher(current_user)),
+        ranking=get_student_ranking_by_completed_sessions(current_user, since_date),
+        trastornos_top=get_trastornos_mas_trabajados(current_user),
+        planes_activos=get_planes_activos(current_user),
+        serie_semanal=get_weekly_completion_counts(current_user),
+        rango_actual=rango,
+        active_nav="panel_general",
+    )
+
+
+@bp.route("/registro-estudiantes", methods=["GET", "POST"])
+@login_required
+def registro_estudiantes():
     if not _is_teacher_or_admin():
         return redirect(url_for("dashboard.index"))
 
@@ -74,7 +108,7 @@ def panel_general():
         if "submit_group" in request.form and group_form.validate_on_submit():
             create_group(current_user, group_form.name.data)
             flash("Grupo creado correctamente.", "success")
-            return redirect(url_for("dashboard.panel_general"))
+            return redirect(url_for("dashboard.registro_estudiantes"))
 
         if "submit_student" in request.form and student_form.validate_on_submit():
             try:
@@ -95,22 +129,22 @@ def panel_general():
                 flash("Estudiante añadido al grupo.", "success")
             except ValueError as exc:
                 flash(str(exc), "danger")
-            return redirect(url_for("dashboard.panel_general"))
+            return redirect(url_for("dashboard.registro_estudiantes"))
 
         for field_errors in list(group_form.errors.values()) + list(student_form.errors.values()):
             for error in field_errors:
                 flash(error, "danger")
 
     return render_template(
-        "dashboard/teacher/panel_general.html",
+        "dashboard/teacher/registro_estudiantes.html",
         groups=groups,
         group_form=group_form,
         student_form=student_form,
-        active_nav="panel_general",
+        active_nav="registro_estudiantes",
     )
 
 
-@bp.route("/panel-general/grupo/<int:group_id>/mover", methods=["POST"])
+@bp.route("/registro-estudiantes/grupo/<int:group_id>/mover", methods=["POST"])
 @login_required
 def mover_estudiante(group_id):
     if not _is_teacher_or_admin():
@@ -124,27 +158,27 @@ def mover_estudiante(group_id):
             flash("Estudiante movido de grupo.", "success")
         except ValueError as exc:
             flash(str(exc), "danger")
-    return redirect(url_for("dashboard.panel_general"))
+    return redirect(url_for("dashboard.registro_estudiantes"))
 
 
-@bp.route("/panel-general/grupo/<int:group_id>/desvincular/<int:student_id>", methods=["POST"])
+@bp.route("/registro-estudiantes/grupo/<int:group_id>/desvincular/<int:student_id>", methods=["POST"])
 @login_required
 def desvincular_estudiante(group_id, student_id):
     if not _is_teacher_or_admin():
         return redirect(url_for("dashboard.index"))
     deactivate_student(current_user, group_id, student_id)
     flash("Estudiante desvinculado. Quedó en 'Niños inactivos' de este grupo.", "info")
-    return redirect(url_for("dashboard.panel_general"))
+    return redirect(url_for("dashboard.registro_estudiantes"))
 
 
-@bp.route("/panel-general/grupo/<int:group_id>/reactivar/<int:student_id>", methods=["POST"])
+@bp.route("/registro-estudiantes/grupo/<int:group_id>/reactivar/<int:student_id>", methods=["POST"])
 @login_required
 def reactivar_estudiante(group_id, student_id):
     if not _is_teacher_or_admin():
         return redirect(url_for("dashboard.index"))
     reactivate_student(current_user, group_id, student_id)
     flash("Estudiante reactivado.", "success")
-    return redirect(url_for("dashboard.panel_general"))
+    return redirect(url_for("dashboard.registro_estudiantes"))
 
 
 @bp.route("/estudiante/<int:student_id>", methods=["GET", "POST"])
@@ -156,7 +190,7 @@ def perfil_estudiante(student_id):
     student = get_student_if_owned_by_teacher(current_user, student_id)
     if student is None:
         flash("Ese estudiante no existe o no pertenece a tus grupos.", "danger")
-        return redirect(url_for("dashboard.panel_general"))
+        return redirect(url_for("dashboard.registro_estudiantes"))
 
     trastornos_form = AssignTrastornosForm()
     trastornos_form.trastornos.choices = [
@@ -175,7 +209,7 @@ def perfil_estudiante(student_id):
         "dashboard/teacher/student_profile.html",
         student=student,
         trastornos_form=trastornos_form,
-        active_nav="panel_general",
+        active_nav="registro_estudiantes",
     )
 
 
@@ -250,7 +284,7 @@ def actualizar_notas_sesion(asignacion_id):
 def planes_entrenamiento():
     if not _is_teacher_or_admin():
         return redirect(url_for("dashboard.index"))
-    planes = get_trastornos_overview()
+    planes = get_planes_overview(current_user)
     return render_template(
         "dashboard/teacher/planes_entrenamiento.html",
         planes=planes,
@@ -284,7 +318,11 @@ def perfil():
 
     if form.validate_on_submit():
         update_teacher_profile(
-            current_user, form.full_name.data, form.email.data, form.area.data
+            current_user,
+            form.full_name.data,
+            form.email.data,
+            form.area.data,
+            new_password=form.new_password.data,
         )
         flash("Perfil actualizado correctamente.", "success")
         return redirect(url_for("dashboard.perfil"))

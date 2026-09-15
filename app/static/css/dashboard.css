@@ -168,6 +168,10 @@ body.teacher-body {
 }
 
 .teacher-sidebar {
+  min-height: calc(100vh - 72px);
+}
+
+.teacher-sidebar {
   width: 260px;
   flex-shrink: 0;
   background: var(--teacher-navy);
@@ -293,4 +297,77 @@ body.teacher-body {
   color: #6b7280;
   font-weight: 600;
   font-size: 0.85rem;
+}
+
+/* Fix sidebar cortado cuando el contenido es corto */
+.teacher-sidebar {
+  min-height: calc(100vh - 72px);
+}
+/* Panel general — layout de dos columnas */
+.pg-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  grid-template-rows: auto auto;
+  gap: 1rem;
+  align-items: start;
+}
+
+.pg-left {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pg-right {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pg-stat-card {
+  background: #fff;
+  border: 1px solid #e6e9f2;
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.pg-stat-card__label {
+  color: #6b7280;
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.pg-stat-card__value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--teacher-navy);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.pg-stat-card__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--teacher-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--teacher-navy);
+}
+
+@media (max-width: 900px) {
+  .pg-layout {
+    grid-template-columns: 1fr;
+  }
+  .pg-left,
+  .pg-right {
+    grid-column: 1;
+  }
 }
