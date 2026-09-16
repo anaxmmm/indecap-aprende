@@ -383,3 +383,76 @@ def get_planes_activos(teacher: User) -> List[dict]:
         for item in get_trastornos_mas_trabajados(teacher, limit=1000)
         if item["estudiantes"] > 0
     ]
+
+
+def get_student_trastornos_con_progreso(student: User) -> List[dict]:
+    """Para el panel general del estudiante: sus trastornos asignados con
+    cuántas actividades tiene en total y cuántas ha completado."""
+    resultado = []
+    for asignacion in student.trastornos_asignados:
+        trastorno = asignacion.trastorno
+        total = Actividad.query.filter_by(trastorno_id=trastorno.id).count()
+        completadas = SesionAsignada.query.filter_by(
+            student_id=student.id,
+            status=EstadoSesion.COMPLETADA,
+        ).join(Actividad).filter(
+            Actividad.trastorno_id == trastorno.id
+        ).count()
+        proxima = (
+            SesionAsignada.query.filter_by(
+                student_id=student.id,
+                status=EstadoSesion.PENDIENTE,
+            )
+            .join(Actividad)
+            .filter(Actividad.trastorno_id == trastorno.id)
+            .order_by(Actividad.order_index.asc())
+            .first()
+        )
+        resultado.append({
+            "trastorno": trastorno,
+            "total": total,
+            "completadas": completadas,
+            "porcentaje": round((completadas / total * 100) if total > 0 else 0),
+            "proxima": proxima,
+        })
+    return resultado
+
+
+def get_student_actividades_por_trastorno(student: User) -> List[dict]:
+    """Para la pantalla de Actividades del estudiante: sus sesiones asignadas
+    agrupadas por trastorno, con su estado actual."""
+    grupos = {}
+    for sesion in student.sesiones_asignadas:
+        trastorno = sesion.actividad.trastorno
+        if trastorno.id not in grupos:
+            grupos[trastorno.id] = {
+                "trastorno": trastorno,
+                "sesiones": [],
+            }
+        grupos[trastorno.id]["sesiones"].append(sesion)
+
+    for grupo in grupos.values():
+        grupo["sesiones"].sort(key=lambda s: s.actividad.order_index)
+
+    return list(grupos.values())
+
+
+def get_student_racha(student: User) -> int:
+    """Días consecutivos con al menos una sesión completada (racha de constancia).
+    Cuenta hacia atrás desde hoy hasta romper la racha."""
+    today = date.today()
+    racha = 0
+    dia = today
+    for _ in range(365):
+        tuvo_actividad = SesionAsignada.query.filter(
+            SesionAsignada.student_id == student.id,
+            SesionAsignada.status == EstadoSesion.COMPLETADA,
+            SesionAsignada.assigned_at >= dia,
+            SesionAsignada.assigned_at < dia + timedelta(days=1),
+        ).first()
+        if tuvo_actividad:
+            racha += 1
+            dia -= timedelta(days=1)
+        else:
+            break
+    return racha

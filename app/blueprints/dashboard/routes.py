@@ -36,6 +36,9 @@ from app.blueprints.dashboard.services import (
     get_weekly_completion_counts,
     get_trastornos_mas_trabajados,
     get_planes_activos,
+    get_student_trastornos_con_progreso,
+    get_student_actividades_por_trastorno,
+    get_student_racha,
 )
 from app.models.content import Trastorno, Actividad
 
@@ -58,9 +61,38 @@ def inject_notifications():
 @login_required
 def index():
     if current_user.is_student:
-        return render_template("dashboard/student/index.html")
+        return redirect(url_for("dashboard.student_panel_general"))
     return redirect(url_for("dashboard.panel_general"))
 
+
+# ─── RUTAS DEL ESTUDIANTE ────────────────────────────────────────────────────
+
+@bp.route("/mi-panel")
+@login_required
+def student_panel_general():
+    if not current_user.is_student:
+        return redirect(url_for("dashboard.panel_general"))
+    return render_template(
+        "dashboard/student/index.html",
+        trastornos=get_student_trastornos_con_progreso(current_user),
+        racha=get_student_racha(current_user),
+        active_nav="panel_general",
+    )
+
+
+@bp.route("/mis-actividades")
+@login_required
+def student_actividades():
+    if not current_user.is_student:
+        return redirect(url_for("dashboard.panel_general"))
+    return render_template(
+        "dashboard/student/actividades.html",
+        grupos=get_student_actividades_por_trastorno(current_user),
+        active_nav="actividades",
+    )
+
+
+# ─── RUTAS DEL DOCENTE ───────────────────────────────────────────────────────
 
 @bp.route("/panel-general")
 @login_required
