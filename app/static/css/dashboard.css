@@ -371,3 +371,13 @@ body.teacher-body {
     grid-column: 1;
   }
 }
+
+/* Dashboard estudiante — reutiliza teacher-body, teacher-topbar, teacher-sidebar
+   y teacher-content; solo ajustes específicos del contexto de estudiante */
+.teacher-body h1, .teacher-body h2, .teacher-body h3,
+.teacher-body h4, .teacher-body h5, .teacher-body h6,
+.teacher-body .h1, .teacher-body .h2, .teacher-body .h3,
+.teacher-body .h4, .teacher-body .h5, .teacher-body .h6 {
+  font-family: 'Inter', sans-serif;
+  color: var(--teacher-navy);
+}
