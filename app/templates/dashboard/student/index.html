@@ -1,6 +1,85 @@
 {% extends "dashboard/student/base_student.html" %}
-{% block title %}Mi progreso — indecap-aprende{% endblock %}
+{% block title %}Mi panel — indecap-aprende{% endblock %}
 {% block student_content %}
-<h1 class="h4">¡Hola, {{ current_user.full_name }}!</h1>
-<p class="text-muted">Aquí verás tus trastornos asignados y tus actividades — se construye en la siguiente iteración.</p>
+<h1 class="h4 mb-3">¡Hola, {{ current_user.full_name }}!</h1>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="teacher-card text-center">
+      <p class="text-muted small mb-1">Racha este mes</p>
+      <p class="h4 mb-0">{{ racha }} día{{ 's' if racha != 1 else '' }}</p>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="teacher-card text-center">
+      <p class="text-muted small mb-1">Actividades iniciadas</p>
+      <p class="h4 mb-0">{{ actividades_iniciadas|length }}</p>
+    </div>
+  </div>
+</div>
+
+{% if actividades_iniciadas %}
+<div class="teacher-card mb-4">
+  <h2 class="h6 mb-3">Sigue donde quedaste</h2>
+  <div class="d-flex flex-column gap-2">
+    {% for sesion in actividades_iniciadas %}
+    <div class="d-flex align-items-center justify-content-between p-2 rounded"
+         style="background: var(--teacher-bg); border: 1px solid #e6e9f2;">
+      <div>
+        <p class="mb-0 small fw-semibold">{{ sesion.actividad.title }}</p>
+        <p class="mb-0 text-muted" style="font-size: 0.75rem;">{{ sesion.actividad.trastorno.name }}</p>
+      </div>
+      <a href="{{ url_for('dashboard.student_juego_detail', trastorno_id=sesion.actividad.trastorno_id) }}"
+         class="badge text-decoration-none" style="background: var(--teacher-navy); color:#fff;">
+        Continuar
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="teacher-card mb-4">
+  <h2 class="h6 mb-3">Mis trastornos asignados</h2>
+  {% if not trastornos %}
+  <p class="text-muted small mb-0">
+    Todavía no tienes trastornos asignados. Tu docente los configurará pronto.
+  </p>
+  {% else %}
+  <div class="row g-3">
+    {% for item in trastornos %}
+    <div class="col-md-6">
+      <div class="p-3 rounded" style="background: var(--teacher-bg); border: 1px solid #e6e9f2;">
+        <p class="mb-1 fw-semibold">{{ item.trastorno.name }}</p>
+        <div class="progress mb-1" style="height: 6px;">
+          <div class="progress-bar" role="progressbar" style="width: {{ item.porcentaje }}%; background: var(--teacher-gold);"></div>
+        </div>
+        <p class="mb-0 text-muted" style="font-size: 0.75rem;">
+          {{ item.completadas }} de {{ item.total }} actividades completadas ({{ item.porcentaje }}%)
+        </p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<div class="teacher-card">
+  <h2 class="h6 mb-3">Notificaciones</h2>
+  {% if not recent_notifications %}
+  <p class="text-muted small mb-0">
+    Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te asigne algo nuevo.
+  </p>
+  {% else %}
+  <div class="d-flex flex-column gap-2">
+    {% for n in recent_notifications %}
+    <div class="p-2 rounded"
+         style="background: var(--teacher-bg); {{ 'border-left: 3px solid var(--teacher-gold);' if not n.is_read else '' }}">
+      <p class="mb-0 small">{{ n.message }}</p>
+      <p class="mb-0 text-muted" style="font-size: 0.7rem;">{{ n.created_at.strftime('%d/%m %H:%M') }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
 {% endblock %}

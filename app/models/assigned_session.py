@@ -28,6 +28,10 @@ class SesionAsignada(db.Model):
     clinical_notes = db.Column(db.Text, nullable=True)
 
     assigned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # Se registra la primera vez que el estudiante abre la actividad desde
+    # "Mis actividades". Permite mostrar "Actividades iniciadas" en su panel
+    # sin necesitar todavía el motor de juego real.
+    started_at = db.Column(db.DateTime, nullable=True)
 
     student = db.relationship(
         "User", foreign_keys=[student_id], backref="sesiones_asignadas"

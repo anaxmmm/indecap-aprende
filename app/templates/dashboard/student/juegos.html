@@ -1,0 +1,24 @@
+{% extends "dashboard/student/base_student.html" %}
+{% block title %}Juegos — indecap-aprende{% endblock %}
+{% block student_content %}
+<h1 class="h4 mb-3">Juegos</h1>
+<p class="text-muted mb-4">Elige un trastorno para acceder a su actividad interactiva.</p>
+
+{% if not trastornos %}
+<div class="teacher-card">
+  <p class="text-muted mb-0">Todavía no hay juegos configurados en el sistema.</p>
+</div>
+{% else %}
+<div class="row g-3">
+  {% for trastorno in trastornos %}
+  <div class="col-md-4 col-sm-6">
+    <a href="{{ url_for('dashboard.student_juego_detail', trastorno_id=trastorno.id) }}"
+       class="d-block text-decoration-none teacher-card h-100">
+      <p class="mb-0 fw-semibold" style="color: var(--teacher-navy);">{{ trastorno.name }}</p>
+      <p class="mb-0 text-muted" style="font-size: 0.8rem;">Próximamente</p>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

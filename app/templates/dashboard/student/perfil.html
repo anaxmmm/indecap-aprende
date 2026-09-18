@@ -1,0 +1,22 @@
+{% extends "dashboard/student/base_student.html" %}
+{% block title %}Mi perfil — indecap-aprende{% endblock %}
+{% block student_content %}
+<h1 class="h4 mb-3">Mi perfil</h1>
+
+<div class="teacher-card" style="max-width: 480px;">
+  <p class="text-muted small mb-1">Nombre completo</p>
+  <p class="mb-3">{{ current_user.full_name }}</p>
+
+  <p class="text-muted small mb-1">Correo electrónico</p>
+  <p class="mb-3">{{ current_user.email }}</p>
+
+  {% if profile and profile.alias %}
+  <p class="text-muted small mb-1">Alias</p>
+  <p class="mb-3">{{ profile.alias }}</p>
+  {% endif %}
+
+  <p class="text-muted" style="font-size: 0.8rem;">
+    ¿Necesitas cambiar algún dato? Pídele a tu docente que lo actualice desde tu perfil en el panel de administración.
+  </p>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "dashboard/student/base_student.html" %}
+{% block title %}{{ trastorno.name }} — indecap-aprende{% endblock %}
+{% block student_content %}
+<div class="teacher-card text-center py-5">
+  <p class="text-muted small mb-2">{{ trastorno.name }}</p>
+  <h1 class="h4 mb-3">Este juego está en construcción</h1>
+  <p class="text-muted mb-4">Estamos preparando la actividad interactiva para este trastorno. Vuelve pronto.</p>
+  <a href="{{ url_for('dashboard.student_juegos') }}" class="btn btn-teacher-primary">Volver a Juegos</a>
+</div>
+{% endblock %}

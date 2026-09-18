@@ -38,7 +38,10 @@ from app.blueprints.dashboard.services import (
     get_planes_activos,
     get_student_trastornos_con_progreso,
     get_student_actividades_por_trastorno,
-    get_student_racha,
+    get_student_racha_mensual,
+    get_started_activities,
+    start_session,
+    get_student_profile,
 )
 from app.models.content import Trastorno, Actividad
 
@@ -49,7 +52,7 @@ def _is_teacher_or_admin() -> bool:
 
 @bp.context_processor
 def inject_notifications():
-    if current_user.is_authenticated and _is_teacher_or_admin():
+    if current_user.is_authenticated:
         return {
             "unread_notifications_count": count_unread_notifications(current_user),
             "recent_notifications": get_recent_notifications(current_user, limit=5),
@@ -75,7 +78,8 @@ def student_panel_general():
     return render_template(
         "dashboard/student/index.html",
         trastornos=get_student_trastornos_con_progreso(current_user),
-        racha=get_student_racha(current_user),
+        racha=get_student_racha_mensual(current_user),
+        actividades_iniciadas=get_started_activities(current_user),
         active_nav="panel_general",
     )
 
@@ -89,6 +93,58 @@ def student_actividades():
         "dashboard/student/actividades.html",
         grupos=get_student_actividades_por_trastorno(current_user),
         active_nav="actividades",
+    )
+
+
+@bp.route("/mis-actividades/sesion/<int:sesion_id>/iniciar", methods=["POST"])
+@login_required
+def student_iniciar_actividad(sesion_id):
+    if not current_user.is_student:
+        return redirect(url_for("dashboard.panel_general"))
+    try:
+        sesion = start_session(current_user, sesion_id)
+    except ValueError as exc:
+        flash(str(exc), "danger")
+        return redirect(url_for("dashboard.student_actividades"))
+    return redirect(
+        url_for("dashboard.student_juego_detail", trastorno_id=sesion.actividad.trastorno_id)
+    )
+
+
+@bp.route("/juegos")
+@login_required
+def student_juegos():
+    if not current_user.is_student:
+        return redirect(url_for("dashboard.panel_general"))
+    return render_template(
+        "dashboard/student/juegos.html",
+        trastornos=Trastorno.query.order_by(Trastorno.name.asc()).all(),
+        active_nav="juegos",
+    )
+
+
+@bp.route("/juegos/<int:trastorno_id>")
+@login_required
+def student_juego_detail(trastorno_id):
+    if not current_user.is_student:
+        return redirect(url_for("dashboard.panel_general"))
+    trastorno = Trastorno.query.get_or_404(trastorno_id)
+    return render_template(
+        "dashboard/student/juego_detail.html",
+        trastorno=trastorno,
+        active_nav="juegos",
+    )
+
+
+@bp.route("/mi-perfil")
+@login_required
+def student_perfil():
+    if not current_user.is_student:
+        return redirect(url_for("dashboard.panel_general"))
+    return render_template(
+        "dashboard/student/perfil.html",
+        profile=get_student_profile(current_user),
+        active_nav="perfil",
     )
 
 
@@ -367,7 +423,5 @@ def perfil():
 @bp.route("/notificaciones/marcar-leidas", methods=["POST"])
 @login_required
 def marcar_notificaciones_leidas():
-    if not _is_teacher_or_admin():
-        return redirect(url_for("dashboard.index"))
     mark_all_notifications_read(current_user)
-    return redirect(request.referrer or url_for("dashboard.panel_general"))
+    return redirect(request.referrer or url_for("dashboard.index"))

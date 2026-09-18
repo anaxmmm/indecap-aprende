@@ -1,7 +1,7 @@
 """Lógica de negocio del blueprint dashboard, separada de las rutas
 para mantenerlas delgadas y facilitar pruebas unitarias.
 """
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import List, Optional
 
 from sqlalchemy.exc import IntegrityError
@@ -32,6 +32,13 @@ def create_group(teacher: User, name: str) -> Grupo:
     return grupo
 
 
+def _notify_student(student_id: int, message: str) -> None:
+    """Crea una notificación dirigida al estudiante. No hace commit — el
+    llamador se encarga de confirmar la transacción junto con el resto de
+    los cambios."""
+    db.session.add(Notification(recipient_id=student_id, message=message))
+
+
 def _auto_enroll_first_session(student_id: int, trastorno_id: int, assigned_by_id: int) -> None:
     """Al asignar un trastorno, inscribe automáticamente al estudiante en la
     primera actividad (capítulo 1) de ese plan, si no la tiene ya asignada.
@@ -59,6 +66,10 @@ def _auto_enroll_first_session(student_id: int, trastorno_id: int, assigned_by_i
             start_date=hoy,
             end_date=hoy + timedelta(days=30),
         )
+    )
+    _notify_student(
+        student_id,
+        f"Tu docente te asignó una nueva actividad: {primera_actividad.title}.",
     )
 
 
@@ -290,6 +301,14 @@ def assign_session(
         end_date=end_date,
     )
     db.session.add(sesion)
+
+    actividad = Actividad.query.get(actividad_id)
+    if actividad is not None:
+        _notify_student(
+            student_id,
+            f"Tu docente te asignó una nueva actividad: {actividad.title}.",
+        )
+
     db.session.commit()
     return sesion
 
@@ -456,3 +475,46 @@ def get_student_racha(student: User) -> int:
         else:
             break
     return racha
+
+
+def get_student_racha_mensual(student: User) -> int:
+    """Racha mensual: cantidad de días distintos (no necesariamente
+    consecutivos) con al menos una sesión completada en los últimos 30 días."""
+    since = date.today() - timedelta(days=30)
+    sesiones = SesionAsignada.query.filter(
+        SesionAsignada.student_id == student.id,
+        SesionAsignada.status == EstadoSesion.COMPLETADA,
+        SesionAsignada.assigned_at >= since,
+    ).all()
+    dias = {sesion.assigned_at.date() for sesion in sesiones}
+    return len(dias)
+
+
+def get_started_activities(student: User) -> List[SesionAsignada]:
+    """Sesiones pendientes que el estudiante ya abrió al menos una vez
+    (started_at definido), para mostrar 'sigue donde quedaste' en su panel."""
+    return (
+        SesionAsignada.query.filter_by(
+            student_id=student.id,
+            status=EstadoSesion.PENDIENTE,
+        )
+        .filter(SesionAsignada.started_at.isnot(None))
+        .order_by(SesionAsignada.started_at.desc())
+        .all()
+    )
+
+
+def start_session(student: User, sesion_id: int) -> SesionAsignada:
+    """Marca una sesión asignada como iniciada la primera vez que el
+    estudiante la abre desde 'Mis actividades'."""
+    sesion = SesionAsignada.query.filter_by(id=sesion_id, student_id=student.id).first()
+    if sesion is None:
+        raise ValueError("Esa actividad no existe o no te pertenece.")
+    if sesion.started_at is None:
+        sesion.started_at = datetime.utcnow()
+        db.session.commit()
+    return sesion
+
+
+def get_student_profile(student: User) -> Optional[StudentProfile]:
+    return StudentProfile.query.filter_by(user_id=student.id).first()
