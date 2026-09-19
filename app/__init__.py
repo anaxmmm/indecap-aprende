@@ -10,7 +10,7 @@ def create_app(config_name: str = None) -> Flask:
     """Application factory de indecap-aprende.
 
     Todos los blueprints se registran al mismo nivel (auth, dashboard,
-    modules, admin, inclusive) — decisión documentada en
+    modules, admin, inclusive, games) — decisión documentada en
     docs/bitacoras/Bitacora_indecap-aprende.docx, sección 5.
     """
     config_name = config_name or os.environ.get("FLASK_ENV", "development")
@@ -38,12 +38,14 @@ def _register_blueprints(app: Flask) -> None:
     from app.blueprints.modules import bp as modules_bp
     from app.blueprints.admin import bp as admin_bp
     from app.blueprints.inclusive import bp as inclusive_bp
+    from app.blueprints.games import bp as games_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(dashboard_bp, url_prefix="/dashboard")
     app.register_blueprint(modules_bp, url_prefix="/modules")
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(inclusive_bp, url_prefix="/inclusive")
+    app.register_blueprint(games_bp, url_prefix="/games")
 
 
 def _register_user_loader() -> None:

@@ -25,3 +25,4 @@ from app.models.student_profile import StudentProfile
 from app.models.teacher_profile import TeacherProfile
 from app.models.notification import Notification
 from app.models.assigned_session import SesionAsignada
+from app.models.game_session import GameSession  # noqa: F401

@@ -43,6 +43,7 @@ from app.blueprints.dashboard.services import (
     start_session,
     get_student_profile,
 )
+from app.blueprints.games.registry import get_game_for_trastorno
 from app.models.content import Trastorno, Actividad
 
 
@@ -132,6 +133,7 @@ def student_juego_detail(trastorno_id):
     return render_template(
         "dashboard/student/juego_detail.html",
         trastorno=trastorno,
+        game=get_game_for_trastorno(trastorno),
         active_nav="juegos",
     )
 

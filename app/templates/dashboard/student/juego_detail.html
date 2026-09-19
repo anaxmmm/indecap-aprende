@@ -1,10 +1,28 @@
 {% extends "dashboard/student/base_student.html" %}
 {% block title %}{{ trastorno.name }} — indecap-aprende{% endblock %}
+
 {% block student_content %}
-<div class="teacher-card text-center py-5">
-  <p class="text-muted small mb-2">{{ trastorno.name }}</p>
-  <h1 class="h4 mb-3">Este juego está en construcción</h1>
-  <p class="text-muted mb-4">Estamos preparando la actividad interactiva para este trastorno. Vuelve pronto.</p>
-  <a href="{{ url_for('dashboard.student_juegos') }}" class="btn btn-teacher-primary">Volver a Juegos</a>
+{% set juego = game %}
+<div class="teacher-card p-4">
+  <p class="text-muted small mb-1">{{ trastorno.name }}</p>
+
+  {% if juego and juego.available %}
+    <h1 class="h4 mb-2">{{ juego.name }}</h1>
+    <p class="text-muted mb-3">{{ juego.core_skill }}</p>
+    <p class="mb-4">{{ juego.dua.implicacion }}</p>
+    <a href="{{ url_for('games.play', slug=juego.slug, level=1, trastorno_id=trastorno.id) }}"
+       class="btn btn-teacher-primary">Entrar al juego</a>
+  {% elif juego %}
+    <h1 class="h4 mb-3">{{ juego.name }}</h1>
+    <p class="text-muted mb-4">
+      Esta actividad está en construcción. Trabajará
+      <strong>{{ juego.core_skill | lower }}</strong> a lo largo de {{ juego.levels }} niveles.
+    </p>
+    <a href="{{ url_for('dashboard.student_juegos') }}" class="btn btn-teacher-primary">Volver a Juegos</a>
+  {% else %}
+    <h1 class="h4 mb-3">Este juego está en construcción</h1>
+    <p class="text-muted mb-4">Estamos preparando la actividad interactiva para este trastorno.</p>
+    <a href="{{ url_for('dashboard.student_juegos') }}" class="btn btn-teacher-primary">Volver a Juegos</a>
+  {% endif %}
 </div>
 {% endblock %}
