@@ -2,7 +2,6 @@
 {% block title %}Juegos — indecap-aprende{% endblock %}
 {% block student_content %}
 <h1 class="h4 mb-3">Juegos</h1>
-<p class="text-muted mb-4">Elige un trastorno para acceder a su actividad interactiva.</p>
 
 {% if not trastornos %}
 <div class="teacher-card">
@@ -11,12 +10,29 @@
 {% else %}
 <div class="row g-3">
   {% for trastorno in trastornos %}
+  {% set acceso = game_access(trastorno) %}
   <div class="col-md-4 col-sm-6">
-    <a href="{{ url_for('dashboard.student_juego_detail', trastorno_id=trastorno.id) }}"
-       class="d-block text-decoration-none teacher-card h-100">
-      <p class="mb-0 fw-semibold" style="color: var(--teacher-navy);">{{ trastorno.name }}</p>
-      <p class="mb-0 text-muted" style="font-size: 0.8rem;">Próximamente</p>
-    </a>
+    <div class="teacher-card h-100 d-flex flex-column">
+      {% if acceso.game %}
+        <p class="mb-1 fw-semibold fs-5" style="color: var(--teacher-navy);">{{ acceso.game.name }}</p>
+        <p class="mb-3">{{ trastorno.name }}</p>
+      {% else %}
+        <p class="mb-1 fw-semibold fs-5" style="color: var(--teacher-navy);">{{ trastorno.name }}</p>
+        <p class="mb-3 text-muted">Actividad en preparación.</p>
+      {% endif %}
+
+      {% if acceso.allowed %}
+        {% if acceso.game.has_stage_map %}
+          <a href="{{ url_for('games.stages', slug=acceso.game.slug, trastorno_id=trastorno.id) }}"
+             class="btn btn-teacher-primary btn-sm mt-auto align-self-start">Jugar</a>
+        {% else %}
+          <a href="{{ url_for('games.play', slug=acceso.game.slug, level=acceso.start_level, trastorno_id=trastorno.id) }}"
+             class="btn btn-teacher-primary btn-sm mt-auto align-self-start">Jugar</a>
+        {% endif %}
+      {% elif acceso.game %}
+        <button type="button" class="btn btn-outline-secondary btn-sm mt-auto align-self-start" disabled>Jugar</button>
+      {% endif %}
+    </div>
   </div>
   {% endfor %}
 </div>

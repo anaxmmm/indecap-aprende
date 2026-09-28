@@ -39,6 +39,14 @@
       <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" data-bs-toggle="collapse" data-bs-target="#add-child-{{ grupo.id }}">
         + Añadir niño
       </button>
+      <form
+        method="post"
+        action="{{ url_for('dashboard.eliminar_grupo', group_id=grupo.id) }}"
+        class="d-inline"
+        onsubmit="return confirm('¿Eliminar el grupo \'{{ grupo.name }}\'? Esta acción no se puede deshacer.');"
+      >
+        <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar grupo</button>
+      </form>
     </div>
 
     <form method="post" id="add-child-{{ grupo.id }}" class="collapse teacher-inline-form">
@@ -163,6 +171,14 @@
           <div class="teacher-group__student-actions">
             <form method="post" action="{{ url_for('dashboard.reactivar_estudiante', group_id=grupo.id, student_id=estudiante.id) }}" class="d-inline">
               <button type="submit" class="btn btn-sm btn-outline-success">Reactivar</button>
+            </form>
+            <form
+              method="post"
+              action="{{ url_for('dashboard.eliminar_estudiante', group_id=grupo.id, student_id=estudiante.id) }}"
+              class="d-inline"
+              onsubmit="return confirm('¿Eliminar definitivamente a {{ estudiante.full_name }}? Esta acción borra todo su historial y no se puede deshacer.');"
+            >
+              <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar definitivamente</button>
             </form>
           </div>
         </li>

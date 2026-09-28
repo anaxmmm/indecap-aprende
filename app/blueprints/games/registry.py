@@ -2,9 +2,18 @@
 Registro único de los juegos de indecap-aprende.
 
 Cada juego declara su condición objetivo, sus principios DUA, las regiones
-cerebrales que trabaja y la configuración de sus 10 niveles. El nivel de apoyo
+cerebrales que trabaja y la configuración de sus niveles. El nivel de apoyo
 (pistas, tiempo, repeticiones) es un AJUSTE PEDAGÓGICO calibrado por desempeño,
 nunca un instrumento diagnóstico (metodología DUA del proyecto).
+
+NOTA: "levels" indica cuántos niveles tiene el juego en total. Se está
+ampliando cada juego de 10 a 50 niveles (5 Stages de 10: Base/Media/Alta/
+Muy Alta/Súper Difícil), juego por juego.
+
+"has_stage_map": True marca los juegos que, además de la selección de nivel
+simple, tienen una pantalla previa de "Etapas" (5 Stages de 10 niveles cada
+uno) — discalculia_mercado, dislexia_letras y tdah_ritmo por ahora, con 50
+niveles cada uno.
 """
 
 import unicodedata
@@ -26,7 +35,9 @@ GAMES = {
             "accion_expresion": "Responde tocando, con teclado (flechas + Enter) o arrastrando; nunca se exige escritura numérica.",
             "implicacion": "Narrativa de mercado espacial, progresión por niveles, reintentos sin castigo y refuerzo positivo inmediato.",
         },
-        "levels": 10,
+        "levels": 50,
+        "has_stage_map": True,
+        "stage_size": 10,
         "asset_path": "js/games/discalculia_mercado/game.js",
         "keywords": ["discalculia", "calculo", "matematica"],
         "available": True,
@@ -106,7 +117,9 @@ GAMES = {
             "accion_expresion": "Trazado con dedo o lápiz óptico, teclado y selección.",
             "implicacion": "Progresión en cuatro modalidades de lectura según desempeño.",
         },
-        "levels": 10,
+        "levels": 50,
+        "has_stage_map": True,
+        "stage_size": 10,
         "asset_path": "js/games/dislexia_letras/game.js",
         "keywords": ["dislexia", "lectura"],
         "available": True,
@@ -126,7 +139,9 @@ GAMES = {
             "accion_expresion": "Toque rápido, arrastre y secuencias tipo go/no-go.",
             "implicacion": "Retos cronometrados con descansos activos intercalados.",
         },
-        "levels": 10,
+        "levels": 50,
+        "has_stage_map": True,
+        "stage_size": 10,
         "asset_path": "js/games/tdah_ritmo/game.js",
         "keywords": ["tdah", "atencion", "hiperactividad"],
         "available": True,

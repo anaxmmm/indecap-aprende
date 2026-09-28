@@ -4,6 +4,7 @@ para mantenerlas delgadas y facilitar pruebas unitarias.
 from datetime import date, datetime, timedelta
 from typing import List, Optional
 
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
@@ -15,6 +16,7 @@ from app.models.student_profile import StudentProfile, GeneroEnum
 from app.models.teacher_profile import TeacherProfile
 from app.models.notification import Notification
 from app.models.assigned_session import SesionAsignada, EstadoSesion
+from app.models.game_session import GameSession
 
 
 def get_groups_for_teacher(teacher: User) -> List[Grupo]:
@@ -30,6 +32,24 @@ def create_group(teacher: User, name: str) -> Grupo:
     db.session.add(grupo)
     db.session.commit()
     return grupo
+
+
+def delete_group(teacher: User, group_id: int) -> None:
+    """Elimina un grupo completo. Solo se permite si ya no tiene ningún
+    niño dentro (ni activo ni inactivo) — de lo contrario esos niños
+    quedarían sin grupo y sin forma de gestionarlos desde la UI."""
+    grupo = Grupo.query.filter_by(id=group_id, teacher_id=teacher.id).first()
+    if grupo is None:
+        raise ValueError("El grupo no existe o no pertenece a este docente.")
+
+    if grupo.estudiantes:
+        raise ValueError(
+            "Este grupo todavía tiene niños asignados (activos o inactivos). "
+            "Muévelos a otro grupo o elimínalos antes de eliminar el grupo."
+        )
+
+    db.session.delete(grupo)
+    db.session.commit()
 
 
 def _notify_student(student_id: int, message: str) -> None:
@@ -163,6 +183,32 @@ def reactivate_student(teacher: User, group_id: int, student_id: int) -> None:
     if grupo and student and student in grupo.estudiantes:
         student.is_active_account = True
         db.session.commit()
+
+
+def delete_student_permanently(teacher: User, group_id: int, student_id: int) -> None:
+    """Elimina definitivamente a un estudiante y todo su rastro en el
+    sistema: trastornos asignados, sesiones asignadas y notificaciones que
+    lo mencionan. StudentProfile, AccessibilityProfile y Progress ya
+    cascadean automáticamente al borrar el User (están configurados así en
+    sus modelos), pero TrastornoAsignado, SesionAsignada y Notification no
+    tienen cascada definida, así que se borran aquí explícitamente antes
+    del User para no dejar filas huérfanas ni romper la integridad de la
+    base de datos. A diferencia de deactivate_student, esto es
+    irreversible.
+    """
+    grupo = Grupo.query.filter_by(id=group_id, teacher_id=teacher.id).first()
+    student = User.query.get(student_id)
+    if grupo is None or student is None or student not in grupo.estudiantes:
+        raise ValueError("El estudiante no existe o no pertenece a este grupo.")
+
+    TrastornoAsignado.query.filter_by(student_id=student.id).delete()
+    SesionAsignada.query.filter_by(student_id=student.id).delete()
+    Notification.query.filter(
+        or_(Notification.recipient_id == student.id, Notification.student_id == student.id)
+    ).delete(synchronize_session=False)
+
+    db.session.delete(student)
+    db.session.commit()
 
 
 def get_sesiones_sistema() -> List[Trastorno]:
@@ -331,18 +377,22 @@ def update_session_notes(teacher: User, sesion_id: int, notes: str) -> int:
 
 
 def get_student_ranking_by_completed_sessions(teacher: User, since_date=None) -> List[dict]:
-    """Ranking de estudiantes por sesiones completadas dentro de un ciclo.
-    Los ciclos duran 6-7 meses; el filtro 'ciclo_actual' usa 6 meses como
-    referencia por defecto cuando no se pasa since_date."""
+    """Ranking de estudiantes por partidas de juego completadas dentro de un
+    ciclo. Antes contaba SesionAsignada (asignaciones del panel docente),
+    pero jugar un juego nunca crea ni actualiza una SesionAsignada — los
+    juegos tienen su propio registro en GameSession (ver
+    games/services.py). Los ciclos duran 6-7 meses; el filtro
+    'ciclo_actual' usa 6 meses como referencia por defecto cuando no se pasa
+    since_date."""
     if since_date is None:
         since_date = date.today() - timedelta(days=180)
 
     ranking = []
     for student in get_students_for_teacher(teacher):
-        query = SesionAsignada.query.filter(
-            SesionAsignada.student_id == student.id,
-            SesionAsignada.status == EstadoSesion.COMPLETADA,
-            SesionAsignada.assigned_at >= since_date,
+        query = GameSession.query.filter(
+            GameSession.user_id == student.id,
+            GameSession.completed.is_(True),
+            GameSession.created_at >= since_date,
         )
         ranking.append({"student": student, "completadas": query.count()})
     ranking.sort(key=lambda fila: fila["completadas"], reverse=True)
@@ -350,22 +400,25 @@ def get_student_ranking_by_completed_sessions(teacher: User, since_date=None) ->
 
 
 def get_weekly_completion_counts(teacher: User, weeks: int = 8) -> dict:
-    """Serie semanal de sesiones completadas, para el gráfico de rendimiento
-    general del panel general. Referencia temporal: los ciclos duran 6-7 meses,
-    así que 8 semanas (≈2 meses) es una vista relevante del ciclo activo."""
+    """Serie semanal de partidas de juego completadas, para el gráfico de
+    rendimiento general del panel general. Igual que en
+    get_student_ranking_by_completed_sessions, la fuente correcta es
+    GameSession, no SesionAsignada. Referencia temporal: los ciclos duran
+    6-7 meses, así que 8 semanas (≈2 meses) es una vista relevante del ciclo
+    activo."""
     student_ids = [s.id for s in get_students_for_teacher(teacher)]
     today = date.today()
     labels, values = [], []
     for i in range(weeks - 1, -1, -1):
         week_start = today - timedelta(days=today.weekday() + i * 7)
-        week_end = week_start + timedelta(days=6)
+        week_end_exclusive = week_start + timedelta(days=7)
         count = 0
         if student_ids:
-            count = SesionAsignada.query.filter(
-                SesionAsignada.student_id.in_(student_ids),
-                SesionAsignada.status == EstadoSesion.COMPLETADA,
-                SesionAsignada.assigned_at >= week_start,
-                SesionAsignada.assigned_at <= week_end,
+            count = GameSession.query.filter(
+                GameSession.user_id.in_(student_ids),
+                GameSession.completed.is_(True),
+                GameSession.created_at >= week_start,
+                GameSession.created_at < week_end_exclusive,
             ).count()
         labels.append(week_start.strftime("%d/%m"))
         values.append(count)
@@ -405,32 +458,64 @@ def get_planes_activos(teacher: User) -> List[dict]:
 
 
 def get_student_trastornos_con_progreso(student: User) -> List[dict]:
-    """Para el panel general del estudiante: sus trastornos asignados con
-    cuántas actividades tiene en total y cuántas ha completado."""
+    """Para el panel general del estudiante: sus trastornos asignados con su
+    progreso real. Si el trastorno tiene un juego disponible (registry.py),
+    el progreso se mide en GameSession: nivel desbloqueado (score >= 60)
+    sobre el total de niveles del juego — que es lo que el estudiante
+    realmente juega. Si el trastorno todavía no tiene juego, se usa como
+    respaldo el conteo antiguo de Actividad/SesionAsignada del panel
+    docente.
+
+    El import de get_game_for_trastorno se hace aquí adentro (no arriba del
+    archivo) a propósito: dashboard y games se importan mutuamente en algún
+    punto de la cadena de arranque, y ponerlo a nivel de módulo revienta con
+    un ImportError circular. games/routes.py resuelve el mismo problema en
+    sentido inverso (import de dashboard.services dentro de
+    inject_notifications) por la misma razón."""
+    from app.blueprints.games.registry import get_game_for_trastorno
+
     resultado = []
     for asignacion in student.trastornos_asignados:
         trastorno = asignacion.trastorno
-        total = Actividad.query.filter_by(trastorno_id=trastorno.id).count()
-        completadas = SesionAsignada.query.filter_by(
-            student_id=student.id,
-            status=EstadoSesion.COMPLETADA,
-        ).join(Actividad).filter(
-            Actividad.trastorno_id == trastorno.id
-        ).count()
-        proxima = (
-            SesionAsignada.query.filter_by(
-                student_id=student.id,
-                status=EstadoSesion.PENDIENTE,
+        juego = get_game_for_trastorno(trastorno)
+
+        if juego is not None:
+            total = juego["levels"]
+            mejor = (
+                GameSession.query
+                .filter(
+                    GameSession.user_id == student.id,
+                    GameSession.game_slug == juego["slug"],
+                    GameSession.score >= 60,
+                )
+                .order_by(GameSession.level.desc())
+                .first()
             )
-            .join(Actividad)
-            .filter(Actividad.trastorno_id == trastorno.id)
-            .order_by(Actividad.order_index.asc())
-            .first()
-        )
+            completadas = mejor.level if mejor else 0
+            proxima = None
+        else:
+            total = Actividad.query.filter_by(trastorno_id=trastorno.id).count()
+            completadas = SesionAsignada.query.filter_by(
+                student_id=student.id,
+                status=EstadoSesion.COMPLETADA,
+            ).join(Actividad).filter(
+                Actividad.trastorno_id == trastorno.id
+            ).count()
+            proxima = (
+                SesionAsignada.query.filter_by(
+                    student_id=student.id,
+                    status=EstadoSesion.PENDIENTE,
+                )
+                .join(Actividad)
+                .filter(Actividad.trastorno_id == trastorno.id)
+                .order_by(Actividad.order_index.asc())
+                .first()
+            )
+
         resultado.append({
             "trastorno": trastorno,
             "total": total,
-            "completadas": completadas,
+            "completadas": min(completadas, total) if total else completadas,
             "porcentaje": round((completadas / total * 100) if total > 0 else 0),
             "proxima": proxima,
         })
@@ -479,14 +564,17 @@ def get_student_racha(student: User) -> int:
 
 def get_student_racha_mensual(student: User) -> int:
     """Racha mensual: cantidad de días distintos (no necesariamente
-    consecutivos) con al menos una sesión completada en los últimos 30 días."""
+    consecutivos) con al menos una partida de juego completada en los
+    últimos 30 días. Antes contaba SesionAsignada, que nunca se toca al
+    jugar; ahora cuenta GameSession, que es donde realmente se guarda cada
+    partida."""
     since = date.today() - timedelta(days=30)
-    sesiones = SesionAsignada.query.filter(
-        SesionAsignada.student_id == student.id,
-        SesionAsignada.status == EstadoSesion.COMPLETADA,
-        SesionAsignada.assigned_at >= since,
+    sesiones = GameSession.query.filter(
+        GameSession.user_id == student.id,
+        GameSession.completed.is_(True),
+        GameSession.created_at >= since,
     ).all()
-    dias = {sesion.assigned_at.date() for sesion in sesiones}
+    dias = {sesion.created_at.date() for sesion in sesiones}
     return len(dias)
 
 

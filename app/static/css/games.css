@@ -129,7 +129,7 @@
 }
 .game-frame__title {
   font-family: 'Playfair Display', serif;
-  color: #FFFFFF;
+  color: #FFFFFF !important;   /* main.css pinta los h1 de azul oscuro */
   font-size: 1.35rem;
   margin: 0;
 }
@@ -399,7 +399,7 @@
 }
 .game-save-state { font-size: 0.85rem; color: var(--g-muted); margin-top: 10px; }
 
-/* --- Ficha pedagógica --- */
+/* --- Ficha pedagógica (solo docentes) --- */
 .game-sheet {
   background: #FFFFFF;
   border: 1px solid var(--indecap-border, #DCE4EA);

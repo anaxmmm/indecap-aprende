@@ -11,6 +11,16 @@
  *  - Mecánica propia: el reto trae `mount(host, api)`, que dibuja su propia
  *    interfaz dentro de `host`, devuelve una función de limpieza y avisa con
  *    `api.done({...})` cuando termina.
+ *
+ * NUEVO — Repaso de errores al cierre de nivel:
+ * Si el estudiante falla al menos una ronda, al terminar todas las rondas del
+ * nivel el motor genera automáticamente una ronda de repaso (con datos nuevos,
+ * no la misma pregunta) por cada mecánica en la que falló, y las presenta
+ * antes de cerrar el nivel. Si no hubo errores, el nivel cierra igual que
+ * antes. Esto funciona para cualquier juego registrado, porque todos siguen
+ * la misma convención: getLevel(level) → { rounds, mechanics, params, intro }
+ * y buildRound(cfg, index, ctx) que elige la mecánica con
+ * cfg.mechanics[index % cfg.mechanics.length].
  */
 (function (global) {
   "use strict";
@@ -128,15 +138,33 @@
   Engine.prototype.prepareLevel = function () {
     this.config = this.def.getLevel(this.level);
     var ctx = { support: this.supportLevel() };
+    this.ctx = ctx;
+
+    // Se guarda, para cada ronda, qué mecánica la generó (misma convención
+    // que usan todos los juegos: cfg.mechanics[index % cfg.mechanics.length]).
+    // Esto permite, si el estudiante falla, regenerar después una ronda nueva
+    // de esa misma mecánica para el repaso final, sin que cada juego tenga
+    // que implementar nada adicional.
+    this.roundMechanics = [];
     this.rounds = [];
     for (var i = 0; i < this.config.rounds; i++) {
+      var mech = (this.config.mechanics && this.config.mechanics.length)
+        ? this.config.mechanics[i % this.config.mechanics.length]
+        : null;
+      this.roundMechanics.push(mech);
       this.rounds.push(this.def.buildRound(this.config, i, ctx));
     }
+
     this.index = 0;
     this.stars = 0;
     this.errors = [];
     this.attemptsInRound = 0;
     this.startedAt = null;
+
+    this.inCorrection = false;
+    this.failedMechanics = [];
+    this.correctionStartIndex = null;
+    this.correctionTotal = 0;
 
     this.el.hudLevel.textContent = this.level;
     this.el.introText.textContent = this.config.intro;
@@ -186,7 +214,12 @@
     this.attemptsInRound = 0;
     this.roundClosed = false;
 
-    this.el.hudRound.textContent = (this.index + 1) + "/" + this.rounds.length;
+    if (this.inCorrection) {
+      var ci = this.index - this.correctionStartIndex + 1;
+      this.el.hudRound.textContent = "Repaso " + ci + "/" + this.correctionTotal;
+    } else {
+      this.el.hudRound.textContent = (this.index + 1) + "/" + this.rounds.length;
+    }
     this.el.progressBar.style.width = ((this.index / this.rounds.length) * 100) + "%";
     this.el.feedback.textContent = "";
     this.el.feedback.className = "game-feedback";
@@ -254,6 +287,7 @@
           var registro = { round: self.index + 1, skill: round.skill };
           Object.keys(result.error).forEach(function (k) { registro[k] = result.error[k]; });
           self.errors.push(registro);
+          self.markMechanicFailed(token);
         }
 
         var msg = result.message || "¡Reto completado!";
@@ -277,6 +311,15 @@
     this.el.hint.textContent = "💡 " + round.hint;
     this.el.hint.hidden = false;
     if (spoken) this.a11y.say(round.hint, true);
+  };
+
+  /** Anota que la mecánica de la ronda `idx` necesita repaso al cerrar el nivel. */
+  Engine.prototype.markMechanicFailed = function (idx) {
+    if (this.inCorrection) return; // el repaso no genera repasos de sí mismo
+    var mech = this.roundMechanics[idx];
+    if (mech && this.failedMechanics.indexOf(mech) === -1) {
+      this.failedMechanics.push(mech);
+    }
   };
 
   Engine.prototype.answer = function (button, option, round) {
@@ -308,6 +351,7 @@
         given: option.value,
         attempts: this.attemptsInRound
       });
+      this.markMechanicFailed(this.index);
 
       var msg = pick(FRASES_REINTENTO);
       this.el.feedback.textContent = msg;
@@ -347,10 +391,52 @@
   Engine.prototype.nextRound = function () {
     this.index += 1;
     if (this.index >= this.rounds.length) {
-      this.finish();
+      if (!this.inCorrection && this.failedMechanics.length) {
+        this.startCorrection();
+      } else {
+        this.finish();
+      }
     } else {
       this.renderRound();
     }
+  };
+
+  /**
+   * Genera y encadena rondas de repaso, una por cada mecánica en la que el
+   * estudiante falló durante el nivel. Se construyen con el mismo
+   * buildRound(cfg, index, ctx) del juego, así que traen datos nuevos (no la
+   * pregunta exacta que falló) pero de la misma habilidad.
+   */
+  Engine.prototype.startCorrection = function () {
+    var self = this;
+    this.inCorrection = true;
+
+    var mechs = this.failedMechanics.slice();
+    var correctionCfg = Object.assign({}, this.config, { mechanics: mechs });
+    this.correctionStartIndex = this.rounds.length;
+    this.correctionTotal = mechs.length;
+
+    mechs.forEach(function (m, i) {
+      var r = self.def.buildRound(correctionCfg, i, self.ctx);
+      var basePrompt = r.prompt || "";
+      r.prompt = "🔁 Repasemos: " + basePrompt;
+      r.speech = "Repasemos. " + (r.speech || basePrompt);
+      self.roundMechanics.push(m);
+      self.rounds.push(r);
+    });
+
+    this.el.feedback.textContent = "";
+    this.el.prompt.textContent = "";
+    this.el.visual.innerHTML = "";
+    this.el.options.innerHTML = "";
+
+    var msg = mechs.length === 1
+      ? "Antes de terminar, repasemos una actividad más."
+      : "Antes de terminar, repasemos " + mechs.length + " actividades más.";
+    this.el.prompt.textContent = msg;
+    this.a11y.say(msg, true);
+
+    setTimeout(function () { self.renderRound(); }, 1400);
   };
 
   Engine.prototype.finish = function () {

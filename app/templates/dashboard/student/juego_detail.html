@@ -2,26 +2,31 @@
 {% block title %}{{ trastorno.name }} — indecap-aprende{% endblock %}
 
 {% block student_content %}
-{% set juego = game %}
+{% set acceso = game_access(trastorno) %}
+{% set juego = acceso.game %}
 <div class="teacher-card p-4">
   <p class="text-muted small mb-1">{{ trastorno.name }}</p>
 
-  {% if juego and juego.available %}
-    <h1 class="h4 mb-2">{{ juego.name }}</h1>
-    <p class="text-muted mb-3">{{ juego.core_skill }}</p>
-    <p class="mb-4">{{ juego.dua.implicacion }}</p>
-    <a href="{{ url_for('games.play', slug=juego.slug, level=1, trastorno_id=trastorno.id) }}"
-       class="btn btn-teacher-primary">Entrar al juego</a>
-  {% elif juego %}
+  {% if juego and acceso.allowed %}
     <h1 class="h4 mb-3">{{ juego.name }}</h1>
     <p class="text-muted mb-4">
-      Esta actividad está en construcción. Trabajará
-      <strong>{{ juego.core_skill | lower }}</strong> a lo largo de {{ juego.levels }} niveles.
+      Actividad asignada por tu docente el
+      {{ acceso.assignment.assigned_at.strftime('%d/%m/%Y') }}.
     </p>
+    {% if juego.has_stage_map %}
+      <a href="{{ url_for('games.stages', slug=juego.slug, trastorno_id=trastorno.id) }}"
+         class="btn btn-teacher-primary">Jugar</a>
+    {% else %}
+      <a href="{{ url_for('games.play', slug=juego.slug, level=acceso.start_level, trastorno_id=trastorno.id) }}"
+         class="btn btn-teacher-primary">Jugar</a>
+    {% endif %}
+  {% elif juego and juego.available %}
+    <h1 class="h4 mb-3">{{ juego.name }}</h1>
+    <p class="text-muted mb-4">Tu docente aún no te asignó esta actividad.</p>
     <a href="{{ url_for('dashboard.student_juegos') }}" class="btn btn-teacher-primary">Volver a Juegos</a>
   {% else %}
-    <h1 class="h4 mb-3">Este juego está en construcción</h1>
-    <p class="text-muted mb-4">Estamos preparando la actividad interactiva para este trastorno.</p>
+    <h1 class="h4 mb-3">Actividad en preparación</h1>
+    <p class="text-muted mb-4">Estamos preparando la actividad interactiva para esta área.</p>
     <a href="{{ url_for('dashboard.student_juegos') }}" class="btn btn-teacher-primary">Volver a Juegos</a>
   {% endif %}
 </div>

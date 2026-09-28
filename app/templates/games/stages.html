@@ -1,0 +1,114 @@
+{% extends "dashboard/student/base_student.html" %}
+{% block title %}Etapas — {{ game.name }} — indecap-aprende{% endblock %}
+
+{% block student_content %}
+<style>
+  .stage-map { display: flex; flex-direction: column; gap: 0.9rem; }
+  .stage-map__header {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 1rem; margin-bottom: -0.4rem;
+  }
+  .stage-map__exit {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--teacher-bg); color: var(--teacher-navy);
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none; font-size: 1.05rem; flex-shrink: 0;
+    border: 1px solid #e6e9f2;
+  }
+  .stage-map__exit:hover { background: #eef0f6; color: var(--teacher-navy); }
+  .stage-card { border-left: 6px solid var(--teacher-gold); padding: 1rem 1.25rem; }
+  .stage-card.is-locked { border-left-color: #cfd6ea; opacity: 0.75; }
+  .stage-card__header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;
+  }
+  .stage-card__title { font-weight: 700; color: var(--teacher-navy); margin: 0; font-size: 1rem; }
+  .stage-card__subtitle { color: #6b7280; font-size: 0.82rem; margin: 2px 0 0; }
+  .stage-card__progress {
+    font-size: 0.8rem; font-weight: 600; color: var(--teacher-navy);
+    background: var(--teacher-bg); border-radius: 999px; padding: 4px 12px;
+  }
+  .stage-card__lock-note {
+    font-size: 0.85rem; color: #6b7280; margin: 0;
+  }
+  .stage-levels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 8px;
+    max-width: 100%;
+  }
+  .stage-level {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px;
+    min-height: 56px;
+    border-radius: 12px;
+    border: 2px solid var(--teacher-navy);
+    background: #fff;
+    color: var(--teacher-navy);
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    padding: 4px;
+  }
+  .stage-level:hover { background: var(--teacher-bg); color: var(--teacher-navy); }
+  .stage-level.is-completed {
+    background: var(--teacher-navy); color: #fff;
+  }
+  .stage-level.is-completed:hover { background: var(--teacher-navy-light); color: #fff; }
+  .stage-level.is-locked {
+    border-color: #cfd6ea; color: #9aa2b4; background: var(--teacher-bg);
+    cursor: default; pointer-events: none;
+  }
+  .stage-level__caption { font-size: 0.62rem; font-weight: 500; }
+  @media (max-width: 480px) {
+    .stage-levels { grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); }
+    .stage-level { font-size: 0.9rem; min-height: 50px; }
+  }
+</style>
+
+<div class="stage-map">
+  <div class="stage-map__header">
+    <a href="{{ url_for('dashboard.student_juegos') }}" class="stage-map__exit" aria-label="Volver a Juegos">✕</a>
+  </div>
+
+  {% if preview %}
+  <div class="teacher-card">
+    <p class="text-muted mb-0">Modo vista previa: como docente puedes ver todas las etapas y niveles, pero el progreso no se guarda.</p>
+  </div>
+  {% endif %}
+
+  {% for stage in stages %}
+  <div class="teacher-card stage-card {{ '' if stage.unlocked else 'is-locked' }}">
+    <div class="stage-card__header">
+      <div>
+        <p class="stage-card__title">Etapa {{ stage.number }} · {{ stage.name }}</p>
+        <p class="stage-card__subtitle">Niveles {{ stage.start }}–{{ stage.end }}</p>
+      </div>
+      <span class="stage-card__progress">{{ stage.completed_count }}/{{ stage.levels | length }} superados</span>
+    </div>
+
+    {% if not stage.unlocked %}
+      <p class="stage-card__lock-note">🔒 Completa la etapa anterior para desbloquear esta.</p>
+    {% else %}
+      <div class="stage-levels">
+        {% for lvl in stage.levels %}
+          {% if lvl.unlocked %}
+            <a href="{{ url_for('games.play', slug=game.slug, level=lvl.level, trastorno_id=trastorno.id if trastorno else '') }}"
+               class="stage-level {{ 'is-completed' if lvl.completed else '' }}"
+               aria-label="Nivel {{ lvl.position }} de la etapa {{ stage.number }}{{ ', superado' if lvl.completed else '' }}">
+              {{ lvl.position }}
+              <span class="stage-level__caption">{{ '✓' if lvl.completed else 'Jugar' }}</span>
+            </a>
+          {% else %}
+            <span class="stage-level is-locked" aria-label="Nivel {{ lvl.position }} bloqueado">
+              🔒
+              <span class="stage-level__caption">{{ lvl.position }}</span>
+            </span>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

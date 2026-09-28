@@ -3,16 +3,25 @@
  *
  * Habilidad núcleo: funciones ejecutivas.
  *  - Control inhibitorio (go/no-go) .............. corteza orbitofrontal, estriado
- *  - Memoria de trabajo (secuencias) ............. corteza prefrontal dorsolateral
- *  - Atención selectiva (búsqueda) ............... cingulado anterior
+ *  - Memoria de trabajo (secuencias, eco) ........ corteza prefrontal dorsolateral
+ *  - Atención selectiva (búsqueda, flechas) ...... cingulado anterior
  *  - Flexibilidad cognitiva (cambio de regla) .... corteza prefrontal, cingulado
+ *  - Planificación y organización (agenda) ....... corteza prefrontal dorsolateral
  *
- * El nivel 10 mezcla las cuatro mecánicas: es la evaluación embebida, que mide
- * lo mismo que el resto de la sesión sin presentarse como examen.
+ * MAPA DE ETAPAS (5 Stages de 10 niveles, 50 en total, numeración continua):
+ *   Stage 1 · Base            → niveles 1-10  (sin cambio de contenido)
+ *   Stage 2 · Media           → niveles 11-20 (ritmo más ágil, mecánicas nuevas)
+ *   Stage 3 · Alta            → niveles 21-30 (más velocidad, menos apoyo)
+ *   Stage 4 · Muy Alta        → niveles 31-40 (doble exigencia, funciones combinadas)
+ *   Stage 5 · Súper Difícil   → niveles 41-50 (integración total, ritmo máximo)
+ *
+ * El desbloqueo de nivel a nivel (score >= 60) lo maneja
+ * games/services.py::get_unlocked_level, agnóstico al número de niveles.
  *
  * Apoyos según el nivel de autonomía del perfil (ajuste pedagógico, no
  * diagnóstico): guiado = más tiempo y más repeticiones; independiente = tiempo
- * base y sin repeticiones.
+ * base y sin repeticiones. El entrenamiento de funciones ejecutivas es un
+ * apoyo pedagógico, no un tratamiento clínico del TDAH.
  *
  * Estilos: se inyectan desde aquí para no tocar games.css.
  */
@@ -24,6 +33,8 @@
   function rnd(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
+
+  function pick(a) { return a[rnd(0, a.length - 1)]; }
 
   function shuffle(arr) {
     var a = arr.slice();
@@ -87,7 +98,16 @@
       ".tdah-cell:disabled{cursor:default;opacity:.55}",
       ".tdah-cell.is-found{background:var(--g-ok-soft);border-color:var(--g-ok);opacity:1}",
       ".tdah-cell.is-miss{background:var(--g-retry-soft);border-color:var(--g-retry)}",
-      ".tdah-cell:focus-visible{outline:3px solid var(--g-accent);outline-offset:3px}"
+      ".tdah-cell:focus-visible{outline:3px solid var(--g-accent);outline-offset:3px}",
+      ".tdah-flanker{flex-basis:100%;display:flex;align-items:center;justify-content:center;gap:14px;font-size:2.6rem;font-weight:700;color:var(--g-frame);min-height:100px}",
+      ".tdah-flanker .is-center{color:var(--g-accent);transform:scale(1.15)}",
+      ".tdah-agenda-list{flex-basis:100%;list-style:none;margin:0 auto 14px;padding:0;max-width:520px;text-align:left}",
+      ".tdah-agenda-item{background:#FFFFFF;border:2px solid var(--g-frame);border-radius:12px;padding:10px 16px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}",
+      ".tdah-agenda-item:disabled,.tdah-agenda-item.is-placed{cursor:default;opacity:.55}",
+      ".tdah-agenda-item.is-wrong{border-color:var(--g-retry);background:var(--g-retry-soft)}",
+      ".tdah-agenda-slots{flex-basis:100%;list-style:decimal;margin:0 auto;padding-left:1.4rem;max-width:520px;text-align:left}",
+      ".tdah-agenda-slots li{color:var(--g-ok);font-weight:600;margin-bottom:6px;min-height:1.4em}",
+      ".tdah-eco-history{flex-basis:100%;font-size:0.85rem;color:var(--g-muted);margin-bottom:4px}"
     ].join("\n");
     var style = document.createElement("style");
     style.id = STYLE_ID;
@@ -364,14 +384,20 @@
 
   var NOMBRES = {
     "⭐": "estrella", "🌙": "luna", "☀️": "sol", "🪐": "planeta",
-    "🚀": "cohete", "🛸": "platillo volador", "🛰️": "satélite", "✈️": "avión"
+    "🚀": "cohete", "🛸": "platillo volador", "🛰️": "satélite", "✈️": "avión",
+    "📦": "paquete", "📄": "documento", "📌": "chincheta", "🔖": "marcador"
   };
-  var PLURALES = { "⭐": "estrellas", "🚀": "cohetes" };
+  var PLURALES = { "⭐": "estrellas", "🚀": "cohetes", "📦": "paquetes" };
 
   function roundBusqueda(p, ctx) {
     var mult = timeMult(ctx);
-    var target = p.set === "hard" ? "🚀" : "⭐";
-    var dis = p.set === "hard" ? ["🛸", "🛰️", "✈️"] : ["🌙", "☀️", "🪐"];
+    var sets = {
+      easy: { target: "⭐", dis: ["🌙", "☀️", "🪐"] },
+      hard: { target: "🚀", dis: ["🛸", "🛰️", "✈️"] },
+      oficina: { target: "📦", dis: ["📄", "📌", "🔖"] }
+    };
+    var set = sets[p.set] || sets.easy;
+    var target = set.target, dis = set.dis;
     var cells = [];
     for (var i = 0; i < p.targets; i++) cells.push(target);
     while (cells.length < p.cells) cells.push(dis[rnd(0, dis.length - 1)]);
@@ -575,53 +601,329 @@
     };
   }
 
-  // ─── Definición de los 10 niveles ─────────────────────────────────────────
+  // ─── Mecánica 5 (nueva): flechas / flanker (atención selectiva) ───────────
+
+  function roundFlechas(p, ctx) {
+    var mult = timeMult(ctx);
+    var trials = [];
+    for (var i = 0; i < p.trials; i++) {
+      var congruent = Math.random() < 0.5;
+      var dir = Math.random() < 0.5 ? "left" : "right";
+      var flanker = congruent ? dir : (dir === "left" ? "right" : "left");
+      trials.push({ dir: dir, flanker: flanker, congruent: congruent });
+    }
+    var prompt = "Aparece una fila de flechas. Toca hacia dónde apunta la flecha del CENTRO, sin dejarte confundir por las de los lados.";
+
+    return {
+      skill: "flechas_flanker",
+      prompt: prompt,
+      speech: prompt,
+      hint: "Fíjate solo en la flecha de en medio: es la más grande y de otro color.",
+      mount: function (host, api) {
+        var s = scheduler();
+        host.innerHTML = "";
+        var live = liveRegion();
+        var row = el("div", "tdah-flanker");
+        row.setAttribute("aria-hidden", "true");
+        var actions = el("div", "tdah-actions");
+        var bL = el("button", "game-option");
+        var bR = el("button", "game-option");
+        bL.type = "button"; bR.type = "button";
+        bL.textContent = "⬅️ Izquierda"; bL.dataset.value = "left";
+        bR.textContent = "Derecha ➡️"; bR.dataset.value = "right";
+        actions.appendChild(bL); actions.appendChild(bR);
+        host.appendChild(live);
+        host.appendChild(row);
+        host.appendChild(actions);
+
+        var idx = 0, correct = 0, errors = 0, locked = true, current = null;
+
+        function arrowIcon(dir) { return dir === "left" ? "⬅️" : "➡️"; }
+
+        function render() {
+          current = trials[idx];
+          row.innerHTML = "";
+          for (var k = 0; k < 5; k++) {
+            var span = el("span");
+            var isCenter = k === 2;
+            span.className = isCenter ? "is-center" : "";
+            span.textContent = arrowIcon(isCenter ? current.dir : current.flanker);
+            row.appendChild(span);
+          }
+          live.textContent = "Flecha central apunta hacia " + (current.dir === "left" ? "la izquierda" : "la derecha") + ".";
+          locked = false;
+        }
+
+        function answer(btn) {
+          if (locked) return;
+          locked = true;
+          var ok = btn.dataset.value === current.dir;
+          if (ok) { correct++; btn.classList.add("is-correct"); }
+          else {
+            errors++; btn.classList.add("is-wrong");
+            api.feedback("Mira solo la flecha central, más grande y de otro color.", "retry");
+          }
+          s.later(function () {
+            bL.className = "game-option"; bR.className = "game-option";
+            idx++;
+            if (idx >= trials.length) end(); else render();
+          }, ok ? 500 : 1100);
+        }
+
+        function end() {
+          api.done({
+            stars: correct / trials.length,
+            message: "Terminaste: " + correct + " de " + trials.length + " bien.",
+            error: errors ? { wrong: errors, attempts: errors + 1 } : null
+          });
+        }
+
+        bL.addEventListener("click", function () { answer(bL); });
+        bR.addEventListener("click", function () { answer(bR); });
+
+        render();
+        return function () { s.stop(); };
+      }
+    };
+  }
+
+  // ─── Mecánica 6 (nueva): eco / n-back (memoria de trabajo activa) ─────────
+
+  function roundEco(p, ctx) {
+    var mult = timeMult(ctx);
+    var n = p.back; // 1 o 2 pasos atrás
+    var letras = ["A", "E", "I", "O", "U", "M", "S", "T"];
+    var seq = [];
+    for (var i = 0; i < p.len; i++) {
+      if (i >= n && Math.random() < p.matchRatio) seq.push(seq[i - n]);
+      else seq.push(pick(letras));
+    }
+    var matches = seq.map(function (v, i) { return i >= n && v === seq[i - n]; });
+    var prompt = "Van apareciendo letras. Toca «¡IGUAL!» cuando la letra actual sea igual a la que salió " +
+      (n === 1 ? "justo antes." : "hace dos letras.");
+
+    return {
+      skill: "eco_nback_" + n,
+      prompt: prompt,
+      speech: prompt,
+      hint: n === 1 ? "Compara la letra de ahora con la anterior." : "Compara la letra de ahora con la de hace dos turnos.",
+      mount: function (host, api) {
+        var s = scheduler();
+        host.innerHTML = "";
+        var live = liveRegion();
+        var stim = el("div", "tdah-stim");
+        stim.setAttribute("aria-hidden", "true");
+        var history = el("p", "tdah-eco-history");
+        history.setAttribute("aria-hidden", "true");
+        var btn = el("button", "game-btn game-btn--primary tdah-tap");
+        btn.type = "button";
+        btn.textContent = "¡IGUAL!";
+        btn.disabled = true;
+        host.appendChild(live);
+        host.appendChild(history);
+        host.appendChild(stim);
+        host.appendChild(btn);
+
+        var idx = -1, hits = 0, misses = 0, falseAlarms = 0, correctRejections = 0, responded = false, seen = [];
+
+        btn.addEventListener("click", function () {
+          if (idx < 0 || responded || btn.disabled) return;
+          responded = true;
+          if (matches[idx]) { hits++; stim.classList.add("is-ok"); }
+          else { falseAlarms++; stim.classList.add("is-bad"); }
+        });
+
+        function next() {
+          idx++;
+          if (idx >= seq.length) { finish(); return; }
+          responded = false;
+          stim.className = "tdah-stim";
+          stim.textContent = seq[idx];
+          live.textContent = "Letra " + seq[idx];
+          api.say(seq[idx]);
+          seen.push(seq[idx]);
+          history.textContent = idx >= n ? "Letras recientes: " + seen.slice(-4).join(" - ") : "";
+          btn.disabled = idx < n;
+          s.later(function () {
+            if (!responded && idx >= n) {
+              if (matches[idx]) misses++; else correctRejections++;
+            }
+            btn.disabled = true;
+            s.later(next, p.gapMs * mult);
+          }, p.showMs * mult);
+        }
+
+        function finish() {
+          btn.disabled = true;
+          var total = seq.length - n;
+          var ok = hits + correctRejections;
+          api.done({
+            stars: total > 0 ? ok / total : 1,
+            message: "Bloque terminado: acertaste " + ok + " de " + total + ".",
+            error: (misses || falseAlarms) ? {
+              misses: misses, false_alarms: falseAlarms,
+              hits: hits, attempts: 1
+            } : null
+          });
+        }
+
+        next();
+        return function () { s.stop(); };
+      }
+    };
+  }
+
+  // ─── Mecánica 7 (nueva): agenda / planificador (organización del tiempo) ──
+
+  function roundAgenda(p, ctx) {
+    var tareas = shuffle(p.banco).slice(0, p.count);
+    var orden = tareas.slice().sort(function (a, b) { return a.rank - b.rank; });
+    var prompt = "Ordena estas tareas según cuál debes hacer primero. Tócalas en el orden correcto.";
+
+    return {
+      skill: "agenda_planificacion",
+      prompt: prompt,
+      speech: prompt,
+      hint: "Fíjate en la hora o el día límite de cada tarea: lo más urgente va primero.",
+      mount: function (host, api) {
+        host.innerHTML = "";
+        var live = liveRegion();
+        var pool = el("ul", "tdah-agenda-list");
+        pool.setAttribute("role", "group");
+        pool.setAttribute("aria-label", "Tareas para ordenar");
+        var slots = el("ol", "tdah-agenda-slots");
+        for (var k = 0; k < orden.length; k++) slots.appendChild(el("li"));
+        host.appendChild(live);
+        host.appendChild(pool);
+        host.appendChild(slots);
+
+        var pos = 0, errors = 0, finished = false;
+
+        tareas.forEach(function (t) {
+          var li = el("li", "tdah-agenda-item");
+          li.tabIndex = 0;
+          li.setAttribute("role", "button");
+          var label = el("span"); label.textContent = t.label;
+          var when = el("span"); when.textContent = t.when; when.style.color = "var(--g-muted)"; when.style.fontSize = "0.85rem";
+          li.appendChild(label); li.appendChild(when);
+          function tap() {
+            if (finished || li.classList.contains("is-placed")) return;
+            if (t.rank === orden[pos].rank) {
+              li.classList.add("is-placed");
+              slots.children[pos].textContent = t.label + " — " + t.when;
+              pos++;
+              live.textContent = t.label + " ubicada.";
+              if (pos === orden.length) end();
+            } else {
+              errors++;
+              li.classList.add("is-wrong");
+              api.feedback("Esa tarea no va ahí. Revisa cuál es más urgente.", "retry");
+              setTimeout(function () { li.classList.remove("is-wrong"); }, 500);
+              if (errors === 2) api.hint();
+            }
+          }
+          li.addEventListener("click", tap);
+          li.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tap(); } });
+          pool.appendChild(li);
+        });
+
+        function end() {
+          finished = true;
+          var stars = errors === 0 ? 1 : (errors === 1 ? 0.75 : (errors === 2 ? 0.5 : 0.25));
+          api.done({
+            stars: stars,
+            message: errors === 0 ? "¡Orden perfecto!" : "¡Agenda organizada!",
+            error: errors ? { wrong: errors, attempts: errors + 1 } : null
+          });
+        }
+
+        return function () { finished = true; };
+      }
+    };
+  }
+
+  // ─── Bancos de tareas para la Agenda (vida adulta, 15-26 años) ────────────
+
+  var AGENDA_BASICO = [
+    { label: "Entregar el informe", when: "Hoy, 2:00 p.m.", rank: 1 },
+    { label: "Responder el correo del profesor", when: "Hoy, 5:00 p.m.", rank: 2 },
+    { label: "Comprar materiales para el taller", when: "Mañana", rank: 3 },
+    { label: "Pagar la matrícula", when: "En 3 días", rank: 4 }
+  ];
+  var AGENDA_MEDIO = [
+    { label: "Confirmar la entrevista de trabajo", when: "Hoy, 9:00 a.m.", rank: 1 },
+    { label: "Entregar el examen final", when: "Hoy, 4:00 p.m.", rank: 2 },
+    { label: "Llamar al banco por la tarjeta", when: "Mañana, 10:00 a.m.", rank: 3 },
+    { label: "Renovar el documento de identidad", when: "Esta semana", rank: 4 },
+    { label: "Inscribirse al próximo semestre", when: "En 2 semanas", rank: 5 }
+  ];
+  var AGENDA_EXIGENTE = [
+    { label: "Enviar la hoja de vida a la vacante", when: "Hoy, 11:00 a.m.", rank: 1 },
+    { label: "Asistir a la reunión con el supervisor", when: "Hoy, 1:00 p.m.", rank: 2 },
+    { label: "Pagar el recibo antes del corte", when: "Hoy, 6:00 p.m.", rank: 3 },
+    { label: "Entregar el proyecto grupal", when: "Mañana, 8:00 a.m.", rank: 4 },
+    { label: "Renovar el contrato de arriendo", when: "En 5 días", rank: 5 },
+    { label: "Programar la cita médica", when: "El próximo mes", rank: 6 }
+  ];
+
+  // ─── Definición de los niveles (50: 5 Stages de 10 niveles) ────────────────
+
+  var CONSTRUCTORES = {
+    gonogo: roundGoNoGo,
+    secuencia: roundSecuencia,
+    busqueda: roundBusqueda,
+    regla: roundRegla,
+    flechas: roundFlechas,
+    eco: roundEco,
+    agenda: roundAgenda
+  };
 
   var NIVELES = {
+    // ══ Stage 1 · Base (1-10): sin cambios ═══════════════════════════════════
     1: {
       rounds: 3, mechanics: ["gonogo"],
       params: { gonogo: { count: 6, showMs: 2200, gapMs: 900, nogoRatio: 0.25 } },
-      intro: "Te doy la bienvenida a la Misión Ritmo y Enfoque. Soy NOVA. Hoy vigilamos el radar: toca cuando veas un satélite y deja pasar los meteoritos."
+      intro: "Stage 1 · Nivel 1 · Te doy la bienvenida a la Misión Ritmo y Enfoque. Soy NOVA. Hoy vigilamos el radar: toca cuando veas un satélite y deja pasar los meteoritos."
     },
     2: {
       rounds: 5, mechanics: ["secuencia"],
       params: { secuencia: { lenMin: 2, lenMax: 3, mode: "same", showMs: 1000, pad: "exact" } },
-      intro: "Llegan mensajes en clave. Mira los números que aparecen y repítelos en el mismo orden."
+      intro: "Stage 1 · Nivel 2 · Llegan mensajes en clave. Mira los números que aparecen y repítelos en el mismo orden."
     },
     3: {
       rounds: 4, mechanics: ["busqueda"],
       params: { busqueda: { cells: 12, cols: 4, targets: 3, set: "easy", timeMs: 0 } },
-      intro: "Hay estrellas escondidas en el mapa de la estación. Sin prisa: encuéntralas todas."
+      intro: "Stage 1 · Nivel 3 · Hay estrellas escondidas en el mapa de la estación. Sin prisa: encuéntralas todas."
     },
     4: {
       rounds: 3, mechanics: ["gonogo"],
       params: { gonogo: { count: 8, showMs: 1500, gapMs: 700, nogoRatio: 0.3 } },
-      intro: "El radar va un poco más rápido. Mira bien antes de tocar."
+      intro: "Stage 1 · Nivel 4 · El radar va un poco más rápido. Mira bien antes de tocar."
     },
     5: {
       rounds: 5, mechanics: ["secuencia"],
       params: { secuencia: { lenMin: 2, lenMax: 3, mode: "reverse", showMs: 1000, pad: "exact" } },
-      intro: "Ahora los mensajes llegan al revés: tócalos empezando por el último número que viste."
+      intro: "Stage 1 · Nivel 5 · Ahora los mensajes llegan al revés: tócalos empezando por el último número que viste."
     },
     6: {
       rounds: 3, mechanics: ["regla"],
       params: { regla: { trials: 8, switchEvery: 4 } },
-      intro: "Las compuertas cambian de regla. Unas veces importa el tamaño y otras la forma. Yo te aviso cuando cambie."
+      intro: "Stage 1 · Nivel 6 · Las compuertas cambian de regla. Unas veces importa el tamaño y otras la forma. Yo te aviso cuando cambie."
     },
     7: {
       rounds: 4, mechanics: ["busqueda"],
       params: { busqueda: { cells: 20, cols: 5, targets: 4, set: "hard", timeMs: 40000 } },
-      intro: "El mapa se llenó de naves parecidas. Busca solo los cohetes y no te distraigas con lo demás."
+      intro: "Stage 1 · Nivel 7 · El mapa se llenó de naves parecidas. Busca solo los cohetes y no te distraigas con lo demás."
     },
     8: {
       rounds: 5, mechanics: ["secuencia"],
       params: { secuencia: { lenMin: 3, lenMax: 4, mode: "asc", showMs: 900, pad: "full" } },
-      intro: "Los números llegan desordenados. Tócalos de menor a mayor."
+      intro: "Stage 1 · Nivel 8 · Los números llegan desordenados. Tócalos de menor a mayor."
     },
     9: {
       rounds: 3, mechanics: ["gonogo"],
       params: { gonogo: { count: 12, showMs: 1100, gapMs: 500, nogoRatio: 0.35, switchRule: true } },
-      intro: "Radar avanzado: a mitad del reto la regla se invierte. Presta atención al aviso."
+      intro: "Stage 1 · Nivel 9 · Radar avanzado: a mitad del reto la regla se invierte. Presta atención al aviso."
     },
     10: {
       rounds: 8, mechanics: ["gonogo", "secuencia", "busqueda", "regla"],
@@ -631,15 +933,197 @@
         busqueda: { cells: 20, cols: 5, targets: 4, set: "hard", timeMs: 35000 },
         regla: { trials: 8, switchEvery: 2 }
       },
-      intro: "Última misión: aparece todo lo que practicaste. Tómate tu tiempo y confía en lo aprendido."
-    }
-  };
+      intro: "Stage 1 · Nivel 10 · Última misión de la base: aparece todo lo que practicaste. Tómate tu tiempo y confía en lo aprendido."
+    },
 
-  var CONSTRUCTORES = {
-    gonogo: roundGoNoGo,
-    secuencia: roundSecuencia,
-    busqueda: roundBusqueda,
-    regla: roundRegla
+    // ══ Stage 2 · Media (11-20): ritmo más ágil, mecánicas nuevas ═══════════
+    11: { rounds: 10, mechanics: ["gonogo"],
+          params: { gonogo: { count: 10, showMs: 1300, gapMs: 600, nogoRatio: 0.3 } },
+          intro: "Stage 2 · Nivel 11 · El radar sube de ritmo: más meteoritos y menos tiempo para decidir." },
+    12: { rounds: 10, mechanics: ["secuencia"],
+          params: { secuencia: { lenMin: 3, lenMax: 5, mode: "same", showMs: 850, pad: "full" } },
+          intro: "Stage 2 · Nivel 12 · Mensajes más largos, en el mismo orden." },
+    13: { rounds: 10, mechanics: ["flechas"],
+          params: { flechas: { trials: 10 } },
+          intro: "Stage 2 · Nivel 13 · Mecánica nueva: sigue la flecha del centro sin dejarte confundir por las de los lados." },
+    14: { rounds: 10, mechanics: ["busqueda"],
+          params: { busqueda: { cells: 20, cols: 5, targets: 5, set: "oficina", timeMs: 0 } },
+          intro: "Stage 2 · Nivel 14 · Encuentra los paquetes en el mapa de la oficina." },
+    15: { rounds: 10, mechanics: ["regla"],
+          params: { regla: { trials: 9, switchEvery: 3 } },
+          intro: "Stage 2 · Nivel 15 · La regla cambia con más frecuencia." },
+    16: { rounds: 10, mechanics: ["agenda"],
+          params: { agenda: { banco: AGENDA_BASICO, count: 4 } },
+          intro: "Stage 2 · Nivel 16 · Mecánica nueva: organiza tu día ordenando tareas según lo más urgente." },
+    17: { rounds: 10, mechanics: ["secuencia"],
+          params: { secuencia: { lenMin: 4, lenMax: 5, mode: "reverse", showMs: 800, pad: "full" } },
+          intro: "Stage 2 · Nivel 17 · Mensajes más largos, al revés." },
+    18: { rounds: 10, mechanics: ["eco"],
+          params: { eco: { back: 1, len: 12, showMs: 1400, gapMs: 500, matchRatio: 0.4 } },
+          intro: "Stage 2 · Nivel 18 · Mecánica nueva: toca «¡IGUAL!» cuando la letra se repita justo después de la anterior." },
+    19: { rounds: 10, mechanics: ["gonogo"],
+          params: { gonogo: { count: 14, showMs: 1000, gapMs: 450, nogoRatio: 0.35, switchRule: true } },
+          intro: "Stage 2 · Nivel 19 · Radar con cambio de regla a mitad del bloque, más rápido." },
+    20: { rounds: 10,
+          mechanics: ["gonogo", "secuencia", "flechas", "busqueda", "regla", "agenda", "eco"],
+          params: {
+            gonogo: { count: 10, showMs: 1200, gapMs: 550, nogoRatio: 0.3 },
+            secuencia: { lenMin: 3, lenMax: 4, mode: "same", showMs: 850, pad: "full" },
+            flechas: { trials: 8 },
+            busqueda: { cells: 20, cols: 5, targets: 4, set: "oficina", timeMs: 0 },
+            regla: { trials: 8, switchEvery: 3 },
+            agenda: { banco: AGENDA_BASICO, count: 4 },
+            eco: { back: 1, len: 10, showMs: 1300, gapMs: 500, matchRatio: 0.4 }
+          },
+          intro: "Stage 2 · Nivel 20 · Reto integrador de la etapa Media: mezcla todo lo practicado." },
+
+    // ══ Stage 3 · Alta (21-30): más velocidad, menos apoyo ══════════════════
+    21: { rounds: 10, mechanics: ["gonogo"],
+          params: { gonogo: { count: 14, showMs: 950, gapMs: 400, nogoRatio: 0.35 } },
+          intro: "Stage 3 · Nivel 21 · Radar veloz: aparecen muchos más meteoritos." },
+    22: { rounds: 10, mechanics: ["flechas"],
+          params: { flechas: { trials: 12 } },
+          intro: "Stage 3 · Nivel 22 · Flechas con más distractores." },
+    23: { rounds: 10, mechanics: ["secuencia"],
+          params: { secuencia: { lenMin: 4, lenMax: 6, mode: "asc", showMs: 750, pad: "full" } },
+          intro: "Stage 3 · Nivel 23 · Ordena de menor a mayor con el teclado completo de números." },
+    24: { rounds: 10, mechanics: ["agenda"],
+          params: { agenda: { banco: AGENDA_MEDIO, count: 5 } },
+          intro: "Stage 3 · Nivel 24 · Organiza cinco tareas de un día ocupado." },
+    25: { rounds: 10, mechanics: ["busqueda"],
+          params: { busqueda: { cells: 24, cols: 6, targets: 5, set: "hard", timeMs: 30000 } },
+          intro: "Stage 3 · Nivel 25 · Mapa difícil, contra el tiempo." },
+    26: { rounds: 10, mechanics: ["eco"],
+          params: { eco: { back: 1, len: 14, showMs: 1200, gapMs: 450, matchRatio: 0.4 } },
+          intro: "Stage 3 · Nivel 26 · Sigue practicando el eco de una letra atrás, más rápido." },
+    27: { rounds: 10, mechanics: ["regla"],
+          params: { regla: { trials: 10, switchEvery: 2 } },
+          intro: "Stage 3 · Nivel 27 · La regla cambia casi en cada figura." },
+    28: { rounds: 10, mechanics: ["secuencia"],
+          params: { secuencia: { lenMin: 5, lenMax: 6, mode: "reverse", showMs: 700, pad: "full" } },
+          intro: "Stage 3 · Nivel 28 · Mensajes largos, al revés." },
+    29: { rounds: 10, mechanics: ["gonogo", "flechas"],
+          params: { gonogo: { count: 8, showMs: 1000, gapMs: 450, nogoRatio: 0.3 }, flechas: { trials: 8 } },
+          intro: "Stage 3 · Nivel 29 · Radar y flechas alternados: cambia de tarea sin perder el ritmo." },
+    30: { rounds: 10,
+          mechanics: ["gonogo", "flechas", "secuencia", "agenda", "busqueda", "eco", "regla"],
+          params: {
+            gonogo: { count: 10, showMs: 1000, gapMs: 450, nogoRatio: 0.32 },
+            flechas: { trials: 10 },
+            secuencia: { lenMin: 4, lenMax: 5, mode: "asc", showMs: 800, pad: "full" },
+            agenda: { banco: AGENDA_MEDIO, count: 5 },
+            busqueda: { cells: 24, cols: 6, targets: 5, set: "hard", timeMs: 30000 },
+            eco: { back: 1, len: 12, showMs: 1200, gapMs: 450, matchRatio: 0.4 },
+            regla: { trials: 9, switchEvery: 2 }
+          },
+          intro: "Stage 3 · Nivel 30 · Reto integrador de la etapa Alta: mezcla todo lo practicado." },
+
+    // ══ Stage 4 · Muy Alta (31-40): doble exigencia ══════════════════════════
+    31: { rounds: 10, mechanics: ["eco"],
+          params: { eco: { back: 2, len: 14, showMs: 1300, gapMs: 500, matchRatio: 0.35 } },
+          intro: "Stage 4 · Nivel 31 · Eco de dos pasos atrás: compara con la letra de hace dos turnos." },
+    32: { rounds: 10, mechanics: ["agenda"],
+          params: { agenda: { banco: AGENDA_EXIGENTE, count: 6 } },
+          intro: "Stage 4 · Nivel 32 · Agenda con seis tareas y horas más exigentes." },
+    33: { rounds: 10, mechanics: ["gonogo"],
+          params: { gonogo: { count: 16, showMs: 900, gapMs: 380, nogoRatio: 0.35, switchRule: true } },
+          intro: "Stage 4 · Nivel 33 · Radar con cambio de regla, en un bloque largo." },
+    34: { rounds: 10, mechanics: ["secuencia"],
+          params: { secuencia: { lenMin: 5, lenMax: 7, mode: "same", showMs: 700, pad: "full" } },
+          intro: "Stage 4 · Nivel 34 · Mensajes muy largos, en el mismo orden." },
+    35: { rounds: 10, mechanics: ["flechas"],
+          params: { flechas: { trials: 14 } },
+          intro: "Stage 4 · Nivel 35 · Flechas a contrarreloj: responde rápido sin perder precisión." },
+    36: { rounds: 10, mechanics: ["busqueda"],
+          params: { busqueda: { cells: 24, cols: 6, targets: 5, set: "oficina", timeMs: 25000 } },
+          intro: "Stage 4 · Nivel 36 · Mapa grande, cinco objetivos y poco tiempo." },
+    37: { rounds: 10, mechanics: ["regla"],
+          params: { regla: { trials: 10, switchEvery: 1 } },
+          intro: "Stage 4 · Nivel 37 · La regla cambia en cada figura." },
+    38: { rounds: 10, mechanics: ["agenda", "secuencia"],
+          params: { agenda: { banco: AGENDA_MEDIO, count: 5 }, secuencia: { lenMin: 4, lenMax: 5, mode: "reverse", showMs: 750, pad: "full" } },
+          intro: "Stage 4 · Nivel 38 · Organiza tareas y recuerda mensajes al revés, alternando." },
+    39: { rounds: 10, mechanics: ["eco", "gonogo"],
+          params: { eco: { back: 1, len: 12, showMs: 1100, gapMs: 450, matchRatio: 0.4 }, gonogo: { count: 10, showMs: 950, gapMs: 400, nogoRatio: 0.3 } },
+          intro: "Stage 4 · Nivel 39 · Memoria y control inhibitorio, uno tras otro." },
+    40: { rounds: 10,
+          mechanics: ["eco", "agenda", "gonogo", "secuencia", "flechas", "busqueda", "regla"],
+          params: {
+            eco: { back: 1, len: 12, showMs: 1100, gapMs: 450, matchRatio: 0.4 },
+            agenda: { banco: AGENDA_EXIGENTE, count: 6 },
+            gonogo: { count: 12, showMs: 900, gapMs: 400, nogoRatio: 0.32 },
+            secuencia: { lenMin: 4, lenMax: 6, mode: "asc", showMs: 750, pad: "full" },
+            flechas: { trials: 10 },
+            busqueda: { cells: 24, cols: 6, targets: 5, set: "oficina", timeMs: 25000 },
+            regla: { trials: 9, switchEvery: 2 }
+          },
+          intro: "Stage 4 · Nivel 40 · Reto integrador de la etapa Muy Alta: mezcla todo lo practicado." },
+
+    // ══ Stage 5 · Súper Difícil (41-50): integración total, ritmo máximo ════
+    41: { rounds: 10, mechanics: ["gonogo", "regla"],
+          params: { gonogo: { count: 12, showMs: 850, gapMs: 350, nogoRatio: 0.35, switchRule: true }, regla: { trials: 9, switchEvery: 2 } },
+          intro: "Stage 5 · Nivel 41 · Inhibición y flexibilidad, sin descanso entre una y otra." },
+    42: { rounds: 10, mechanics: ["flechas", "busqueda"],
+          params: { flechas: { trials: 12 }, busqueda: { cells: 24, cols: 6, targets: 5, set: "hard", timeMs: 25000 } },
+          intro: "Stage 5 · Nivel 42 · Atención selectiva doble: flechas y mapa alternados." },
+    43: { rounds: 10, mechanics: ["eco", "secuencia"],
+          params: { eco: { back: 2, len: 14, showMs: 1100, gapMs: 400, matchRatio: 0.35 }, secuencia: { lenMin: 5, lenMax: 7, mode: "reverse", showMs: 650, pad: "full" } },
+          intro: "Stage 5 · Nivel 43 · Memoria de trabajo exigente: eco de dos atrás y mensajes largos al revés." },
+    44: { rounds: 10, mechanics: ["agenda", "regla"],
+          params: { agenda: { banco: AGENDA_EXIGENTE, count: 6 }, regla: { trials: 10, switchEvery: 1 } },
+          intro: "Stage 5 · Nivel 44 · Planificar y cambiar de regla, uno tras otro." },
+    45: { rounds: 10, mechanics: ["gonogo", "flechas", "eco"],
+          params: {
+            gonogo: { count: 10, showMs: 850, gapMs: 350, nogoRatio: 0.32 },
+            flechas: { trials: 10 },
+            eco: { back: 1, len: 12, showMs: 1050, gapMs: 400, matchRatio: 0.4 }
+          },
+          intro: "Stage 5 · Nivel 45 · Tres funciones ejecutivas a la vez." },
+    46: { rounds: 10, mechanics: ["busqueda", "secuencia", "agenda"],
+          params: {
+            busqueda: { cells: 24, cols: 6, targets: 5, set: "oficina", timeMs: 22000 },
+            secuencia: { lenMin: 4, lenMax: 6, mode: "asc", showMs: 700, pad: "full" },
+            agenda: { banco: AGENDA_MEDIO, count: 5 }
+          },
+          intro: "Stage 5 · Nivel 46 · Buscar, recordar y planificar en el mismo bloque." },
+    47: { rounds: 10, mechanics: ["regla", "eco", "flechas"],
+          params: {
+            regla: { trials: 9, switchEvery: 2 },
+            eco: { back: 1, len: 12, showMs: 1050, gapMs: 400, matchRatio: 0.4 },
+            flechas: { trials: 10 }
+          },
+          intro: "Stage 5 · Nivel 47 · Cambio de regla, memoria y atención selectiva combinadas." },
+    48: { rounds: 10, mechanics: ["gonogo", "busqueda", "agenda", "secuencia"],
+          params: {
+            gonogo: { count: 10, showMs: 850, gapMs: 350, nogoRatio: 0.32 },
+            busqueda: { cells: 20, cols: 5, targets: 4, set: "hard", timeMs: 22000 },
+            agenda: { banco: AGENDA_MEDIO, count: 5 },
+            secuencia: { lenMin: 4, lenMax: 6, mode: "reverse", showMs: 700, pad: "full" }
+          },
+          intro: "Stage 5 · Nivel 48 · Cuatro mecánicas alternadas, sin previo aviso." },
+    49: { rounds: 10,
+          mechanics: ["gonogo", "flechas", "eco", "regla", "busqueda", "agenda"],
+          params: {
+            gonogo: { count: 10, showMs: 850, gapMs: 350, nogoRatio: 0.32, switchRule: true },
+            flechas: { trials: 10 },
+            eco: { back: 2, len: 12, showMs: 1050, gapMs: 400, matchRatio: 0.35 },
+            regla: { trials: 9, switchEvery: 1 },
+            busqueda: { cells: 24, cols: 6, targets: 5, set: "oficina", timeMs: 22000 },
+            agenda: { banco: AGENDA_EXIGENTE, count: 6 }
+          },
+          intro: "Stage 5 · Nivel 49 · Mezcla exigente de seis mecánicas. Falta solo el reto final." },
+    50: { rounds: 10,
+          mechanics: ["gonogo", "secuencia", "flechas", "busqueda", "regla", "eco", "agenda"],
+          params: {
+            gonogo: { count: 12, showMs: 800, gapMs: 350, nogoRatio: 0.33, switchRule: true },
+            secuencia: { lenMin: 5, lenMax: 7, mode: "reverse", showMs: 650, pad: "full" },
+            flechas: { trials: 12 },
+            busqueda: { cells: 24, cols: 6, targets: 5, set: "hard", timeMs: 22000 },
+            regla: { trials: 10, switchEvery: 1 },
+            eco: { back: 2, len: 14, showMs: 1000, gapMs: 380, matchRatio: 0.35 },
+            agenda: { banco: AGENDA_EXIGENTE, count: 6 }
+          },
+          intro: "Stage 5 · Nivel 50 · Reto final de la Misión Ritmo y Enfoque: las siete mecánicas, al ritmo más alto. ¡Tú puedes!" }
   };
 
   global.IndecapGame.register({

@@ -2,14 +2,21 @@ from flask import render_template, jsonify, request, redirect, url_for, flash, a
 from flask_login import login_required, current_user
 
 from app.blueprints.games import bp
-from app.blueprints.games.registry import GAMES, get_game
+from app.blueprints.games.registry import GAMES, get_game, get_game_for_trastorno
 from app.blueprints.games.services import (
     get_accessibility_context,
+    get_active_assignment,
     get_unlocked_level,
     get_level_scores,
     save_game_session,
 )
 from app.models.content import Trastorno
+
+
+# Nombres genéricos de etapa, en orden de dificultad. Aplican a cualquier
+# juego que declare "has_stage_map": True en el registry, agrupado en
+# bloques de "stage_size" niveles cada uno.
+STAGE_NAMES = ["Base", "Media", "Alta", "Muy Alta", "Súper Difícil"]
 
 
 @bp.context_processor
@@ -29,6 +36,111 @@ def inject_notifications():
             "recent_notifications": get_recent_notifications(current_user, limit=5),
         }
     return {"unread_notifications_count": 0, "recent_notifications": []}
+
+
+@bp.app_context_processor
+def inject_game_access():
+    """
+    Expone game_access(trastorno) a TODAS las plantillas (Juegos y detalle del
+    dashboard incluidos), para decidir si se muestra "Jugar" sin duplicar la
+    regla de acceso en las rutas del dashboard.
+    """
+    def game_access(trastorno):
+        game = get_game_for_trastorno(trastorno)
+        info = {"game": game, "allowed": False, "assignment": None, "start_level": 1}
+        if game is None or not game["available"]:
+            return info
+        if not current_user.is_authenticated or not current_user.is_student:
+            return info
+        sesion = get_active_assignment(current_user, game)
+        if sesion is None:
+            return info
+        info["allowed"] = True
+        info["assignment"] = sesion
+        info["start_level"] = min(get_unlocked_level(current_user, game["slug"]), game["levels"])
+        return info
+
+    return {"game_access": game_access}
+
+
+def _resolve_trastorno():
+    trastorno_id = request.args.get("trastorno_id", type=int)
+    return Trastorno.query.get(trastorno_id) if trastorno_id else None
+
+
+@bp.route("/<slug>/etapas")
+@login_required
+def stages(slug):
+    """
+    Mapa de etapas: agrupa los niveles de un juego en bloques de
+    game['stage_size'] (por ahora solo discalculia_mercado, 5 etapas de 10
+    niveles = 50 niveles en total). No introduce un concepto nuevo de
+    "etapa completada": el desbloqueo de cada nivel individual sigue
+    siendo exactamente el que ya calcula get_unlocked_level (score >= 60
+    en el nivel anterior), así que una etapa está disponible en cuanto su
+    primer nivel es alcanzable.
+    """
+    game = get_game(slug)
+    if game is None:
+        abort(404)
+
+    if not game.get("has_stage_map"):
+        # Este juego no tiene mapa de etapas: se comporta como antes.
+        return redirect(url_for("games.play", slug=slug))
+
+    if not game["available"]:
+        flash("Este juego todavía está en construcción.", "info")
+        return redirect(url_for("dashboard.student_juegos"))
+
+    if not current_user.is_student:
+        preview = True
+        unlocked = game["levels"]
+        scores = {}
+    else:
+        if get_active_assignment(current_user, game) is None:
+            flash("Tu docente aún no te asignó esta actividad.", "info")
+            return redirect(url_for("dashboard.student_juegos"))
+        preview = False
+        unlocked = get_unlocked_level(current_user, slug)
+        scores = get_level_scores(current_user, slug)
+
+    stage_size = game.get("stage_size", 10)
+    total_stages = game["levels"] // stage_size
+
+    stages_data = []
+    for s in range(1, total_stages + 1):
+        start = (s - 1) * stage_size + 1
+        end = s * stage_size
+        levels = []
+        for lvl in range(start, end + 1):
+            best = scores.get(lvl, 0)
+            levels.append({
+                "level": lvl,
+                "position": lvl - start + 1,
+                "unlocked": lvl <= unlocked,
+                "completed": best >= 60,
+                "score": best,
+            })
+        stages_data.append({
+            "number": s,
+            "name": STAGE_NAMES[s - 1] if s - 1 < len(STAGE_NAMES) else f"Etapa {s}",
+            "start": start,
+            "end": end,
+            "unlocked": start <= unlocked,
+            "completed_count": sum(1 for lvl in levels if lvl["completed"]),
+            "levels": levels,
+        })
+
+    trastorno = _resolve_trastorno()
+
+    return render_template(
+        "games/stages.html",
+        game=game,
+        stages=stages_data,
+        preview=preview,
+        trastorno=trastorno,
+        active_nav="juegos",
+    )
 
 
 @bp.route("/<slug>")
@@ -51,6 +163,11 @@ def play(slug, level=None):
         unlocked = game["levels"]
         scores = {}
     else:
+        # El acceso lo controla el docente: sin actividad asignada y vigente
+        # no se entra, aunque el estudiante conozca la URL.
+        if get_active_assignment(current_user, game) is None:
+            flash("Tu docente aún no te asignó esta actividad.", "info")
+            return redirect(url_for("dashboard.student_juegos"))
         preview = False
         unlocked = get_unlocked_level(current_user, slug)
         scores = get_level_scores(current_user, slug)
@@ -62,8 +179,7 @@ def play(slug, level=None):
         flash("Primero completa los niveles anteriores.", "info")
         return redirect(url_for("games.play", slug=slug, level=unlocked))
 
-    trastorno_id = request.args.get("trastorno_id", type=int)
-    trastorno = Trastorno.query.get(trastorno_id) if trastorno_id else None
+    trastorno = _resolve_trastorno()
 
     return render_template(
         "games/play.html",
@@ -97,6 +213,9 @@ def submit_session():
 
     if not current_user.is_student:
         return jsonify({"ok": True, "saved": False, "reason": "modo_vista_previa"}), 200
+
+    if get_active_assignment(current_user, game) is None:
+        return jsonify({"ok": False, "error": "sin_asignacion_vigente"}), 403
 
     sesion = save_game_session(current_user, payload, game)
 

@@ -1,7 +1,13 @@
-"""Lógica de negocio del blueprint admin: CRUD de trastornos, actividades y estadísticas."""
+"""Lógica de negocio del blueprint admin: CRUD de trastornos, actividades,
+gestión de usuarios y estadísticas."""
+from sqlalchemy import or_
+
 from app.extensions import db
 from app.models.content import Trastorno, Actividad
 from app.models.user import User
+from app.models.assignment import TrastornoAsignado
+from app.models.assigned_session import SesionAsignada
+from app.models.notification import Notification
 
 
 def get_dashboard_stats() -> dict:
@@ -67,4 +73,35 @@ def update_actividad(actividad: Actividad, data: dict) -> Actividad:
 
 def delete_actividad(actividad: Actividad) -> None:
     db.session.delete(actividad)
+    db.session.commit()
+
+
+# --- Usuarios ---
+
+def list_all_users():
+    return User.query.order_by(User.full_name.asc()).all()
+
+
+def delete_student_account(user_id: int) -> None:
+    """Elimina definitivamente una cuenta de estudiante y todo su rastro en
+    el sistema (trastornos asignados, sesiones asignadas, notificaciones),
+    sin importar si pertenece a algún grupo o docente — pensado para
+    cuentas huérfanas que nunca pasaron por el flujo normal de registro.
+
+    Solo aplica a cuentas de estudiante: borrar un docente o administrador
+    requiere reglas aparte (tiene grupos propios como teacher_id y aparece
+    como assigned_by_id en asignaciones de otros estudiantes), así que no
+    se permite desde aquí todavía.
+    """
+    user = User.query.get(user_id)
+    if user is None or not user.is_student:
+        raise ValueError("Esa cuenta no existe o no es de un estudiante.")
+
+    TrastornoAsignado.query.filter_by(student_id=user.id).delete()
+    SesionAsignada.query.filter_by(student_id=user.id).delete()
+    Notification.query.filter(
+        or_(Notification.recipient_id == user.id, Notification.student_id == user.id)
+    ).delete(synchronize_session=False)
+
+    db.session.delete(user)
     db.session.commit()

@@ -14,10 +14,12 @@ from app.blueprints.dashboard.forms import (
 from app.blueprints.dashboard.services import (
     get_groups_for_teacher,
     create_group,
+    delete_group,
     create_student_in_group,
     move_student_to_group,
     deactivate_student,
     reactivate_student,
+    delete_student_permanently,
     get_sesiones_sistema,
     get_planes_overview,
     get_student_if_owned_by_teacher,
@@ -234,6 +236,19 @@ def registro_estudiantes():
     )
 
 
+@bp.route("/registro-estudiantes/grupo/<int:group_id>/eliminar", methods=["POST"])
+@login_required
+def eliminar_grupo(group_id):
+    if not _is_teacher_or_admin():
+        return redirect(url_for("dashboard.index"))
+    try:
+        delete_group(current_user, group_id)
+        flash("Grupo eliminado correctamente.", "info")
+    except ValueError as exc:
+        flash(str(exc), "danger")
+    return redirect(url_for("dashboard.registro_estudiantes"))
+
+
 @bp.route("/registro-estudiantes/grupo/<int:group_id>/mover", methods=["POST"])
 @login_required
 def mover_estudiante(group_id):
@@ -268,6 +283,19 @@ def reactivar_estudiante(group_id, student_id):
         return redirect(url_for("dashboard.index"))
     reactivate_student(current_user, group_id, student_id)
     flash("Estudiante reactivado.", "success")
+    return redirect(url_for("dashboard.registro_estudiantes"))
+
+
+@bp.route("/registro-estudiantes/grupo/<int:group_id>/eliminar-estudiante/<int:student_id>", methods=["POST"])
+@login_required
+def eliminar_estudiante(group_id, student_id):
+    if not _is_teacher_or_admin():
+        return redirect(url_for("dashboard.index"))
+    try:
+        delete_student_permanently(current_user, group_id, student_id)
+        flash("Estudiante eliminado definitivamente.", "info")
+    except ValueError as exc:
+        flash(str(exc), "danger")
     return redirect(url_for("dashboard.registro_estudiantes"))
 
 

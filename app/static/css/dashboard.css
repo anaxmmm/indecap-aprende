@@ -5,8 +5,11 @@
   --teacher-bg: #f4f6fb;
 }
 
-html, body.teacher-body {
-  height: 100%;
+/* Antes: "html, body.teacher-body { height: 100% }". Fijar el alto del body al
+   de la pantalla hacía que el contenido largo desbordara por fuera y la barra
+   lateral se cortara. Ahora el body crece con su contenido. */
+html {
+  min-height: 100%;
 }
 
 body.teacher-body {

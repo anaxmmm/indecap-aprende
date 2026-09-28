@@ -4,6 +4,7 @@ from flask_login import current_user
 from app.blueprints.admin import bp
 from app.blueprints.admin import services
 from app.blueprints.admin.forms import TrastornoForm, ActividadForm
+from app.blueprints.dashboard.services import count_unread_notifications, get_recent_notifications
 from app.models.content import Trastorno
 from app.extensions import login_manager
 
@@ -141,3 +142,27 @@ def actividad_delete(actividad_id):
     services.delete_actividad(actividad)
     flash("Actividad eliminada.", "info")
     return redirect(url_for("admin.actividades_list", trastorno_id=trastorno_id))
+
+
+# --- Usuarios ---
+
+@bp.route("/usuarios")
+def usuarios_list():
+    usuarios = services.list_all_users()
+    return render_template(
+        "admin/usuarios_list.html",
+        usuarios=usuarios,
+        active_nav="usuarios",
+        unread_notifications_count=count_unread_notifications(current_user),
+        recent_notifications=get_recent_notifications(current_user, limit=5),
+    )
+
+
+@bp.route("/usuarios/<int:user_id>/eliminar", methods=["POST"])
+def usuario_delete(user_id):
+    try:
+        services.delete_student_account(user_id)
+        flash("Cuenta eliminada correctamente.", "info")
+    except ValueError as exc:
+        flash(str(exc), "danger")
+    return redirect(url_for("admin.usuarios_list"))

@@ -246,6 +246,27 @@ code {
 .home-nav__links a.active::after {
   width: 100%;
 }
+.home-nav__access {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.home-nav__lang-btn {
+  background: #FFFFFF;
+  border: 1px solid var(--indecap-border);
+  color: var(--indecap-text-muted);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.home-nav__lang-btn:hover, .home-nav__lang-btn:focus {
+  border-color: var(--indecap-navy);
+  color: var(--indecap-navy);
+}
 .home-hero {
   background: linear-gradient(135deg, var(--indecap-navy) 0%, #241463 100%);
   padding: 80px 32px 32px;
@@ -405,6 +426,31 @@ code {
   margin-top: auto;
   text-align: center;
   padding-top: 20px;
+}
+
+/* Pantallas pequeñas: el panel deja de ser un drawer pegado al borde
+   derecho y pasa a ser un modal centrado y compacto, más cómodo en móvil. */
+@media (max-width: 576px) {
+  .login-overlay {
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+  }
+  .login-panel {
+    width: 100%;
+    max-width: 380px;
+    max-height: 90vh;
+    border-radius: 16px;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25);
+    padding: 24px 20px;
+  }
+  .login-panel__title {
+    font-size: 18px;
+  }
+  .login-panel__subtitle {
+    font-size: 11px;
+    margin-bottom: 18px;
+  }
 }
 
 .home-nav__brand-group {

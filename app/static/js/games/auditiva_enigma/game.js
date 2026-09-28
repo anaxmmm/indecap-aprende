@@ -73,7 +73,9 @@
     ".seq-steps{flex-basis:100%;display:flex;flex-wrap:wrap;gap:12px;justify-content:center}",
     ".game-option.seq-step{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:1.05rem;min-width:110px}",
     ".seq-icon{font-size:2.4rem;line-height:1}",
-    ".game-option.seq-next{outline:4px solid var(--g-accent);outline-offset:3px}"
+    ".game-option.seq-next{outline:4px solid var(--g-accent);outline-offset:3px}",
+    ".game-shell[data-game-slug=\"auditiva_enigma\"] .game-stage{min-height:0;align-items:flex-start;padding-top:20px}",
+    ".game-shell[data-game-slug=\"auditiva_enigma\"] .game-screen.is-active{padding-top:4px}"
   ].join("\n"));
 
   function sequenceMount(steps, help, showText, extra) {

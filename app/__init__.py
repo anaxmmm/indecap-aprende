@@ -53,7 +53,14 @@ def _register_user_loader() -> None:
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        user = User.query.get(int(user_id))
+        # Si la cuenta fue desactivada (p. ej. estudiante desvinculado de su
+        # grupo), Flask-Login debe dejar de reconocer la sesión existente en
+        # cada request siguiente — devolver None aquí cierra esa sesión de
+        # forma efectiva, sin tocar el resto del flujo de login/logout.
+        if user is not None and not user.is_active_account:
+            return None
+        return user
 
 
 def _register_cli(app: Flask) -> None:

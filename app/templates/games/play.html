@@ -4,6 +4,8 @@
 {% block student_content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
 
+{% set exit_url = url_for('games.stages', slug=game.slug, trastorno_id=trastorno.id if trastorno else '') if game.has_stage_map else url_for('dashboard.student_juegos') %}
+
 <div class="game-shell"
      data-game-slug="{{ game.slug }}"
      data-game-name="{{ game.name }}"
@@ -14,98 +16,101 @@
      data-submit-url="{{ url_for('games.submit_session') }}"
      data-a11y='{{ a11y | tojson }}'>
 
-  {% if preview %}
-  <p class="game-preview-flag" role="status">
-    Modo vista previa: puedes jugar para conocer la actividad, pero no se guarda progreso.
-  </p>
-  {% endif %}
+  <div class="game-page-viewport">
+    {% if preview %}
+    <p class="game-preview-flag" role="status">
+      Modo vista previa: puedes jugar para conocer la actividad, pero no se guarda progreso.
+    </p>
+    {% endif %}
 
-  <!-- ══ Barra de accesibilidad: siempre visible, nunca escondida en un menú ══ -->
-  <div class="game-a11y-bar" role="region" aria-label="Ajustes de accesibilidad">
-    <button type="button" class="game-a11y-btn" data-a11y-action="speak"
-            aria-pressed="false">🔊 Leer en voz alta</button>
-    <button type="button" class="game-a11y-btn" data-a11y-action="contrast"
-            aria-pressed="false">◐ Alto contraste</button>
-    <button type="button" class="game-a11y-btn" data-a11y-action="text-bigger">A+ Texto</button>
-    <button type="button" class="game-a11y-btn" data-a11y-action="text-smaller">A− Texto</button>
-    <button type="button" class="game-a11y-btn" data-a11y-action="motion"
-            aria-pressed="false">✦ Reducir movimiento</button>
-    <button type="button" class="game-a11y-btn game-a11y-btn--hint" data-a11y-action="hint">
-      💡 Necesito una pista
-    </button>
-  </div>
+    <!-- ══ Barra de accesibilidad: siempre visible, nunca escondida en un menú ══ -->
+    <div class="game-a11y-bar" role="region" aria-label="Ajustes de accesibilidad">
+      <button type="button" class="game-a11y-btn" data-a11y-action="speak"
+              aria-pressed="false">🔊 Leer en voz alta</button>
+      <button type="button" class="game-a11y-btn" data-a11y-action="contrast"
+              aria-pressed="false">◐ Alto contraste</button>
+      <button type="button" class="game-a11y-btn" data-a11y-action="text-bigger">A+ Texto</button>
+      <button type="button" class="game-a11y-btn" data-a11y-action="text-smaller">A− Texto</button>
+      <button type="button" class="game-a11y-btn" data-a11y-action="motion"
+              aria-pressed="false">✦ Reducir movimiento</button>
+      <button type="button" class="game-a11y-btn game-a11y-btn--hint" data-a11y-action="hint">
+        💡 Necesito una pista
+      </button>
+    </div>
 
-  <!-- ══ Marco de consola ══ -->
-  <div class="game-frame">
-    <header class="game-frame__header">
-      <div>
-        <p class="game-frame__condition">{{ game.condition }}</p>
-        <h1 class="game-frame__title">{{ game.name }}</h1>
+    <!-- ══ Marco de consola ══ -->
+    <div class="game-frame">
+      <header class="game-frame__header">
+        <div>
+          <p class="game-frame__condition">{{ game.condition }}</p>
+          <h1 class="game-frame__title">{{ game.name }}</h1>
+        </div>
+        <a href="{{ exit_url }}"
+           class="game-frame__exit" aria-label="Salir del juego">✕</a>
+      </header>
+
+      <!-- HUD -->
+      <div class="game-hud" role="status" aria-live="polite" aria-atomic="true">
+        <span class="game-hud__item">Nivel <strong id="hudLevel">{{ level }}</strong>/{{ game.levels }}</span>
+        <span class="game-hud__item">Reto <strong id="hudRound">1</strong></span>
+        <span class="game-hud__item">Estrellas <strong id="hudStars">0</strong></span>
+        <span class="game-hud__item" id="hudTimer">⏱ 0:00</span>
       </div>
-      <a href="{{ url_for('dashboard.student_juegos') }}"
-         class="game-frame__exit" aria-label="Salir del juego">✕</a>
-    </header>
 
-    <!-- HUD -->
-    <div class="game-hud" role="status" aria-live="polite" aria-atomic="true">
-      <span class="game-hud__item">Nivel <strong id="hudLevel">{{ level }}</strong>/{{ game.levels }}</span>
-      <span class="game-hud__item">Reto <strong id="hudRound">1</strong></span>
-      <span class="game-hud__item">Estrellas <strong id="hudStars">0</strong></span>
-      <span class="game-hud__item" id="hudTimer">⏱ 0:00</span>
-    </div>
+      <div class="game-progress" aria-hidden="true">
+        <div class="game-progress__bar" id="progressBar" style="width:0%"></div>
+      </div>
 
-    <div class="game-progress" aria-hidden="true">
-      <div class="game-progress__bar" id="progressBar" style="width:0%"></div>
-    </div>
-
-    <!-- Escenario -->
-    <main class="game-stage" id="gameStage" tabindex="-1">
-      <!-- Pantalla de intro -->
-      <section class="game-screen is-active" id="screenIntro">
-        <div class="game-guide">
-          <div class="game-guide__avatar" aria-hidden="true">🛰️</div>
-          <div class="game-guide__bubble">
-            <p class="game-guide__name">NOVA, tu guía</p>
-            <p id="introText">Cargando la misión…</p>
+      <!-- Escenario -->
+      <main class="game-stage" id="gameStage" tabindex="-1">
+        <!-- Pantalla de intro -->
+        <section class="game-screen is-active" id="screenIntro">
+          <div class="game-guide">
+            <div class="game-guide__avatar" aria-hidden="true">🛰️</div>
+            <div class="game-guide__bubble">
+              <p class="game-guide__name">NOVA, tu guía</p>
+              <p id="introText">Cargando la misión…</p>
+            </div>
           </div>
-        </div>
-        <button type="button" class="game-btn game-btn--primary" id="btnStart">
-          Comenzar la misión
-        </button>
-      </section>
+          <button type="button" class="game-btn game-btn--primary" id="btnStart">
+            Comenzar la misión
+          </button>
+        </section>
 
-      <!-- Pantalla de juego -->
-      <section class="game-screen" id="screenPlay" aria-live="polite">
-        <p class="game-prompt" id="prompt"></p>
-        <div class="game-visual" id="visual" aria-hidden="true"></div>
-        <p class="game-hint" id="hintText" role="status" hidden></p>
-        <div class="game-options" id="options" role="group" aria-label="Opciones de respuesta"></div>
-        <p class="game-feedback" id="feedback" role="status" aria-live="assertive"></p>
-      </section>
+        <!-- Pantalla de juego -->
+        <section class="game-screen" id="screenPlay" aria-live="polite">
+          <p class="game-prompt" id="prompt"></p>
+          <div class="game-visual" id="visual" aria-hidden="true"></div>
+          <p class="game-hint" id="hintText" role="status" hidden></p>
+          <div class="game-options" id="options" role="group" aria-label="Opciones de respuesta"></div>
+          <p class="game-feedback" id="feedback" role="status" aria-live="assertive"></p>
+        </section>
 
-      <!-- Pantalla de cierre -->
-      <section class="game-screen" id="screenEnd">
-        <div class="game-guide">
-          <div class="game-guide__avatar" aria-hidden="true">🌟</div>
-          <div class="game-guide__bubble">
-            <p class="game-guide__name">NOVA, tu guía</p>
-            <p id="endText"></p>
+        <!-- Pantalla de cierre -->
+        <section class="game-screen" id="screenEnd">
+          <div class="game-guide">
+            <div class="game-guide__avatar" aria-hidden="true">🌟</div>
+            <div class="game-guide__bubble">
+              <p class="game-guide__name">NOVA, tu guía</p>
+              <p id="endText"></p>
+            </div>
           </div>
-        </div>
-        <p class="game-save-state" id="saveState" role="status"></p>
-        <div class="game-end-actions">
-          <button type="button" class="game-btn game-btn--ghost" id="btnRetry">Repetir nivel</button>
-          <button type="button" class="game-btn game-btn--primary" id="btnNext">Siguiente nivel</button>
-          <a href="{{ url_for('dashboard.student_juegos') }}" class="game-btn game-btn--ghost">Salir</a>
-        </div>
-      </section>
-    </main>
+          <p class="game-save-state" id="saveState" role="status"></p>
+          <div class="game-end-actions">
+            <button type="button" class="game-btn game-btn--ghost" id="btnRetry">Repetir nivel</button>
+            <button type="button" class="game-btn game-btn--primary" id="btnNext">Siguiente nivel</button>
+            <a href="{{ exit_url }}" class="game-btn game-btn--ghost">Salir</a>
+          </div>
+        </section>
+      </main>
 
-    <!-- Personaje guía en la esquina -->
-    <div class="game-companion" aria-hidden="true">🐢</div>
+      <!-- Personaje guía en la esquina -->
+      <div class="game-companion" aria-hidden="true">🐢</div>
+    </div>
   </div>
 
-  <!-- ══ Ficha pedagógica: visible para docentes y para la sustentación ══ -->
+  {% if not current_user.is_student %}
+  <!-- ══ Ficha pedagógica: solo para docentes y administración ══ -->
   <details class="game-sheet">
     <summary>Qué trabaja esta actividad</summary>
     <div class="game-sheet__body">
@@ -123,6 +128,7 @@
       </p>
     </div>
   </details>
+  {% endif %}
 </div>
 
 <script src="{{ url_for('static', filename='js/games/core/a11y.js') }}"></script>
