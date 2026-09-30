@@ -12,8 +12,8 @@ Muy Alta/Súper Difícil), juego por juego.
 
 "has_stage_map": True marca los juegos que, además de la selección de nivel
 simple, tienen una pantalla previa de "Etapas" (5 Stages de 10 niveles cada
-uno) — discalculia_mercado, dislexia_letras y tdah_ritmo por ahora, con 50
-niveles cada uno.
+uno) — discalculia_mercado, dislexia_letras, tdah_ritmo, auditiva_enigma,
+cognitiva_rutinas y visual_eco por ahora, con 50 niveles cada uno.
 """
 
 import unicodedata
@@ -57,7 +57,9 @@ GAMES = {
             "accion_expresion": "Arrastre de pictogramas, selección y reproducción de patrones por vibración o luz.",
             "implicacion": "Historias secuenciadas sin dependencia del audio.",
         },
-        "levels": 10,
+        "levels": 50,
+        "has_stage_map": True,
+        "stage_size": 10,
         "asset_path": "js/games/auditiva_enigma/game.js",
         "keywords": ["auditiva", "sordera", "hipoacusia"],
         "available": True,
@@ -77,7 +79,9 @@ GAMES = {
             "accion_expresion": "Arrastre de tarjetas y toque único.",
             "implicacion": "Situaciones de la vida real y retirada gradual de ayudas (scaffolding).",
         },
-        "levels": 10,
+        "levels": 50,
+        "has_stage_map": True,
+        "stage_size": 10,
         "asset_path": "js/games/cognitiva_rutinas/game.js",
         "keywords": ["cognitiva", "intelectual", "comprension"],
         "available": True,
@@ -97,7 +101,9 @@ GAMES = {
             "accion_expresion": "Botones grandes de alto contraste, navegación por teclado y respuesta por voz.",
             "implicacion": "Aventura narrada con decisiones.",
         },
-        "levels": 10,
+        "levels": 50,
+        "has_stage_map": True,
+        "stage_size": 10,
         "asset_path": "js/games/visual_eco/game.js",
         "keywords": ["visual", "ceguera", "baja vision"],
         "available": True,

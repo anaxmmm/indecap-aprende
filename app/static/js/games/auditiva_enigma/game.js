@@ -9,13 +9,27 @@
  *  - Ritmo por luz y vibración .................... sustituto no auditivo de la prosodia
  *  - Emociones y expresión facial ................. giro fusiforme
  *  - Memoria de símbolos y subtítulos ............. memoria de trabajo visual
+ *  - Señales visuales cotidianas ................... vida independiente (15-26 años)
+ *
+ * MAPA DE ETAPAS (5 Stages de 10 niveles, 50 en total, numeración continua):
+ *   Stage 1 · Base            → niveles 1-10  (sin cambio de contenido)
+ *   Stage 2 · Media           → niveles 11-20 (vocabulario y contexto de vida adulta)
+ *   Stage 3 · Alta            → niveles 21-30 (comprensión y escenarios más exigentes)
+ *   Stage 4 · Muy Alta        → niveles 31-40 (integración de dos mecánicas por nivel)
+ *   Stage 5 · Súper Difícil   → niveles 41-50 (integración total)
+ *
+ * El desbloqueo de nivel a nivel (score >= 60) lo maneja
+ * games/services.py::get_unlocked_level, agnóstico al número de niveles.
  *
  * VIDEOS DE SEÑAS (opcionales): si existe app/static/media/senas/<palabra>.mp4
  * se muestra el video; si no, se muestra el pictograma. Los videos deben ser
  * grabados o validados por la psicóloga o un intérprete de lengua de señas.
  *
  * Seguridad fotosensible: las luces nunca parpadean más de 1 vez por segundo.
- * Nivel 10: evaluación embebida.
+ * La mecánica de señales visuales (Stage 2 en adelante) no usa parpadeo
+ * animado: se representa con iconos estáticos, para no añadir ningún riesgo
+ * nuevo de destello.
+ * Nivel 10: evaluación embebida de la base.
  */
 (function (global) {
   "use strict";
@@ -139,7 +153,7 @@
     };
   }
 
-  // ─── Datos ────────────────────────────────────────────────────────────────
+  // ─── Datos: base (Stage 1, sin cambios) ────────────────────────────────────
   var SENAS_BASE = "/static/media/senas/";
   var VOCAB = [
     ["🐶", "perro"], ["🐱", "gato"], ["🍎", "manzana"], ["🏠", "casa"], ["📚", "libro"],
@@ -174,9 +188,49 @@
       qs: [{ q: "¿Qué hace Don Carlos?", ok: "Pan", bad: ["Jugo", "Helado"] }, { q: "¿Cuántos panes compra la niña?", ok: "Dos", bad: ["Uno", "Cinco"] }] }
   ];
 
-  // ─── Mecánicas de opción única ────────────────────────────────────────────
-  function retoVocab() {
-    var v = pick(VOCAB), otros = shuffle(VOCAB.filter(function (x) { return x[1] !== v[1]; })).slice(0, 2);
+  // ─── Datos: vida adulta (Stage 2 en adelante, 15-26 años) ──────────────────
+  var VOCAB_ADULTO = [
+    ["💻", "computador"], ["📄", "documento"], ["🏢", "oficina"], ["📅", "agenda"], ["💳", "tarjeta"],
+    ["🔑", "contraseña"], ["📞", "llamada"], ["🖊️", "firma"], ["🧾", "factura"], ["📦", "paquete"]
+  ];
+  var HISTORIAS_ADULTO = [
+    { title: "Buscar empleo", steps: [{ i: "📝", t: "Actualiza su hoja de vida" }, { i: "📧", t: "Envía la solicitud" }, { i: "📞", t: "Lo llaman para la entrevista" }, { i: "🎉", t: "Lo contratan" }] },
+    { title: "Pagar un servicio", steps: [{ i: "🧾", t: "Recibe la factura" }, { i: "🏦", t: "Va al banco" }, { i: "💳", t: "Paga con tarjeta" }, { i: "✅", t: "Guarda el recibo" }] },
+    { title: "Preparar una entrevista", steps: [{ i: "👔", t: "Se viste formal" }, { i: "🕐", t: "Llega temprano" }, { i: "🤝", t: "Saluda al entrevistador" }, { i: "💬", t: "Responde las preguntas" }] }
+  ];
+  var FRASES_ADULTO = [
+    { p: "👩‍💼 💻 📊", w: ["La", "jefa", "revisa", "el", "informe", "en", "el", "computador"] },
+    { p: "👨 🏦 💳", w: ["El", "hombre", "paga", "la", "factura", "en", "el", "banco"] },
+    { p: "👩 📞 🏥", w: ["Ella", "llama", "para", "pedir", "una", "cita", "médica"] },
+    { p: "👨‍🎓 📚 🎓", w: ["El", "estudiante", "entrega", "su", "trabajo", "final"] },
+    { p: "👩‍💼 🤝 📄", w: ["La", "jefa", "firma", "el", "contrato"] },
+    { p: "👨 📦 🚪", w: ["El", "repartidor", "deja", "el", "paquete", "en", "la", "puerta"] }
+  ];
+  var EMO_ADULTO = [["😕", "Confundido"], ["😌", "Aliviado"], ["😤", "Impaciente"], ["🙏", "Agradecido"], ["😰", "Nervioso"], ["😊", "Orgulloso"]];
+  var CUENTOS_ADULTO = [
+    { scenes: [{ i: "👔📄", c: "Marta se prepara con su hoja de vida para la entrevista." }, { i: "🚶‍♀️🏢", c: "Llega a la empresa quince minutos antes." }, { i: "🤝💼", c: "El entrevistador le hace preguntas sobre su experiencia." }],
+      qs: [{ q: "¿Qué lleva Marta a la entrevista?", ok: "Su hoja de vida", bad: ["Su celular", "Un regalo"] }, { q: "¿Cuánto tiempo antes llega?", ok: "Quince minutos", bad: ["Una hora", "Cinco minutos"] }] },
+    { scenes: [{ i: "📬🧾", c: "Llega la factura del agua a la casa de Andrés." }, { i: "🏦💳", c: "Andrés va al banco y paga con su tarjeta." }, { i: "📱✅", c: "Recibe la confirmación del pago en su celular." }],
+      qs: [{ q: "¿Qué factura le llegó a Andrés?", ok: "La del agua", bad: ["La de la luz", "La del internet"] }, { q: "¿Cómo paga?", ok: "Con tarjeta", bad: ["En efectivo", "Con cheque"] }] },
+    { scenes: [{ i: "📞🏥", c: "Sofía llama para pedir una cita médica." }, { i: "📅", c: "Le dan una cita para el próximo martes." }, { i: "🩺", c: "El doctor la revisa y le da una recomendación." }],
+      qs: [{ q: "¿Para qué día le dan la cita?", ok: "El martes", bad: ["El lunes", "El viernes"] }, { q: "¿Quién la revisa?", ok: "El doctor", bad: ["La enfermera", "El recepcionista"] }] }
+  ];
+  /** Señales visuales cotidianas: alertas que en la vida diaria suelen ser
+      sonoras, presentadas aquí como icono estático (sin parpadeo) para no
+      introducir ningún riesgo fotosensible nuevo. */
+  var SENALES_VISUALES = [
+    { icon: "🔔💡", label: "Timbre de la puerta con luz", action: "Alguien está en la puerta", bad: ["Se acabó la batería del celular", "Empezó a llover"] },
+    { icon: "🚨🔴", label: "Alarma de incendio con luz intermitente", action: "Debes evacuar el edificio", bad: ["Debes cargar el celular", "Debes silenciar el timbre"] },
+    { icon: "📳", label: "Celular vibrando", action: "Tienes una llamada o mensaje", bad: ["Se apagó el celular", "El celular se está cargando"] },
+    { icon: "📹💬", label: "Notificación de videollamada con subtítulos activados", action: "Alguien te está llamando por video", bad: ["Se cortó la videollamada", "Se activó el modo avión"] },
+    { icon: "⏰💡", label: "Despertador con luz parpadeante", action: "Es hora de levantarte", bad: ["Se fue la luz", "Sonó la alarma de incendio"] },
+    { icon: "🚪🔦", label: "Timbre del trabajo con luz en el escritorio", action: "Te están llamando a una reunión", bad: ["Se dañó la luz del escritorio", "Terminó tu turno"] }
+  ];
+
+  // ─── Mecánicas de opción única ─────────────────────────────────────────────
+  function retoVocab(p) {
+    var banco = (p && p.bancos) || VOCAB;
+    var v = pick(banco), otros = shuffle(banco.filter(function (x) { return x[1] !== v[1]; })).slice(0, 2);
     var prompt = "Mira el dibujo y la seña. Elige la palabra escrita que corresponde.";
     return {
       skill: "vocabulario_triple", prompt: prompt, speech: prompt,
@@ -187,8 +241,9 @@
       explain: "El dibujo, la seña y la palabra se llaman «" + v[1] + "»."
     };
   }
-  function retoEmocion() {
-    var e = pick(EMO), otros = shuffle(EMO.filter(function (x) { return x[1] !== e[1]; })).slice(0, 3);
+  function retoEmocion(p) {
+    var banco = (p && p.bancos) || EMO;
+    var e = pick(banco), otros = shuffle(banco.filter(function (x) { return x[1] !== e[1]; })).slice(0, 3);
     var prompt = "Mira la cara. ¿Qué emoción muestra?";
     return {
       skill: "expresion_facial", prompt: prompt, speech: prompt,
@@ -199,10 +254,24 @@
       explain: "Esa cara muestra: " + e[1] + "."
     };
   }
+  function retoSenales(p) {
+    var banco = (p && p.bancos) || SENALES_VISUALES;
+    var s = pick(banco);
+    var prompt = "Mira la señal visual. ¿Qué significa?";
+    return {
+      skill: "senales_visuales", prompt: prompt, speech: prompt,
+      visual: '<span class="aud-big">' + s.icon + '</span><p class="aud-caption">' + s.label + "</p>",
+      options: textOpts(s.action, s.bad, 3),
+      answer: s.action, answerLabel: s.action,
+      hint: "Piensa en qué situación cotidiana usarías esa señal.",
+      explain: s.label + " significa: " + s.action + "."
+    };
+  }
 
   // ─── Mecánicas con interfaz propia ────────────────────────────────────────
   function roundHistoria(p, ctx, index) {
-    var h = HISTORIAS[((p.offset || 0) + index) % HISTORIAS.length];
+    var banco = p.historias || HISTORIAS;
+    var h = banco[((p.offset || 0) + index) % banco.length];
     var steps = h.steps.map(function (s, i) { return { k: "p" + i, i: s.i, t: s.t }; });
     var prompt = "Historia: «" + h.title + "». Toca las viñetas en el orden en que ocurre.";
     return {
@@ -213,8 +282,9 @@
   }
 
   function roundFrase(p, ctx) {
-    var pool = FRASES.filter(function (f) { return f.w.length >= p.minW && f.w.length <= p.maxW; });
-    var f = pick(pool.length ? pool : FRASES);
+    var banco = p.frases || FRASES;
+    var pool = banco.filter(function (f) { return f.w.length >= p.minW && f.w.length <= p.maxW; });
+    var f = pick(pool.length ? pool : banco);
     var steps = f.w.map(function (w, i) { return { k: w, t: w, n: i }; });
     var prompt = "Ordena las palabras para decir lo que muestran los dibujos.";
     return {
@@ -289,8 +359,9 @@
 
   /** Memoria visual de secuencias de símbolos. */
   function roundMemoria(p, ctx) {
+    var banco = p.simbolos || SIMBOLOS;
     var m = mult(ctx), len = rnd(p.lenMin, p.lenMax);
-    var seq = shuffle(SIMBOLOS).slice(0, len);
+    var seq = shuffle(banco).slice(0, len);
     var replays = ((ctx && ctx.support) || 1) === 1 ? 2 : (ctx.support === 2 ? 1 : 0);
     var prompt = "Mira los símbolos que aparecen. Luego tócalos en el mismo orden.";
     return {
@@ -307,7 +378,7 @@
 
         function buildPad() {
           pad.innerHTML = "";
-          shuffle(SIMBOLOS).forEach(function (sy) {
+          shuffle(banco).forEach(function (sy) {
             var b = el("button", "game-option"); b.type = "button"; b.textContent = sy[0]; b.setAttribute("aria-label", sy[1]);
             b.addEventListener("click", function () { tap(b, sy); });
             pad.appendChild(b);
@@ -348,7 +419,8 @@
 
   /** Mini-video con subtítulos: se avanza a tu ritmo y luego hay preguntas. */
   function roundSubtitulos(p, ctx, index) {
-    var c = CUENTOS[((p.offset || 0) + index) % CUENTOS.length];
+    var banco = p.cuentos || CUENTOS;
+    var c = banco[((p.offset || 0) + index) % banco.length];
     var prompt = "Mira la historia con subtítulos. Avanza cuando termines de leer cada escena. Después habrá preguntas.";
     return {
       skill: "comprension_subtitulos", prompt: prompt, speech: prompt,
@@ -398,10 +470,11 @@
     };
   }
 
-  // ─── Definición de los 10 niveles ─────────────────────────────────────────
+  // ─── Definición de los niveles (50: 5 Stages de 10 niveles) ────────────────
   var CONSTRUCTORES = {
-    vocab: function () { return retoVocab(); },
-    emocion: function () { return retoEmocion(); },
+    vocab: function (p) { return retoVocab(p); },
+    emocion: function (p) { return retoEmocion(p); },
+    senales: function (p) { return retoSenales(p); },
     historia: roundHistoria,
     frase: roundFrase,
     ritmo: roundRitmo,
@@ -410,28 +483,168 @@
   };
 
   var NIVELES = {
+    // ══ Stage 1 · Base (1-10): sin cambios ═══════════════════════════════════
     1: { rounds: 5, mechanics: ["vocab"], params: { vocab: {} },
-         intro: "Hola, soy NOVA. En este enigma todo se ve: dibujos, señas y palabras escritas. Empecemos relacionando el dibujo con su palabra." },
+         intro: "Stage 1 · Nivel 1 · Hola, soy NOVA. En este enigma todo se ve: dibujos, señas y palabras escritas. Empecemos relacionando el dibujo con su palabra." },
     2: { rounds: 3, mechanics: ["historia"], params: { historia: { text: true } },
-         intro: "Las historias tienen orden. Toca las viñetas en el orden en que ocurren." },
+         intro: "Stage 1 · Nivel 2 · Las historias tienen orden. Toca las viñetas en el orden en que ocurren." },
     3: { rounds: 4, mechanics: ["frase"], params: { frase: { minW: 4, maxW: 5 } },
-         intro: "Vamos a construir oraciones. Los dibujos te dicen qué decir; tú ordenas las palabras." },
+         intro: "Stage 1 · Nivel 3 · Vamos a construir oraciones. Los dibujos te dicen qué decir; tú ordenas las palabras." },
     4: { rounds: 4, mechanics: ["ritmo"], params: { ritmo: { len: 3 } },
-         intro: "Los ritmos también se ven y se sienten. Mira la luz y repite el patrón: corto o largo." },
+         intro: "Stage 1 · Nivel 4 · Los ritmos también se ven y se sienten. Mira la luz y repite el patrón: corto o largo." },
     5: { rounds: 5, mechanics: ["emocion"], params: { emocion: {} },
-         intro: "Las caras dicen mucho. Mira la expresión y elige la emoción." },
+         intro: "Stage 1 · Nivel 5 · Las caras dicen mucho. Mira la expresión y elige la emoción." },
     6: { rounds: 4, mechanics: ["memoria"], params: { memoria: { lenMin: 3, lenMax: 4 } },
-         intro: "Mira los símbolos que aparecen y repítelos en el mismo orden." },
+         intro: "Stage 1 · Nivel 6 · Mira los símbolos que aparecen y repítelos en el mismo orden." },
     7: { rounds: 2, mechanics: ["subtitulos"], params: { subtitulos: {} },
-         intro: "Ahora una historia con subtítulos. Avanza a tu ritmo y luego responde las preguntas." },
+         intro: "Stage 1 · Nivel 7 · Ahora una historia con subtítulos. Avanza a tu ritmo y luego responde las preguntas." },
     8: { rounds: 4, mechanics: ["frase"], params: { frase: { minW: 6, maxW: 7 } },
-         intro: "Las oraciones ahora son más largas. Recuerda: quién, qué hace y dónde." },
+         intro: "Stage 1 · Nivel 8 · Las oraciones ahora son más largas. Recuerda: quién, qué hace y dónde." },
     9: { rounds: 6, mechanics: ["ritmo", "historia"], params: { ritmo: { len: 5 }, historia: { text: false } },
-         intro: "Ritmos más largos y historias solo con dibujos. Tú puedes con ambas." },
+         intro: "Stage 1 · Nivel 9 · Ritmos más largos y historias solo con dibujos. Tú puedes con ambas." },
     10: { rounds: 8,
           mechanics: ["vocab", "historia", "frase", "ritmo", "emocion", "memoria", "subtitulos", "frase"],
           params: { vocab: {}, historia: { text: false }, frase: { minW: 5, maxW: 7 }, ritmo: { len: 4 }, emocion: {}, memoria: { lenMin: 4, lenMax: 5 }, subtitulos: {} },
-          intro: "Última misión del enigma: aparece todo lo que aprendiste. Sin tiempo límite. ¡Adelante!" }
+          intro: "Stage 1 · Nivel 10 · Última misión de la base: aparece todo lo que aprendiste. Sin tiempo límite. ¡Adelante!" },
+
+    // ══ Stage 2 · Media (11-20): vocabulario y contexto de vida adulta ══════
+    11: { rounds: 10, mechanics: ["vocab"], params: { vocab: { bancos: VOCAB_ADULTO } },
+          intro: "Stage 2 · Nivel 11 · Vocabulario del trabajo y la tecnología: dibujo, seña y palabra." },
+    12: { rounds: 10, mechanics: ["historia"], params: { historia: { historias: HISTORIAS_ADULTO, text: false } },
+          intro: "Stage 2 · Nivel 12 · Historias de la vida adulta, solo con dibujos: busca empleo, paga un servicio." },
+    13: { rounds: 10, mechanics: ["frase"], params: { frase: { frases: FRASES_ADULTO, minW: 5, maxW: 7 } },
+          intro: "Stage 2 · Nivel 13 · Oraciones más largas de contexto laboral." },
+    14: { rounds: 10, mechanics: ["senales"], params: { senales: { bancos: SENALES_VISUALES } },
+          intro: "Stage 2 · Nivel 14 · Mecánica nueva: reconoce señales visuales cotidianas, como el timbre con luz o el celular vibrando." },
+    15: { rounds: 10, mechanics: ["ritmo"], params: { ritmo: { len: 5 } },
+          intro: "Stage 2 · Nivel 15 · Ritmos más largos." },
+    16: { rounds: 10, mechanics: ["emocion"], params: { emocion: { bancos: EMO_ADULTO } },
+          intro: "Stage 2 · Nivel 16 · Emociones en contexto de trabajo y estudio: confundido, aliviado, agradecido." },
+    17: { rounds: 10, mechanics: ["memoria"], params: { memoria: { lenMin: 4, lenMax: 5 } },
+          intro: "Stage 2 · Nivel 17 · Secuencias de símbolos más largas." },
+    18: { rounds: 10, mechanics: ["subtitulos"], params: { subtitulos: { cuentos: CUENTOS_ADULTO } },
+          intro: "Stage 2 · Nivel 18 · Historias con subtítulos sobre la vida adulta: entrevistas, pagos, citas." },
+    19: { rounds: 10, mechanics: ["frase", "senales"],
+          params: { frase: { frases: FRASES_ADULTO, minW: 5, maxW: 7 }, senales: { bancos: SENALES_VISUALES } },
+          intro: "Stage 2 · Nivel 19 · Oraciones y señales visuales, alternadas." },
+    20: { rounds: 10,
+          mechanics: ["vocab", "historia", "frase", "senales", "ritmo", "emocion", "memoria", "subtitulos"],
+          params: {
+            vocab: { bancos: VOCAB_ADULTO }, historia: { historias: HISTORIAS_ADULTO, text: false },
+            frase: { frases: FRASES_ADULTO, minW: 5, maxW: 7 }, senales: { bancos: SENALES_VISUALES },
+            ritmo: { len: 5 }, emocion: { bancos: EMO_ADULTO }, memoria: { lenMin: 4, lenMax: 5 },
+            subtitulos: { cuentos: CUENTOS_ADULTO }
+          },
+          intro: "Stage 2 · Nivel 20 · Reto integrador de la etapa Media: mezcla todo lo practicado." },
+
+    // ══ Stage 3 · Alta (21-30): comprensión y escenarios más exigentes ══════
+    21: { rounds: 10, mechanics: ["subtitulos"], params: { subtitulos: { cuentos: CUENTOS_ADULTO } },
+          intro: "Stage 3 · Nivel 21 · Historias con subtítulos, con más atención a los detalles." },
+    22: { rounds: 10, mechanics: ["vocab"], params: { vocab: { bancos: VOCAB_ADULTO.concat(VOCAB) } },
+          intro: "Stage 3 · Nivel 22 · Vocabulario ampliado, con más palabras para reconocer." },
+    23: { rounds: 10, mechanics: ["frase"], params: { frase: { frases: FRASES_ADULTO, minW: 6, maxW: 9 } },
+          intro: "Stage 3 · Nivel 23 · Oraciones largas con orden más libre." },
+    24: { rounds: 10, mechanics: ["senales"], params: { senales: { bancos: SENALES_VISUALES } },
+          intro: "Stage 3 · Nivel 24 · Más señales visuales combinadas." },
+    25: { rounds: 10, mechanics: ["historia"], params: { historia: { historias: HISTORIAS_ADULTO, text: false } },
+          intro: "Stage 3 · Nivel 25 · Historias de varios pasos, solo con dibujos." },
+    26: { rounds: 10, mechanics: ["ritmo"], params: { ritmo: { len: 6 } },
+          intro: "Stage 3 · Nivel 26 · Ritmos más complejos." },
+    27: { rounds: 10, mechanics: ["emocion"], params: { emocion: { bancos: EMO_ADULTO } },
+          intro: "Stage 3 · Nivel 27 · Emociones más sutiles: sigue practicando." },
+    28: { rounds: 10, mechanics: ["memoria"], params: { memoria: { lenMin: 5, lenMax: 6 } },
+          intro: "Stage 3 · Nivel 28 · Secuencias de hasta seis símbolos." },
+    29: { rounds: 10, mechanics: ["historia", "emocion"],
+          params: { historia: { historias: HISTORIAS_ADULTO, text: false }, emocion: { bancos: EMO_ADULTO } },
+          intro: "Stage 3 · Nivel 29 · Historias y emociones, alternadas." },
+    30: { rounds: 10,
+          mechanics: ["subtitulos", "vocab", "frase", "senales", "historia", "ritmo", "emocion", "memoria"],
+          params: {
+            subtitulos: { cuentos: CUENTOS_ADULTO }, vocab: { bancos: VOCAB_ADULTO.concat(VOCAB) },
+            frase: { frases: FRASES_ADULTO, minW: 6, maxW: 9 }, senales: { bancos: SENALES_VISUALES },
+            historia: { historias: HISTORIAS_ADULTO, text: false }, ritmo: { len: 6 },
+            emocion: { bancos: EMO_ADULTO }, memoria: { lenMin: 5, lenMax: 6 }
+          },
+          intro: "Stage 3 · Nivel 30 · Reto integrador de la etapa Alta: mezcla todo lo practicado." },
+
+    // ══ Stage 4 · Muy Alta (31-40): integración de dos mecánicas por nivel ══
+    31: { rounds: 10, mechanics: ["subtitulos"], params: { subtitulos: { cuentos: CUENTOS_ADULTO } },
+          intro: "Stage 4 · Nivel 31 · Historias con subtítulos, cada vez con más atención a los detalles." },
+    32: { rounds: 10, mechanics: ["senales"], params: { senales: { bancos: SENALES_VISUALES } },
+          intro: "Stage 4 · Nivel 32 · Señales visuales avanzadas." },
+    33: { rounds: 10, mechanics: ["vocab", "frase"],
+          params: { vocab: { bancos: VOCAB_ADULTO.concat(VOCAB) }, frase: { frases: FRASES_ADULTO, minW: 5, maxW: 8 } },
+          intro: "Stage 4 · Nivel 33 · Vocabulario y oraciones, combinados." },
+    34: { rounds: 10, mechanics: ["ritmo"], params: { ritmo: { len: 6 } },
+          intro: "Stage 4 · Nivel 34 · Ritmos largos y precisos." },
+    35: { rounds: 10, mechanics: ["memoria", "emocion"],
+          params: { memoria: { lenMin: 5, lenMax: 6 }, emocion: { bancos: EMO_ADULTO } },
+          intro: "Stage 4 · Nivel 35 · Memoria de símbolos y emociones, alternadas." },
+    36: { rounds: 10, mechanics: ["historia", "frase"],
+          params: { historia: { historias: HISTORIAS_ADULTO, text: false }, frase: { frases: FRASES_ADULTO, minW: 5, maxW: 8 } },
+          intro: "Stage 4 · Nivel 36 · Historias y oraciones, combinadas." },
+    37: { rounds: 10, mechanics: ["subtitulos", "senales"],
+          params: { subtitulos: { cuentos: CUENTOS_ADULTO }, senales: { bancos: SENALES_VISUALES } },
+          intro: "Stage 4 · Nivel 37 · Subtítulos y señales visuales, alternados." },
+    38: { rounds: 10, mechanics: ["vocab", "memoria"],
+          params: { vocab: { bancos: VOCAB_ADULTO.concat(VOCAB) }, memoria: { lenMin: 5, lenMax: 6 } },
+          intro: "Stage 4 · Nivel 38 · Vocabulario técnico y memoria de símbolos." },
+    39: { rounds: 10, mechanics: ["ritmo", "emocion"],
+          params: { ritmo: { len: 6 }, emocion: { bancos: EMO_ADULTO } },
+          intro: "Stage 4 · Nivel 39 · Ritmo y emociones, alternados." },
+    40: { rounds: 10,
+          mechanics: ["subtitulos", "senales", "vocab", "frase", "memoria", "historia", "ritmo", "emocion"],
+          params: {
+            subtitulos: { cuentos: CUENTOS_ADULTO }, senales: { bancos: SENALES_VISUALES },
+            vocab: { bancos: VOCAB_ADULTO.concat(VOCAB) }, frase: { frases: FRASES_ADULTO, minW: 5, maxW: 8 },
+            memoria: { lenMin: 5, lenMax: 6 }, historia: { historias: HISTORIAS_ADULTO, text: false },
+            ritmo: { len: 6 }, emocion: { bancos: EMO_ADULTO }
+          },
+          intro: "Stage 4 · Nivel 40 · Reto integrador de la etapa Muy Alta: mezcla todo lo practicado." },
+
+    // ══ Stage 5 · Súper Difícil (41-50): integración total ══════════════════
+    41: { rounds: 10, mechanics: ["senales", "emocion"],
+          params: { senales: { bancos: SENALES_VISUALES }, emocion: { bancos: EMO_ADULTO } },
+          intro: "Stage 5 · Nivel 41 · Señales visuales y emociones, sin previo aviso de cuál toca." },
+    42: { rounds: 10, mechanics: ["subtitulos", "memoria"],
+          params: { subtitulos: { cuentos: CUENTOS_ADULTO }, memoria: { lenMin: 5, lenMax: 6 } },
+          intro: "Stage 5 · Nivel 42 · Comprensión de historias y memoria de símbolos, combinadas." },
+    43: { rounds: 10, mechanics: ["frase", "vocab", "senales"],
+          params: { frase: { frases: FRASES_ADULTO, minW: 5, maxW: 9 }, vocab: { bancos: VOCAB_ADULTO.concat(VOCAB) }, senales: { bancos: SENALES_VISUALES } },
+          intro: "Stage 5 · Nivel 43 · Oraciones, vocabulario y señales, en un mismo bloque." },
+    44: { rounds: 10, mechanics: ["historia", "ritmo"],
+          params: { historia: { historias: HISTORIAS_ADULTO, text: false }, ritmo: { len: 6 } },
+          intro: "Stage 5 · Nivel 44 · Historias y ritmos, alternados." },
+    45: { rounds: 10, mechanics: ["subtitulos", "emocion", "senales"],
+          params: { subtitulos: { cuentos: CUENTOS_ADULTO }, emocion: { bancos: EMO_ADULTO }, senales: { bancos: SENALES_VISUALES } },
+          intro: "Stage 5 · Nivel 45 · Tres mecánicas de comprensión y reconocimiento visual, combinadas." },
+    46: { rounds: 10, mechanics: ["memoria", "vocab", "frase"],
+          params: { memoria: { lenMin: 5, lenMax: 6 }, vocab: { bancos: VOCAB_ADULTO.concat(VOCAB) }, frase: { frases: FRASES_ADULTO, minW: 5, maxW: 9 } },
+          intro: "Stage 5 · Nivel 46 · Memoria, vocabulario y oraciones, sin repetir el mismo tipo de reto." },
+    47: { rounds: 10, mechanics: ["historia", "senales", "ritmo"],
+          params: { historia: { historias: HISTORIAS_ADULTO, text: false }, senales: { bancos: SENALES_VISUALES }, ritmo: { len: 6 } },
+          intro: "Stage 5 · Nivel 47 · Historias, señales y ritmo combinados." },
+    48: { rounds: 10, mechanics: ["subtitulos", "vocab", "emocion", "memoria"],
+          params: { subtitulos: { cuentos: CUENTOS_ADULTO }, vocab: { bancos: VOCAB_ADULTO.concat(VOCAB) }, emocion: { bancos: EMO_ADULTO }, memoria: { lenMin: 5, lenMax: 6 } },
+          intro: "Stage 5 · Nivel 48 · Cuatro mecánicas alternadas, sin previo aviso." },
+    49: { rounds: 10,
+          mechanics: ["subtitulos", "senales", "frase", "vocab", "historia", "ritmo", "emocion", "memoria"],
+          params: {
+            subtitulos: { cuentos: CUENTOS_ADULTO }, senales: { bancos: SENALES_VISUALES },
+            frase: { frases: FRASES_ADULTO, minW: 5, maxW: 9 }, vocab: { bancos: VOCAB_ADULTO.concat(VOCAB) },
+            historia: { historias: HISTORIAS_ADULTO, text: false }, ritmo: { len: 6 },
+            emocion: { bancos: EMO_ADULTO }, memoria: { lenMin: 5, lenMax: 6 }
+          },
+          intro: "Stage 5 · Nivel 49 · Mezcla exigente de casi todas las mecánicas. Falta solo el reto final." },
+    50: { rounds: 10,
+          mechanics: ["vocab", "historia", "frase", "senales", "ritmo", "emocion", "memoria", "subtitulos"],
+          params: {
+            vocab: { bancos: VOCAB_ADULTO.concat(VOCAB) }, historia: { historias: HISTORIAS_ADULTO, text: false },
+            frase: { frases: FRASES_ADULTO, minW: 5, maxW: 9 }, senales: { bancos: SENALES_VISUALES },
+            ritmo: { len: 6 }, emocion: { bancos: EMO_ADULTO }, memoria: { lenMin: 5, lenMax: 6 },
+            subtitulos: { cuentos: CUENTOS_ADULTO }
+          },
+          intro: "Stage 5 · Nivel 50 · Reto final de El Enigma Lingüístico: las ocho mecánicas, todo lo que aprendiste. ¡Tú puedes!" }
   };
 
   global.IndecapGame.register({
