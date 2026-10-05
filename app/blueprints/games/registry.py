@@ -6,14 +6,13 @@ cerebrales que trabaja y la configuración de sus niveles. El nivel de apoyo
 (pistas, tiempo, repeticiones) es un AJUSTE PEDAGÓGICO calibrado por desempeño,
 nunca un instrumento diagnóstico (metodología DUA del proyecto).
 
-NOTA: "levels" indica cuántos niveles tiene el juego en total. Se está
-ampliando cada juego de 10 a 50 niveles (5 Stages de 10: Base/Media/Alta/
-Muy Alta/Súper Difícil), juego por juego.
+NOTA: "levels" indica cuántos niveles tiene el juego en total. Todos los
+juegos del módulo ya están ampliados de 10-14 a 50 niveles (5 Stages de 10:
+Base/Media/Alta/Muy Alta/Súper Difícil).
 
 "has_stage_map": True marca los juegos que, además de la selección de nivel
 simple, tienen una pantalla previa de "Etapas" (5 Stages de 10 niveles cada
-uno) — discalculia_mercado, dislexia_letras, tdah_ritmo, auditiva_enigma,
-cognitiva_rutinas y visual_eco por ahora, con 50 niveles cada uno.
+uno) — los 8 juegos del módulo, con 50 niveles cada uno.
 """
 
 import unicodedata
@@ -167,7 +166,9 @@ GAMES = {
             "accion_expresion": "Elección de respuesta, autoinstrucciones y espera activa.",
             "implicacion": "Economía de fichas con refuerzo positivo, nunca punitivo.",
         },
-        "levels": 10,
+        "levels": 50,
+        "has_stage_map": True,
+        "stage_size": 10,
         "asset_path": "js/games/tod_arquitecto/game.js",
         "keywords": ["opositor", "desafiante", "tod", "conducta"],
         "available": True,
@@ -187,7 +188,9 @@ GAMES = {
             "accion_expresion": "Arrastre, selección y respuestas cerradas sin presión de tiempo.",
             "implicacion": "Rutina estable con intereses configurables por el docente.",
         },
-        "levels": 10,
+        "levels": 50,
+        "has_stage_map": True,
+        "stage_size": 10,
         "asset_path": "js/games/tea_senales/game.js",
         "keywords": ["tea", "autismo", "espectro"],
         "available": True,
