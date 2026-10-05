@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 
 from app.blueprints.dashboard import bp
@@ -20,8 +20,6 @@ from app.blueprints.dashboard.services import (
     deactivate_student,
     reactivate_student,
     delete_student_permanently,
-    get_sesiones_sistema,
-    get_planes_overview,
     get_student_if_owned_by_teacher,
     get_assigned_trastorno_ids,
     set_assigned_trastornos,
@@ -36,8 +34,9 @@ from app.blueprints.dashboard.services import (
     update_session_notes,
     get_student_ranking_by_completed_sessions,
     get_weekly_completion_counts,
-    get_trastornos_mas_trabajados,
+    get_activity_matrix,
     get_planes_activos,
+    get_trastornos_mas_trabajados,
     get_student_trastornos_con_progreso,
     get_student_actividades_por_trastorno,
     get_student_racha_mensual,
@@ -45,8 +44,13 @@ from app.blueprints.dashboard.services import (
     start_session,
     get_student_profile,
 )
-from app.blueprints.games.registry import get_game_for_trastorno
+from app.blueprints.games.registry import GAMES, get_game, get_game_for_trastorno
 from app.models.content import Trastorno, Actividad
+
+
+# Nombres de etapa, en el mismo orden que usa games/stages.html, para que
+# "Sesiones del sistema" muestre la misma nomenclatura que ve el estudiante.
+STAGE_NAMES = ["Base", "Media", "Alta", "Muy Alta", "Súper Difícil"]
 
 
 def _is_teacher_or_admin() -> bool:
@@ -160,24 +164,16 @@ def panel_general():
     if not _is_teacher_or_admin():
         return redirect(url_for("dashboard.index"))
 
-    rango = request.args.get("rango", "mes")
-    since_map = {
-        "semana": date.today() - timedelta(days=7),
-        "mes": date.today() - timedelta(days=30),
-        "2meses": date.today() - timedelta(days=60),
-        "3meses": date.today() - timedelta(days=90),
-        "todo": None,
-    }
-    since_date = since_map.get(rango, since_map["mes"])
+    actividad = get_activity_matrix(current_user)
+    for fila in actividad["students"]:
+        fila["url"] = url_for("dashboard.perfil_estudiante", student_id=fila["id"])
 
     return render_template(
         "dashboard/teacher/panel_general.html",
-        total_estudiantes=len(get_students_for_teacher(current_user)),
-        ranking=get_student_ranking_by_completed_sessions(current_user, since_date),
-        trastornos_top=get_trastornos_mas_trabajados(current_user),
+        total_estudiantes=len(actividad["students"]),
         planes_activos=get_planes_activos(current_user),
-        serie_semanal=get_weekly_completion_counts(current_user),
-        rango_actual=rango,
+        trastornos_top=get_trastornos_mas_trabajados(current_user),
+        actividad=actividad,
         active_nav="panel_general",
     )
 
@@ -334,12 +330,69 @@ def perfil_estudiante(student_id):
 @bp.route("/sesiones-sistema")
 @login_required
 def sesiones_sistema():
+    """
+    Explorador de los 8 juegos del módulo inclusivo, por Etapas y niveles.
+    Ya no depende del modelo Actividad: cada juego genera sus retos en el
+    navegador (buildRound en su game.js), así que aquí solo se arma el mapa
+    de navegación (juego → etapa → nivel). Cada nivel ofrece dos acciones:
+    jugarlo/proyectarlo en vivo (el docente ya entra en modo vista previa,
+    con todo desbloqueado) o ver una muestra de sus respuestas antes de clase.
+    """
     if not _is_teacher_or_admin():
         return redirect(url_for("dashboard.index"))
-    trastornos = get_sesiones_sistema()
+
+    juegos = []
+    for game in GAMES.values():
+        if game.get("has_stage_map"):
+            stage_size = game.get("stage_size", 10)
+            total_stages = game["levels"] // stage_size
+            stages = []
+            for s in range(1, total_stages + 1):
+                start = (s - 1) * stage_size + 1
+                end = s * stage_size
+                stages.append({
+                    "number": s,
+                    "name": STAGE_NAMES[s - 1] if s - 1 < len(STAGE_NAMES) else f"Etapa {s}",
+                    "start": start,
+                    "end": end,
+                    "levels": list(range(start, end + 1)),
+                })
+        else:
+            stages = [{
+                "number": 1,
+                "name": None,
+                "start": 1,
+                "end": game["levels"],
+                "levels": list(range(1, game["levels"] + 1)),
+            }]
+        juegos.append({"game": game, "stages": stages})
+
     return render_template(
         "dashboard/teacher/sesiones_sistema.html",
-        trastornos=trastornos,
+        juegos=juegos,
+        active_nav="sesiones_sistema",
+    )
+
+
+@bp.route("/sesiones-sistema/<slug>/nivel/<int:level>/respuestas")
+@login_required
+def ver_respuestas(slug, level):
+    """
+    Hoja de respuestas de un nivel, generada en el navegador a partir del
+    propio game.js del juego (mismo motor de contenido que usa el estudiante,
+    sin duplicar ningún banco de datos aquí).
+    """
+    if not _is_teacher_or_admin():
+        return redirect(url_for("dashboard.index"))
+
+    game = get_game(slug)
+    if game is None or level < 1 or level > game["levels"]:
+        abort(404)
+
+    return render_template(
+        "dashboard/teacher/ver_respuestas.html",
+        game=game,
+        level=level,
         active_nav="sesiones_sistema",
     )
 
@@ -397,19 +450,6 @@ def actualizar_notas_sesion(asignacion_id):
     return redirect(url_for("dashboard.actividad_detail", actividad_id=actividad_id))
 
 
-@bp.route("/planes-entrenamiento")
-@login_required
-def planes_entrenamiento():
-    if not _is_teacher_or_admin():
-        return redirect(url_for("dashboard.index"))
-    planes = get_planes_overview(current_user)
-    return render_template(
-        "dashboard/teacher/planes_entrenamiento.html",
-        planes=planes,
-        active_nav="planes_entrenamiento",
-    )
-
-
 @bp.route("/guias-uso")
 @login_required
 def guias_uso():
@@ -455,3 +495,24 @@ def perfil():
 def marcar_notificaciones_leidas():
     mark_all_notifications_read(current_user)
     return redirect(request.referrer or url_for("dashboard.index"))
+
+
+@bp.route("/notificaciones/estado")
+@login_required
+def notificaciones_estado():
+    """Estado de las notificaciones en JSON. Lo consulta static/js/dx-live.js
+    cada pocos segundos para mantener la campana sincronizada sin recargar."""
+    notificaciones = get_recent_notifications(current_user, limit=5)
+    return jsonify({
+        "unread": count_unread_notifications(current_user),
+        "latest_id": notificaciones[0].id if notificaciones else 0,
+        "items": [
+            {
+                "id": n.id,
+                "message": n.message,
+                "is_read": bool(n.is_read),
+                "created_at": n.created_at.strftime("%d/%m %H:%M") if n.created_at else "",
+            }
+            for n in notificaciones
+        ],
+    })

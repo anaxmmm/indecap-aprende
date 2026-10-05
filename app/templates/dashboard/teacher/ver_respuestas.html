@@ -1,0 +1,331 @@
+{% extends "dashboard/teacher/base_teacher.html" %}
+{% block title %}Respuestas · {{ game.name }} — Nivel {{ level }} — indecap-aprende{% endblock %}
+{% block teacher_content %}
+
+{% set stage_size = game.stage_size or 10 %}
+{% set stage_num = ((level - 1) // stage_size) + 1 %}
+{% set stage_names = ["Base", "Media", "Alta", "Muy Alta", "Súper Difícil"] %}
+{% set stage_name = stage_names[stage_num - 1] if stage_num <= stage_names|length else "Etapa " ~ stage_num %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
+
+<style>
+  /* Hoja de respuestas docente (vra-) — paleta del dashboard docente */
+  .vra-actions { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; }
+
+  .vra-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .vra-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 46px; padding: 10px; border-radius: 14px;
+    background: var(--teacher-navy); color: #F5C77A;
+    font-weight: 700; font-size: 13px; flex-shrink: 0;
+  }
+  .vra-head__info { flex: 1; min-width: 200px; }
+  .vra-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.35rem; font-weight: 700; color: var(--teacher-navy); margin: 0;
+  }
+  .vra-meta { color: #6b7280; font-size: 0.85rem; margin: 4px 0 0; }
+  .vra-head__actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+  .vra-note {
+    background: #E6F1FB; color: #0C447C; border-radius: 10px;
+    padding: 10px 14px; font-size: 0.85rem; margin: 1rem 0;
+  }
+
+  .vra-intro { margin-bottom: 1rem; }
+  .vra-intro__label {
+    font-size: 0.75rem; font-weight: 700; color: #6b7280;
+    text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 6px;
+  }
+  .vra-intro__text { margin: 0; line-height: 1.6; }
+
+  .vra-sheet { display: flex; flex-direction: column; gap: 1rem; }
+  .vra-round { break-inside: avoid; }
+
+  .vra-round__head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; flex-wrap: wrap; margin-bottom: 10px;
+  }
+  .vra-round__title { font-size: 1rem; font-weight: 700; color: var(--teacher-navy); margin: 0; }
+  .vra-round__skill {
+    background: var(--teacher-bg); border-radius: 999px;
+    padding: 4px 12px; font-size: 0.72rem; font-weight: 600; color: var(--teacher-navy);
+  }
+  .vra-round__prompt { font-size: 1.02rem; font-weight: 600; margin-bottom: 12px; line-height: 1.5; }
+
+  /* Visual del reto: mismo HTML que genera el game.js; se le inyectan los
+     tokens que games.css define bajo .game-shell para que se vea igual. */
+  .vra-visual {
+    --g-text: #171C1E; --g-muted: #5A6570;
+    --g-frame: var(--teacher-navy); --g-frame-dark: var(--teacher-navy);
+    --g-accent: var(--teacher-gold); --g-accent-soft: #F5C77A;
+    --g-stage: #FFFFFF; --g-ok: #1E6B3A; --g-ok-soft: #E3F3E8;
+    --g-retry: #8A5A00; --g-retry-soft: #FDF1DC;
+    --g-outline: 3px; --g-scale: 1; --g-motion: 0.25s;
+    --indecap-border: #DCE4EA;
+    color: var(--g-text);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+    gap: 12px; margin-bottom: 12px; padding: 10px;
+    background: #FBFCFE; border: 1px dashed #e6e9f2; border-radius: 10px;
+  }
+
+  .vra-options { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .vra-options__item {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 2px solid #e6e9f2; border-radius: 10px; padding: 8px 14px;
+    font-weight: 600; color: var(--teacher-navy); background: #fff; font-size: 0.95rem;
+  }
+  .vra-options__item.is-correct { background: #E3F3E8; border-color: #1E6B3A; color: #1E6B3A; }
+  .vra-options__label { display: inline-flex; flex-direction: column; }
+  .vra-options__caption { font-size: 0.75rem; font-weight: 500; color: #6b7280; }
+  .vra-options__tag { font-size: 0.75rem; font-weight: 700; }
+
+  .vra-round__explain { margin: 0 0 6px; font-size: 0.9rem; color: #171C1E; }
+  .vra-round__hint {
+    margin: 0; font-size: 0.82rem; color: #8A5A00;
+    background: #FDF1DC; border-radius: 8px; padding: 8px 12px;
+  }
+  .vra-round__note { margin: 0; font-size: 0.85rem; color: #6b7280; }
+
+  .vra-summary { cursor: pointer; font-weight: 600; color: var(--teacher-navy); }
+  .vra-pedagogy__body { margin-top: 10px; font-size: 0.9rem; color: #5A6570; line-height: 1.65; }
+
+  @media print {
+    .teacher-topbar, .teacher-sidebar, .vra-actions, .vra-head__actions { display: none !important; }
+    .teacher-shell { display: block; }
+    .teacher-content { padding: 0; }
+    body.teacher-body { background: #fff; }
+  }
+</style>
+
+<div class="vra-actions">
+  <a href="{{ url_for('dashboard.sesiones_sistema') }}" class="btn btn-outline-secondary btn-sm">← Sesiones sistema</a>
+  <span class="ms-auto d-flex gap-2">
+    {% if level > 1 %}
+    <a href="{{ url_for('dashboard.ver_respuestas', slug=game.slug, level=level - 1) }}" class="btn btn-outline-secondary btn-sm">← Nivel {{ level - 1 }}</a>
+    {% endif %}
+    {% if level < game.levels %}
+    <a href="{{ url_for('dashboard.ver_respuestas', slug=game.slug, level=level + 1) }}" class="btn btn-outline-secondary btn-sm">Nivel {{ level + 1 }} →</a>
+    {% endif %}
+  </span>
+</div>
+
+<header class="teacher-card vra-head">
+  <span class="vra-badge">{{ game.condition }}</span>
+  <div class="vra-head__info">
+    <h1 class="vra-title">{{ game.name }}</h1>
+    <p class="vra-meta">
+      Nivel {{ level }} de {{ game.levels }}
+      {% if game.has_stage_map %}
+        · Etapa {{ stage_num }} · {{ stage_name }} (niveles {{ (stage_num - 1) * stage_size + 1 }}–{{ stage_num * stage_size }})
+      {% endif %}
+    </p>
+  </div>
+  <div class="vra-head__actions">
+    <a href="{{ url_for('games.play', slug=game.slug, level=level) }}" class="btn btn-teacher-primary btn-sm" target="_blank" rel="noopener">Jugar / proyectar</a>
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">Imprimir</button>
+  </div>
+</header>
+
+<p class="vra-note" role="note">
+  <strong>Muestra generada con el mismo motor que juega el estudiante.</strong>
+  Los retos se crean en el navegador con valores aleatorios: cada vez que abras esta hoja verás
+  una variación distinta del nivel. Para verlo en vivo con tus estudiantes usa «Jugar / proyectar».
+</p>
+
+<div id="vra-intro" class="teacher-card vra-intro" hidden>
+  <p class="vra-intro__label">Lo que el estudiante ve al iniciar el nivel</p>
+  <p class="vra-intro__text" id="vra-intro-text"></p>
+</div>
+
+<div id="vra-sheet" class="vra-sheet" aria-live="polite">
+  <div class="teacher-card">
+    <p class="text-muted mb-0">Generando la hoja de respuestas…</p>
+  </div>
+</div>
+
+<details class="teacher-card mt-3">
+  <summary class="vra-summary">Qué trabaja esta actividad</summary>
+  <div class="vra-pedagogy__body">
+    <p><strong>Habilidad núcleo:</strong> {{ game.core_skill }}</p>
+    <p><strong>Regiones cerebrales implicadas:</strong></p>
+    <ul>
+      {% for region in game.brain_regions %}<li>{{ region }}</li>{% endfor %}
+    </ul>
+    <p><strong>Representación:</strong> {{ game.dua.representacion }}</p>
+    <p><strong>Acción y expresión:</strong> {{ game.dua.accion_expresion }}</p>
+    <p><strong>Implicación:</strong> {{ game.dua.implicacion }}</p>
+    <p class="vra-round__note">
+      El nivel de apoyo (pistas, tiempo y repeticiones) se calibra según el
+      desempeño. Es un ajuste pedagógico, no un instrumento diagnóstico.
+    </p>
+  </div>
+</details>
+
+<script src="{{ url_for('static', filename='js/games/core/engine.js') }}"></script>
+<script>
+  // Esta página no tiene .game-shell, así que el motor queda inerte (el
+  // constructor del Engine sale silenciosamente). Interceptamos register()
+  // únicamente para quedarnos con la definición del juego (getLevel y
+  // buildRound), que es exactamente el contenido que ve el estudiante.
+  window.__vraDefinition = null;
+  (function () {
+    var originalRegister = window.IndecapGame.register;
+    window.IndecapGame.register = function (definition) {
+      window.__vraDefinition = definition;
+      try {
+        originalRegister.call(window.IndecapGame, definition);
+      } catch (err) {
+        /* Sin .game-shell el motor no arranca; la definición ya quedó guardada. */
+      }
+    };
+  })();
+</script>
+<script src="{{ url_for('static', filename=game.asset_path) }}"></script>
+<script>
+(function () {
+  "use strict";
+
+  var definition = window.__vraDefinition;
+  var level = Number("{{ level }}");
+  var sheet = document.getElementById("vra-sheet");
+
+  function showError(message) {
+    sheet.innerHTML = "";
+    var card = document.createElement("div");
+    card.className = "teacher-card";
+    var p = document.createElement("p");
+    p.className = "text-muted mb-0";
+    p.textContent = message;
+    card.appendChild(p);
+    sheet.appendChild(card);
+  }
+
+  if (!definition || typeof definition.getLevel !== "function" || typeof definition.buildRound !== "function") {
+    showError("No se pudo cargar el contenido de este juego. Recarga la página o verifica que el juego esté disponible.");
+    return;
+  }
+
+  var cfg;
+  try { cfg = definition.getLevel(level); } catch (err) { cfg = null; }
+  if (!cfg || !cfg.rounds) {
+    showError("Este nivel no tiene retos configurados.");
+    return;
+  }
+
+  // Mismo contexto que entrega el motor cuando el apoyo es independiente.
+  var ctx = { support: 3 };
+
+  if (cfg.intro) {
+    document.getElementById("vra-intro-text").textContent = cfg.intro;
+    document.getElementById("vra-intro").hidden = false;
+  }
+
+  function buildRoundCard(num, round) {
+    var card = document.createElement("article");
+    card.className = "teacher-card vra-round";
+
+    var head = document.createElement("div");
+    head.className = "vra-round__head";
+    var title = document.createElement("h2");
+    title.className = "vra-round__title";
+    title.textContent = "Reto " + num;
+    head.appendChild(title);
+    if (round && round.skill) {
+      var skill = document.createElement("span");
+      skill.className = "vra-round__skill";
+      skill.textContent = round.skill;
+      head.appendChild(skill);
+    }
+    card.appendChild(head);
+
+    if (!round) {
+      var err = document.createElement("p");
+      err.className = "text-muted mb-0";
+      err.textContent = "Este reto no se pudo generar.";
+      card.appendChild(err);
+      return card;
+    }
+
+    var prompt = document.createElement("p");
+    prompt.className = "vra-round__prompt";
+    prompt.textContent = round.prompt || "(sin consigna)";
+    card.appendChild(prompt);
+
+    if (round.visual) {
+      var visual = document.createElement("div");
+      visual.className = "vra-visual";
+      // Mismo origen y confianza que play.html: el HTML lo genera el game.js.
+      visual.innerHTML = round.visual;
+      card.appendChild(visual);
+    }
+
+    if (round.options && round.options.length) {
+      var list = document.createElement("ul");
+      list.className = "vra-options";
+      round.options.forEach(function (option) {
+        var correct = String(option.value) === String(round.answer);
+        var item = document.createElement("li");
+        item.className = "vra-options__item" + (correct ? " is-correct" : "");
+
+        var label = document.createElement("span");
+        label.className = "vra-options__label";
+        label.innerHTML = option.label;
+        item.appendChild(label);
+
+        if (option.caption) {
+          var caption = document.createElement("span");
+          caption.className = "vra-options__caption";
+          caption.textContent = option.caption;
+          label.appendChild(caption);
+        }
+
+        if (correct) {
+          var tag = document.createElement("span");
+          tag.className = "vra-options__tag";
+          tag.textContent = "✓ Respuesta correcta";
+          item.appendChild(tag);
+        }
+        list.appendChild(item);
+      });
+      card.appendChild(list);
+    } else if (typeof round.mount === "function") {
+      var note = document.createElement("p");
+      note.className = "vra-round__note";
+      note.textContent = "Este reto usa una mecánica interactiva que no se puede mostrar en una hoja estática. Usa «Jugar / proyectar» para verlo en vivo.";
+      card.appendChild(note);
+    }
+
+    if (round.explain) {
+      var expl = document.createElement("p");
+      expl.className = "vra-round__explain";
+      var strong = document.createElement("strong");
+      strong.textContent = "Explicación: ";
+      expl.appendChild(strong);
+      expl.appendChild(document.createTextNode(round.explain));
+      card.appendChild(expl);
+    }
+
+    if (round.hint) {
+      var hint = document.createElement("p");
+      hint.className = "vra-round__hint";
+      hint.textContent = "💡 Pista que vería el estudiante: " + round.hint;
+      card.appendChild(hint);
+    }
+
+    return card;
+  }
+
+  var frag = document.createDocumentFragment();
+  for (var i = 0; i < cfg.rounds; i++) {
+    var round = null;
+    try { round = definition.buildRound(cfg, i, ctx); } catch (err) { round = null; }
+    frag.appendChild(buildRoundCard(i + 1, round));
+  }
+
+  sheet.innerHTML = "";
+  sheet.appendChild(frag);
+})();
+</script>
+{% endblock %}

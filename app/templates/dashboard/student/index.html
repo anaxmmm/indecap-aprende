@@ -1,36 +1,73 @@
 {% extends "dashboard/student/base_student.html" %}
 {% block title %}Mi panel — indecap-aprende{% endblock %}
 {% block student_content %}
-<h1 class="h4 mb-3">¡Hola, {{ current_user.full_name }}!</h1>
+{% set total_all = trastornos | sum(attribute='total') %}
+{% set done_all = trastornos | sum(attribute='completadas') %}
+{% set avance = ((done_all / total_all * 100) | round | int) if total_all else 0 %}
+{% set nombre = current_user.full_name.split()[0] if current_user.full_name else '' %}
 
-<div class="row g-3 mb-4">
-  <div class="col-md-6">
-    <div class="teacher-card text-center">
-      <p class="text-muted small mb-1">Racha este mes</p>
-      <p class="h4 mb-0">{{ racha }} día{{ 's' if racha != 1 else '' }}</p>
+<section class="dx-hero dx-rise">
+  <div>
+    <p class="dx-eyebrow">Mi espacio</p>
+    <h1 class="dx-hero__title">¡Hola, <em>{{ nombre }}</em>!</h1>
+    <p class="dx-hero__text">
+      {% if racha > 0 %}
+      Llevas {{ racha }} día{{ 's' if racha != 1 else '' }} activo{{ 's' if racha != 1 else '' }} este mes. ¡Sigue así!
+      {% else %}
+      Hoy es un buen día para jugar tu primera actividad. Avanzas a tu propio ritmo.
+      {% endif %}
+    </p>
+  </div>
+  <a href="{{ url_for('dashboard.student_juegos') }}" class="dx-btn dx-btn--gold">Ir a Juegos</a>
+</section>
+
+<div class="dx-kpis">
+  <div class="dx-kpi dx-rise" style="--d:.05s">
+    <div class="dx-kpi__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    </div>
+    <div>
+      <p class="dx-kpi__label">Racha este mes</p>
+      <p class="dx-kpi__value">{{ racha }} día{{ 's' if racha != 1 else '' }}</p>
     </div>
   </div>
-  <div class="col-md-6">
-    <div class="teacher-card text-center">
-      <p class="text-muted small mb-1">Actividades iniciadas</p>
-      <p class="h4 mb-0">{{ actividades_iniciadas|length }}</p>
+
+  <div class="dx-kpi dx-rise" style="--d:.1s">
+    <div class="dx-kpi__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </div>
+    <div>
+      <p class="dx-kpi__label">Actividades iniciadas</p>
+      <p class="dx-kpi__value">{{ actividades_iniciadas|length }}</p>
+    </div>
+  </div>
+
+  <div class="dx-kpi dx-rise" style="--d:.15s">
+    <div class="dx-kpi__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+    </div>
+    <div>
+      <p class="dx-kpi__label">Avance general</p>
+      <p class="dx-kpi__value">{{ avance }}%</p>
     </div>
   </div>
 </div>
 
+<p class="dx-highlight dx-rise" style="--d:.18s">La constancia es la clave del éxito.</p>
+
 {% if actividades_iniciadas %}
-<div class="teacher-card mb-4">
-  <h2 class="h6 mb-3">Sigue donde quedaste</h2>
-  <div class="d-flex flex-column gap-2">
+<div class="dx-card dx-rise mb-3" style="--d:.2s">
+  <p class="dx-eyebrow">Continúa</p>
+  <h2 class="dx-card__title">Sigue donde quedaste</h2>
+  <div class="d-flex flex-column gap-2 mt-3">
     {% for sesion in actividades_iniciadas %}
-    <div class="d-flex align-items-center justify-content-between p-2 rounded"
-         style="background: var(--teacher-bg); border: 1px solid #e6e9f2;">
+    <div class="dx-resume">
       <div>
         <p class="mb-0 small fw-semibold">{{ sesion.actividad.title }}</p>
         <p class="mb-0 text-muted" style="font-size: 0.75rem;">{{ sesion.actividad.trastorno.name }}</p>
       </div>
       <a href="{{ url_for('dashboard.student_juego_detail', trastorno_id=sesion.actividad.trastorno_id) }}"
-         class="badge text-decoration-none" style="background: var(--teacher-navy); color:#fff;">
+         class="dx-btn dx-btn--gold" style="padding: .35rem 1rem; font-size: .8rem;">
         Continuar
       </a>
     </div>
@@ -39,24 +76,32 @@
 </div>
 {% endif %}
 
-<div class="teacher-card mb-4">
-  <h2 class="h6 mb-3">Mis trastornos asignados</h2>
+<div class="dx-card dx-rise mb-3" style="--d:.25s">
+  <p class="dx-eyebrow">Tu plan</p>
+  <h2 class="dx-card__title">Mis trastornos asignados</h2>
   {% if not trastornos %}
-  <p class="text-muted small mb-0">
-    Todavía no tienes trastornos asignados. Tu docente los configurará pronto.
-  </p>
+  <p class="dx-empty">Todavía no tienes trastornos asignados. Tu docente los configurará pronto.</p>
   {% else %}
-  <div class="row g-3">
+  <div class="dx-subjects">
     {% for item in trastornos %}
-    <div class="col-md-6">
-      <div class="p-3 rounded" style="background: var(--teacher-bg); border: 1px solid #e6e9f2;">
-        <p class="mb-1 fw-semibold">{{ item.trastorno.name }}</p>
-        <div class="progress mb-1" style="height: 6px;">
-          <div class="progress-bar" role="progressbar" style="width: {{ item.porcentaje }}%; background: var(--teacher-gold);"></div>
-        </div>
-        <p class="mb-0 text-muted" style="font-size: 0.75rem;">
+    {% set pct = [item.porcentaje, 100] | min %}
+    {% set ring_offset = (213.63 * (1 - pct / 100)) | round(2) %}
+    <div class="dx-subject dx-rise" style="--d: {{ 0.3 + loop.index0 * 0.06 }}s">
+      <div class="dx-ring" role="img" aria-label="{{ pct }}% completado">
+        <svg width="76" height="76" viewBox="0 0 80 80" aria-hidden="true">
+          <circle class="dx-ring__track" cx="40" cy="40" r="34" fill="none" stroke-width="7"/>
+          <circle class="dx-ring__value" cx="40" cy="40" r="34" fill="none" stroke-width="7"
+                  stroke-dasharray="213.63"
+                  stroke-dashoffset="{{ ring_offset }}"/>
+        </svg>
+        <span class="dx-ring__label">{{ pct }}%</span>
+      </div>
+      <div>
+        <p class="dx-subject__name">{{ item.trastorno.name }}</p>
+        <p class="dx-subject__meta">
           {{ item.completadas }} de {{ item.total }} actividades completadas ({{ item.porcentaje }}%)
         </p>
+        <a class="dx-link" href="{{ url_for('dashboard.student_juego_detail', trastorno_id=item.trastorno.id) }}">Jugar →</a>
       </div>
     </div>
     {% endfor %}
@@ -64,22 +109,21 @@
   {% endif %}
 </div>
 
-<div class="teacher-card">
-  <h2 class="h6 mb-3">Notificaciones</h2>
-  {% if not recent_notifications %}
-  <p class="text-muted small mb-0">
-    Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te asigne algo nuevo.
-  </p>
-  {% else %}
-  <div class="d-flex flex-column gap-2">
+<div class="dx-card dx-rise" style="--d:.35s">
+  <p class="dx-eyebrow">Avisos</p>
+  <h2 class="dx-card__title">Notificaciones</h2>
+  <div class="dx-feed" data-live-feed
+       data-empty="Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te asigne algo nuevo.">
+    {% if not recent_notifications %}
+    <p class="dx-empty">Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te asigne algo nuevo.</p>
+    {% else %}
     {% for n in recent_notifications %}
-    <div class="p-2 rounded"
-         style="background: var(--teacher-bg); {{ 'border-left: 3px solid var(--teacher-gold);' if not n.is_read else '' }}">
-      <p class="mb-0 small">{{ n.message }}</p>
-      <p class="mb-0 text-muted" style="font-size: 0.7rem;">{{ n.created_at.strftime('%d/%m %H:%M') }}</p>
+    <div class="dx-feed__item{{ '' if n.is_read else ' is-unread' }}">
+      <p class="dx-feed__msg">{{ n.message }}</p>
+      <span class="dx-feed__date">{{ n.created_at.strftime('%d/%m %H:%M') }}</span>
     </div>
     {% endfor %}
+    {% endif %}
   </div>
-  {% endif %}
 </div>
 {% endblock %}

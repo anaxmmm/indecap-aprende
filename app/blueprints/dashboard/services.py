@@ -606,3 +606,50 @@ def start_session(student: User, sesion_id: int) -> SesionAsignada:
 
 def get_student_profile(student: User) -> Optional[StudentProfile]:
     return StudentProfile.query.filter_by(user_id=student.id).first()
+
+
+def get_activity_matrix(teacher: User, days: int = 365) -> dict:
+    """Partidas completadas y niveles superados (score >= 60) por
+    estudiante y por dia, para el grafico del panel general."""
+    students = get_students_for_teacher(teacher)
+    today = date.today()
+    start = today - timedelta(days=days - 1)
+    dates = [start + timedelta(days=i) for i in range(days)]
+    index = {d: i for i, d in enumerate(dates)}
+
+    rows = {
+        s.id: {
+            "id": s.id,
+            "name": s.full_name,
+            "done": [0] * days,
+            "passed": [0] * days,
+        }
+        for s in students
+    }
+
+    if rows:
+        # created_at se guarda en UTC; Colombia es UTC-5.
+        offset = timedelta(hours=5)
+        query = db.session.query(
+            GameSession.user_id,
+            GameSession.created_at,
+            GameSession.score,
+        ).filter(
+            GameSession.user_id.in_(list(rows.keys())),
+            GameSession.completed.is_(True),
+            GameSession.created_at >= datetime.combine(start, datetime.min.time()),
+        )
+        for user_id, created_at, score in query:
+            if created_at is None:
+                continue
+            i = index.get((created_at - offset).date())
+            if i is None:
+                continue
+            rows[user_id]["done"][i] += 1
+            if (score or 0) >= 60:
+                rows[user_id]["passed"][i] += 1
+
+    return {
+        "dates": [d.isoformat() for d in dates],
+        "students": list(rows.values()),
+    }

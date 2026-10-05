@@ -1,28 +1,202 @@
-{% extends "dashboard/teacher/base_teacher.html" %}
+﻿{% extends "dashboard/teacher/base_teacher.html" %}
 {% block title %}Sesiones del sistema — indecap-aprende{% endblock %}
 {% block teacher_content %}
-<h1 class="h4 mb-1">Sesiones del sistema</h1>
-<p class="text-muted mb-3">Consulta el contenido de cada actividad y asigna sesiones sueltas a tus estudiantes.</p>
 
-{% if not trastornos %}
-<p class="text-muted">Todavía no hay trastornos ni actividades cargadas en el sistema.</p>
+<style>
+
+  /* Cuadrícula de tarjetas */
+  .gx-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+  .gx-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    transition: box-shadow .2s ease, translate .2s ease;
+  }
+  .gx-card:hover {
+    box-shadow: 0 10px 22px rgba(26, 58, 107, 0.12);
+    translate: 0 -2px;
+  }
+  .gx-card__name {
+    font-family: inherit;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--teacher-navy);
+    margin: 0;
+  }
+  .gx-card__condition {
+    color: var(--teacher-text-muted);
+    margin: 0;
+  }
+  .gx-card__meta {
+    font-size: 0.8rem;
+    color: var(--teacher-text-muted);
+    margin: 0 0 10px;
+  }
+  .gx-card__btn { margin-top: auto; align-self: flex-start; }
+
+  /* Ventana de etapas y niveles */
+  .gx-dialog {
+    border: none;
+    border-radius: 18px;
+    padding: 0;
+    width: min(760px, 94vw);
+    max-height: 86vh;
+    box-shadow: 0 24px 60px rgba(17, 22, 39, 0.3);
+  }
+  .gx-dialog::backdrop { background: rgba(17, 22, 39, 0.55); }
+  .gx-dialog__inner { padding: 1.5rem; }
+  .gx-dialog__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .gx-dialog__title {
+    font-family: inherit;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--teacher-navy);
+    margin: 0;
+  }
+  .gx-dialog__sub { font-size: 0.85rem; color: var(--teacher-text-muted); margin: 2px 0 0; }
+  .gx-dialog__close {
+    border: none;
+    background: var(--teacher-bg);
+    border-radius: 50%;
+    width: 34px; height: 34px;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: var(--teacher-navy);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .gx-dialog__close:hover { background: var(--teacher-border); }
+
+  .gx-stages { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
+  .gx-stage-chip {
+    border: 1px solid var(--teacher-border);
+    background: var(--teacher-bg);
+    border-radius: 999px;
+    padding: 7px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--teacher-navy);
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .gx-stage-chip small { display: block; font-size: 0.68rem; font-weight: 500; color: var(--teacher-text-muted); }
+  .gx-stage-chip:hover { border-color: var(--teacher-navy); }
+  .gx-stage-chip.is-active { background: var(--teacher-navy); border-color: var(--teacher-navy); color: #fff; }
+  .gx-stage-chip.is-active small { color: var(--teacher-gold-soft); }
+
+  .gx-levels { display: none; }
+  .gx-levels.is-active { display: grid; }
+  .gx-levels { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .gx-level {
+    border: 1px solid var(--teacher-border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: #fff;
+    transition: border-color .2s ease, box-shadow .2s ease, translate .2s ease;
+  }
+  .gx-level:hover {
+    border-color: var(--teacher-navy);
+    box-shadow: 0 8px 18px rgba(26, 58, 107, 0.1);
+    translate: 0 -2px;
+  }
+  .gx-level__num { font-weight: 700; font-size: 0.95rem; color: var(--teacher-navy); margin-bottom: 8px; }
+  .gx-level__actions { display: flex; gap: 6px; }
+  .gx-level__actions .btn { border-radius: 8px; font-size: 0.78rem; padding: 0.25rem 0.6rem; }
+</style>
+
+{% if not juegos %}
+<div class="teacher-card">
+  <p class="text-muted mb-0">Todavía no hay juegos configurados en el sistema.</p>
+</div>
 {% endif %}
 
-{% for trastorno in trastornos %}
-<div class="teacher-card mb-3">
-  <h2 class="h6">{{ trastorno.name }}</h2>
-  {% if trastorno.actividades %}
-  <ul class="teacher-plain-list">
-    {% for actividad in trastorno.actividades|sort(attribute="order_index") %}
-    <li>
-      <a href="{{ url_for('dashboard.actividad_detail', actividad_id=actividad.id) }}">{{ actividad.title }}</a>
-      <span class="text-muted small">— {{ actividad.estimated_minutes }} min</span>
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="text-muted small mb-0">Sin actividades registradas para este trastorno.</p>
-  {% endif %}
-</div>
+<div class="gx-grid">
+{% for item in juegos %}
+<section class="teacher-card gx-card" data-search="{{ (item.game.name ~ ' ' ~ item.game.condition)|lower }}">
+  <h2 class="gx-card__name">{{ item.game.name }}</h2>
+  <p class="gx-card__condition">{{ item.game.condition }}</p>
+  <p class="gx-card__meta">
+    {{ item.game.levels }} niveles{% if item.stages|length > 1 %} · {{ item.stages|length }} etapas{% endif %}
+  </p>
+  <button type="button" class="btn btn-teacher-primary gx-card__btn" data-open>Ver niveles</button>
+
+  <dialog class="gx-dialog" aria-label="Niveles de {{ item.game.name }}">
+    <div class="gx-dialog__inner">
+      <div class="gx-dialog__head">
+        <div>
+          <h3 class="gx-dialog__title">{{ item.game.name }}</h3>
+          <p class="gx-dialog__sub">{{ item.game.condition }} · {{ item.game.levels }} niveles</p>
+        </div>
+        <button type="button" class="gx-dialog__close" data-close aria-label="Cerrar">×</button>
+      </div>
+
+      <div class="gx-stages" role="tablist" aria-label="Etapas de {{ item.game.name }}">
+        {% for stage in item.stages %}
+        <button type="button" class="gx-stage-chip {{ 'is-active' if loop.first else '' }}"
+                data-stage="{{ stage.number }}" role="tab"
+                aria-selected="{{ 'true' if loop.first else 'false' }}">
+          {% if stage.name %}{{ stage.name }}{% else %}Niveles{% endif %}
+          <small>{{ stage.start }}–{{ stage.end }}</small>
+        </button>
+        {% endfor %}
+      </div>
+
+      {% for stage in item.stages %}
+      <div class="gx-levels {{ 'is-active' if loop.first else '' }}"
+           data-panel="{{ stage.number }}" role="tabpanel">
+        {% for lvl in stage.levels %}
+        <div class="gx-level">
+          <div class="gx-level__num">Nivel {{ lvl }}</div>
+          <div class="gx-level__actions">
+            <a href="{{ url_for('games.play', slug=item.game.slug, level=lvl) }}"
+               class="btn btn-teacher-primary" target="_blank" rel="noopener">Jugar</a>
+            <a href="{{ url_for('dashboard.ver_respuestas', slug=item.game.slug, level=lvl) }}"
+               class="btn btn-outline-secondary" target="_blank" rel="noopener">Respuestas</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </dialog>
+</section>
 {% endfor %}
+</div>
+
+<script>
+  document.querySelectorAll(".gx-card").forEach((card) => {
+    const dialog = card.querySelector("dialog");
+
+    card.querySelector("[data-open]").addEventListener("click", () => dialog.showModal());
+    dialog.querySelector("[data-close]").addEventListener("click", () => dialog.close());
+    // Cerrar al hacer clic fuera del contenido
+    dialog.addEventListener("click", (e) => { if (e.target === dialog) dialog.close(); });
+
+    const chips = dialog.querySelectorAll(".gx-stage-chip");
+    const panels = dialog.querySelectorAll(".gx-levels");
+    chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        chips.forEach((c) => {
+          c.classList.remove("is-active");
+          c.setAttribute("aria-selected", "false");
+        });
+        chip.classList.add("is-active");
+        chip.setAttribute("aria-selected", "true");
+        panels.forEach((p) => p.classList.toggle("is-active", p.dataset.panel === chip.dataset.stage));
+      });
+    });
+  });
+</script>
 {% endblock %}
+
