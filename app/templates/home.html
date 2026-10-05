@@ -3,184 +3,255 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>indecap-aprende</title>
+  <title>indecap-aprende · Aprende de una forma que se adapte a ti</title>
+  <meta name="description" content="Plataforma educativa inclusiva que adapta actividades, accesibilidad y apoyos a diferentes formas de aprender. Proyecto de INDECAP.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
 </head>
 <body>
-  <nav class="home-nav">
+  <nav class="home-nav" aria-label="Navegación principal">
     <div class="home-nav__brand-group">
-      <img src="{{ url_for('static', filename='images/logo-indecap-aprende.png') }}" alt="INDECAP — indecap-aprende" class="home-nav__logo">
+      <a href="#inicio" aria-label="Ir al inicio">
+        <img src="{{ url_for('static', filename='images/logo-indecap-aprende.png') }}" alt="INDECAP — indecap-aprende" class="home-nav__logo">
+      </a>
     </div>
-    <div class="home-nav__links">
-      <a href="#solucion" data-section="solucion">Solución</a>
-      <a href="#trastornos" data-section="trastornos">Trastornos</a>
+    <div class="home-nav__links" id="nav-links">
+      <a href="#experiencia" data-section="experiencia">Experiencia</a>
+      <a href="#necesidades" data-section="necesidades">Necesidades de apoyo</a>
       <a href="#como-funciona" data-section="como-funciona">Cómo funciona</a>
-      <a href="#metodologia" data-section="metodologia">Metodología</a>
+      <a href="#dua" data-section="dua">Metodología</a>
       <a href="#quienes-somos" data-section="quienes-somos">Quiénes somos</a>
-      <a href="#novedades" data-section="novedades">Novedades</a>
     </div>
-      <div class="home-nav__access">
+    <div class="home-nav__access">
       <button type="button" id="btn-lang-toggle" class="home-nav__lang-btn" aria-label="Cambiar idioma">
         <span id="lang-toggle-label">ES</span>
       </button>
       <button type="button" class="btn btn-primary btn-sm btn-acceder">Acceder</button>
+      <button type="button" class="home-nav__burger" id="nav-burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </nav>
 
   <header class="home-hero" id="inicio">
     <div class="home-hero__shape"></div>
-    <h1 class="home-hero__title">
-      Aquí podrás aprender <em>y mejorar cognitivamente</em>, a tu propio ritmo
-    </h1>
-    <p class="home-hero__subtitle">
-      Actividades de intervención educativa por trastorno, con acompañamiento
-      inclusivo real para cada estudiante de INDECAP.
-    </p>
-    <div class="home-scroll-hint">
+    <div class="home-hero__shape home-hero__shape--2"></div>
+    <div class="home-hero__content">
+      <h1 class="home-hero__title">APRENDE DE UNA FORMA <em> INTUITIVA</em></h1>
+      <p class="home-hero__subtitle">
+        Una plataforma educativa inclusiva que adapta actividades, accesibilidad y apoyos a diferentes formas de aprender.
+      </p>
+      <div class="home-hero__actions">
+        <button type="button" class="home-btn home-btn--gold btn-acceder">Acceder</button>
+        <a href="#como-funciona" id="btn-como-funciona" class="home-btn home-btn--ghost">Cómo funciona</a>
+      </div>
+    </div>
+    <a href="#experiencia" class="home-scroll-hint" aria-label="Conoce indecap-aprende">
       <span>↓</span>
       <small>Conoce indecap-aprende</small>
-    </div>
+    </a>
   </header>
 
-  <section id="solucion" class="home-section home-reveal">
-    <p class="home-section__eyebrow">Solución</p>
-    <h2 class="home-section__title">Intervención por trastorno, no contenido genérico</h2>
-    <p class="home-section__text">
-      Cada actividad se diseña alrededor de un trastorno específico —dislexia,
-      discalculia, TDAH, TEA, trastorno opositor desafiante, discapacidad visual
-      y auditiva— con acompañamiento inclusivo desde el diseño, no como un
-      anexo de accesibilidad agregado al final.
-    </p>
+  <section id="experiencia" class="home-section">
+    <div class="home-container home-reveal">
+      <p class="home-section__eyebrow">Experiencia</p>
+      <h2 class="home-section__title">Una experiencia para todos</h2>
+      <p class="home-section__text">
+        El contenido se adapta a cada estudiante, teniendo en cuenta las barreras de acceso, es inclusivo en su interacción y diseño para el correcto acompañamiento de sus procesos.
+      </p
+      <p class="home-section__highlight">La constancia es la clave del éxito.</p>
+    </div>
   </section>
 
-  <section id="trastornos" class="home-section home-section--alt home-reveal">
-    <p class="home-section__eyebrow">Trastornos que trabajamos</p>
-    <h2 class="home-section__title">Necesidades reales del instituto</h2>
-    <div class="home-grid">
-      <div class="home-grid__card">
-        <p class="home-grid__card-title">Dislexia</p>
-        <p class="home-grid__card-text">Lectura en voz alta con resaltado de palabra en tiempo real.</p>
+  <section id="necesidades" class="home-section home-section--alt">
+    <div class="home-container">
+      <div class="home-reveal">
+        <p class="home-section__eyebrow">Necesidades de apoyo</p>
       </div>
-      <div class="home-grid__card">
-        <p class="home-grid__card-title">Discalculia</p>
-        <p class="home-grid__card-text">Recta numérica y bloques visuales, no solo cifras.</p>
-      </div>
-      <div class="home-grid__card">
-        <p class="home-grid__card-title">TDAH</p>
-        <p class="home-grid__card-text">Micro-actividades de 20-30 min con checkpoints visibles.</p>
-      </div>
-      <div class="home-grid__card">
-        <p class="home-grid__card-title">TEA</p>
-        <p class="home-grid__card-text">Rutinas predecibles y control real del entorno visual.</p>
-      </div>
-      <div class="home-grid__card">
-        <p class="home-grid__card-title">Trastorno opositor desafiante</p>
-        <p class="home-grid__card-text">Autonomía real de avance, sin límites de tiempo impuestos.</p>
-      </div>
-      <div class="home-grid__card">
-        <p class="home-grid__card-title">Discapacidad visual</p>
-        <p class="home-grid__card-text">Navegación por teclado, lector de pantalla, alto contraste.</p>
-      </div>
-      <div class="home-grid__card">
-        <p class="home-grid__card-title">Discapacidad auditiva</p>
-        <p class="home-grid__card-text">Subtítulos y biblioteca de video en LSC.</p>
-      </div>
-      <div class="home-grid__card">
-        <p class="home-grid__card-title">Discapacidad cognitiva</p>
-        <p class="home-grid__card-text">Perfil de accesibilidad configurable por docente.</p>
+      <div class="home-grid">
+        <div class="home-grid__card home-reveal" style="--d:.00s">
+          <span class="home-grid__badge" aria-hidden="true">Dx</span>
+          <p class="home-grid__card-title">Dislexia</p>
+          <p class="home-grid__card-text">Facilita la lectura mediante apoyo auditivo, resaltado de palabras y contenido estructurado.</p>
+        </div>
+        <div class="home-grid__card home-reveal" style="--d:.06s">
+          <span class="home-grid__badge" aria-hidden="true">Dc</span>
+          <p class="home-grid__card-title">Discalculia</p>
+          <p class="home-grid__card-text">Convierte los conceptos numéricos en experiencias visuales, concretas y fáciles de comprender.</p>
+        </div>
+        <div class="home-grid__card home-reveal" style="--d:.12s">
+          <span class="home-grid__badge" aria-hidden="true">TDAH</span>
+          <p class="home-grid__card-title">TDAH</p>
+          <p class="home-grid__card-text">Actividades breves y estructuradas que facilitan la concentración, la organización y el seguimiento de cada objetivo.</p>
+        </div>
+        <div class="home-grid__card home-reveal" style="--d:.18s">
+          <span class="home-grid__badge" aria-hidden="true">TEA</span>
+          <p class="home-grid__card-title">TEA</p>
+          <p class="home-grid__card-text">Entornos predecibles, instrucciones claras y una experiencia visual organizada para facilitar la interacción.</p>
+        </div>
+        <div class="home-grid__card home-reveal" style="--d:.00s">
+          <span class="home-grid__badge" aria-hidden="true">TOD</span>
+          <p class="home-grid__card-title">Trastorno opositor desafiante</p>
+          <p class="home-grid__card-text">Actividades que promueven la autonomía, la toma de decisiones y una participación activa en el aprendizaje.</p>
+        </div>
+        <div class="home-grid__card home-reveal" style="--d:.06s">
+          <span class="home-grid__badge" aria-hidden="true">Vis</span>
+          <p class="home-grid__card-title">Discapacidad visual</p>
+          <p class="home-grid__card-text">Acceso al contenido mediante navegación por teclado, lectores de pantalla y opciones de contraste.</p>
+        </div>
+        <div class="home-grid__card home-reveal" style="--d:.12s">
+          <span class="home-grid__badge" aria-hidden="true">Aud</span>
+          <p class="home-grid__card-title">Discapacidad auditiva</p>
+          <p class="home-grid__card-text">Contenido accesible mediante subtítulos, recursos visuales y materiales audiovisuales adaptados.</p>
+        </div>
+        <div class="home-grid__card home-reveal" style="--d:.18s">
+          <span class="home-grid__badge" aria-hidden="true">Cog</span>
+          <p class="home-grid__card-title">Discapacidad cognitiva</p>
+          <p class="home-grid__card-text">Contenidos simplificados, instrucciones claras y actividades estructuradas para facilitar la comprensión y participación.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <section id="como-funciona" class="home-section home-reveal">
-    <p class="home-section__eyebrow">Cómo funciona</p>
-    <h2 class="home-section__title">Tres pasos, sin fricción para el estudiante</h2>
-    <div class="home-steps">
-      <div class="home-steps__item">
-        <span class="home-steps__number">1</span>
-        <p class="home-steps__title">Perfil de accesibilidad</p>
-        <p class="home-steps__text">Un docente lo configura al ingreso: contraste, tamaño de texto, apoyo cognitivo.</p>
+  <section id="como-funciona" class="home-section">
+    <div class="home-container">
+      <div class="home-reveal">
+        <p class="home-section__eyebrow">Cómo funciona</p>
       </div>
-      <div class="home-steps__item">
-        <span class="home-steps__number">2</span>
-        <p class="home-steps__title">Check previo, sin diagnóstico</p>
-        <p class="home-steps__text">Un check corto calibra el nivel de apoyo de la actividad — nunca mide avance clínico.</p>
+      <ol class="flow" id="flow">
+        <li class="flow__step">
+          <span class="flow__num">1</span>
+          <p class="flow__title">Registro y configuración</p>
+          <p class="flow__text">El docente registra al estudiante y configura el plan de entrenamiento según sus necesidades.</p>
+        </li>
+        <li class="flow__step">
+          <span class="flow__num">2</span>
+          <p class="flow__title">Asignación de actividades</p>
+          <p class="flow__text">El docente asigna las necesidades de apoyo y los juegos correspondientes desde el panel institucional.</p>
+        </li>
+        <li class="flow__step">
+          <span class="flow__num">3</span>
+          <p class="flow__title">El estudiante juega y aprende</p>
+          <p class="flow__text">El estudiante ingresa a su panel, consulta sus actividades y desarrolla los juegos asignados a su propio ritmo.</p>
+        </li>
+        <li class="flow__step">
+          <span class="flow__num">4</span>
+          <p class="flow__title">Seguimiento del progreso</p>
+          <p class="flow__text">Cada actividad realizada genera información sobre el avance del estudiante.</p>
+        </li>
+        <li class="flow__step">
+          <span class="flow__num">5</span>
+          <p class="flow__title">Acompañamiento docente</p>
+          <p class="flow__text">El docente consulta sesiones, actividades y progreso desde su dashboard para hacer seguimiento al proceso.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="dua" class="home-section home-section--alt">
+    <div class="home-container">
+      <div class="home-reveal">
+        <p class="home-section__eyebrow">Metodología</p>
+        <h2 class="home-section__title">Diseño Universal para el Aprendizaje (DUA)</h2>
       </div>
-      <div class="home-steps__item">
-        <span class="home-steps__number">3</span>
-        <p class="home-steps__title">Seguimiento docente</p>
-        <p class="home-steps__text">Docentes y administración ven el progreso real desde el panel institucional.</p>
+      <div class="dua">
+        <article class="dua__block home-reveal" style="--d:0s">
+          <span class="dua__num" aria-hidden="true">01</span>
+          <h3 class="dua__title">Representar</h3>
+          <p class="dua__question">¿Cómo recibe la información?</p>
+          <p class="dua__text">Texto, audio, imágenes, elementos visuales y contenido estructurado.</p>
+        </article>
+        <article class="dua__block home-reveal" style="--d:.1s">
+          <span class="dua__num" aria-hidden="true">02</span>
+          <h3 class="dua__title">Actuar y expresar</h3>
+          <p class="dua__question">¿Cómo interactúa con lo aprendido?</p>
+          <p class="dua__text">Diferentes formas de responder, navegar y completar actividades.</p>
+        </article>
+        <article class="dua__block home-reveal" style="--d:.2s">
+          <span class="dua__num" aria-hidden="true">03</span>
+          <h3 class="dua__title">Participar</h3>
+          <p class="dua__question">¿Cómo se involucra en el proceso?</p>
+          <p class="dua__text">Opciones de apoyo, estructura, autonomía y motivación.</p>
+        </article>
       </div>
     </div>
   </section>
 
-  <section id="metodologia" class="home-section home-section--alt home-reveal">
-    <p class="home-section__eyebrow">Metodología</p>
-    <h2 class="home-section__title">Diseño Universal para el Aprendizaje (DUA)</h2>
-    <p class="home-section__text">
-      Tres principios rigen cada actividad: múltiples formas de representación,
-      múltiples formas de acción/expresión, múltiples formas de motivación. Los
-      requisitos se levantaron con el área de psicología del instituto y se
-      complementan con literatura especializada (Gallego Codes, <em>Trastornos
-      del Aprendizaje</em>). El nivel de apoyo que ajusta cada actividad es
-      pedagógico, no un instrumento diagnóstico.
-    </p>
-  </section>
-
-  <section id="quienes-somos" class="home-section home-reveal">
-    <p class="home-section__eyebrow">Quiénes somos</p>
-    <h2 class="home-section__title">Un proyecto de INDECAP, para INDECAP</h2>
-    <div class="home-about">
-      <div class="home-about__block">
-        <p class="home-about__heading">La institución</p>
+  <section id="quienes-somos" class="home-section">
+    <div class="home-container">
+      <div class="home-reveal">
+        <p class="home-section__eyebrow">Quiénes somos</p>
         <p class="home-section__text">
-          INDECAP — Instituto de Ciencias Aplicadas, sede Envigado, forma
-          técnicos en Antioquia hace más de una década.
+          INDECAP-APRENDE nace como proyecto de grado para el programa de Desarrollo de Software de INDECAP en Envigado, Antioquia, Colombia. Fue
+          diseñado a partir de las necesidades identificadas en el contexto educativo de la institución, con la participación del área de psicología.
         </p>
       </div>
-      <div class="home-about__block">
-        <p class="home-about__heading">La desarrolladora</p>
-        <p class="home-section__text">
-          indecap-aprende es el proyecto de grado de Ana, estudiante del
-          programa de Desarrollo de Software de INDECAP, construido junto al
-          área de psicología del instituto.
-        </p>
+
+      <div class="home-about">
+        <!-- Tarjeta de la institución: logo, texto y redes (solo iconos) -->
+        <article class="home-card home-reveal" style="--d:0s">
+          <img src="{{ url_for('static', filename='images/logo-indecap-aprende.png') }}" alt="INDECAP" class="home-card__logo">
+          <p class="home-card__text">Institución educativa<br>Contexto, necesidades y acompañamiento</p>
+          <div class="social-row">
+            <a class="social-btn" href="https://indecap.edu.co/sedes/envigado" target="_blank" rel="noopener noreferrer" aria-label="Sede INDECAP Envigado" title="Sede Envigado">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </a>
+            <a class="social-btn" href="https://www.facebook.com/indecapedu/" target="_blank" rel="noopener noreferrer" aria-label="Facebook de INDECAP" title="Facebook">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+            <a class="social-btn" href="https://www.instagram.com/instindecap/" target="_blank" rel="noopener noreferrer" aria-label="Instagram de INDECAP" title="Instagram">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6"/></svg>
+            </a>
+            <a class="social-btn" href="https://www.youtube.com/@CorporacionEducativaINDECAP" target="_blank" rel="noopener noreferrer" aria-label="YouTube de INDECAP" title="YouTube">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+            </a>
+          </div>
+        </article>
+
+        <!-- Tarjeta de la desarrolladora -->
+        <article class="home-card home-reveal" style="--d:.1s">
+          <div class="home-card__photo">
+            <span class="home-card__initials" aria-hidden="true">AM</span>
+            <img src="{{ url_for('static', filename='images/profesionaljpg.jpg') }}" alt="Ana Melo" onerror="this.style.display='none'">
+          </div>
+          <p class="home-card__name">Desarrollado por Ana Melo</p>
+          <p class="home-card__role">Desarrolladora de software · INDECAP</p>
+          <div class="social-row">
+            <a class="social-btn" href="https://www.linkedin.com/in/ancreart/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn de Ana Melo" title="LinkedIn">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            </a>
+            <a class="social-btn" href="https://github.com/ancreart" target="_blank" rel="noopener noreferrer" aria-label="GitHub de Ana Melo" title="GitHub">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+            </a>
+          </div>
+        </article>
       </div>
     </div>
-  </section>
-
-  <section id="novedades" class="home-section home-section--alt home-reveal">
-    <p class="home-section__eyebrow">Novedades</p>
-    <h2 class="home-section__title">Proyecto en desarrollo activo</h2>
-    <p class="home-section__text">
-      Sin novedades publicadas todavía — esta sección reunirá avances reales
-      a medida que se completen los módulos.
-    </p>
   </section>
 
   <footer class="home-footer">
-    <div class="home-footer__col">
-      <p class="home-footer__brand">indecap-aprende</p>
-      <p>Corporación Educativa INDECAP — Instituto de Ciencias Aplicadas.</p>
+    <div class="home-footer__inner">
+      <div>
+        <img src="{{ url_for('static', filename='images/logo-indecap-aprende-blanco.png') }}" alt="INDECAP — indecap-aprende" class="home-footer__logo">
+        <p>Corporación Educativa INDECAP — Instituto de Ciencias Aplicadas ®</p>
+        <p class="home-footer__badge">Calidad Educativa Certificada</p>
+      </div>
+      <div>
+        <p class="home-footer__heading">Contacto</p>
+        <p>indecap@indecap.edu.co</p>
+        <p>(604) 448 4794</p>
+      </div>
     </div>
-    <div class="home-footer__col">
-      <p class="home-footer__heading">Contacto</p>
-      <p>indecap@indecap.edu.co</p>
-      <p>(604) 448 4794</p>
-    </div>
-    <div class="home-footer__col">
-      <p class="home-footer__heading">Síguenos</p>
-      <p>Facebook · Instagram · YouTube</p>
-    </div>
+    <p class="home-footer__copyright">© 2026 indecap-aprende · Proyecto de grado — INDECAP · Desarrollado por Ana Melo</p>
   </footer>
-  <p class="home-footer__copyright">© 2026 Corporación Educativa INDECAP. Todos los derechos reservados.</p>
 
   <!-- Panel de ingreso con superposición: login / registro / olvidé contraseña -->
   <div id="login-overlay" class="login-overlay" hidden>
-    <div class="login-panel">
+    <div class="login-panel" role="dialog" aria-modal="true" aria-label="Acceso a indecap-aprende">
       <div class="login-panel__header">
         <img src="{{ url_for('static', filename='images/logo-indecap-aprende.png') }}" alt="INDECAP — indecap-aprende" class="login-panel__logo">
         <button type="button" id="btn-cerrar-login" class="login-panel__close" aria-label="Cerrar">×</button>
@@ -199,12 +270,11 @@
         <p class="login-panel__title">Ingresa a tu cuenta</p>
         <p class="login-panel__subtitle">Corporación Educativa INDECAP</p>
 
-        <div class="btn-group w-100 mb-3" role="group" aria-label="Tipo de acceso">
-          <input type="radio" class="btn-check" name="login_role_toggle" id="login-role-estudiante" autocomplete="off" checked>
-          <label class="btn btn-outline-primary" for="login-role-estudiante">Estudiante</label>
-
-          <input type="radio" class="btn-check" name="login_role_toggle" id="login-role-docente" autocomplete="off">
-          <label class="btn btn-outline-primary" for="login-role-docente">Docente</label>
+        <div class="role-switch" role="radiogroup" aria-label="Tipo de acceso">
+          <input type="radio" name="login_role_toggle" id="login-role-estudiante" autocomplete="off" checked>
+          <label for="login-role-estudiante">Estudiante</label>
+          <input type="radio" name="login_role_toggle" id="login-role-docente" autocomplete="off">
+          <label for="login-role-docente">Docente</label>
         </div>
 
         <form method="post" action="{{ url_for('auth.login') }}">
@@ -226,7 +296,7 @@
           {{ form.submit(class_="btn btn-primary w-100", value="Ingresar") }}
         </form>
 
-        <div class="login-panel__links mt-3 d-flex justify-content-between">
+        <div class="login-panel__links mt-3">
           <a href="#" data-panel="forgot">¿Olvidaste tu contraseña?</a>
           <a href="#" data-panel="register">Regístrate</a>
         </div>
@@ -298,6 +368,9 @@
   </div>
 
   <script>
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // ---------- Panel de ingreso ----------
     const overlay = document.getElementById("login-overlay");
     const views = {
       login: document.getElementById("view-login"),
@@ -321,19 +394,33 @@
       if (role === "estudiante" && roleEstudiante) roleEstudiante.checked = true;
     }
 
+    function openLogin() {
+      overlay.hidden = false;
+      document.body.style.overflow = "hidden";
+    }
+    function closeLogin() {
+      overlay.hidden = true;
+      document.body.style.overflow = "";
+    }
+
     document.querySelectorAll(".btn-acceder").forEach((btn) => {
       btn.addEventListener("click", () => {
-        overlay.hidden = false;
+        closeMenu();
+        openLogin();
         showPanel("login");
         setPortalRole(btn.dataset.role || "estudiante");
       });
     });
 
-    document.getElementById("btn-cerrar-login").addEventListener("click", () => {
-      overlay.hidden = true;
-    });
+    document.getElementById("btn-cerrar-login").addEventListener("click", closeLogin);
     overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) overlay.hidden = true;
+      if (e.target === overlay) closeLogin();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (!overlay.hidden) closeLogin();
+        closeMenu();
+      }
     });
 
     document.querySelectorAll("[data-panel]").forEach((link) => {
@@ -346,17 +433,39 @@
     if (roleEstudiante) roleEstudiante.addEventListener("change", () => setPortalRole("estudiante"));
     if (roleDocente) roleDocente.addEventListener("change", () => setPortalRole("docente"));
 
-    {% if auto_open_login %}
-    overlay.hidden = false;
-    {% endif %}
+    const autoOpenLoginData = document.getElementById("auto-open-login-data");
+    const autoOpenLogin = autoOpenLoginData ? JSON.parse(autoOpenLoginData.textContent) : false;
+    const openPanel = (() => {
+      const panel = new URLSearchParams(window.location.search).get("panel");
+      return panel && ["login", "register", "forgot"].includes(panel) ? panel : null;
+    })();
 
-    {% set open_panel = request.args.get('panel') %}
-    {% if open_panel in ['login', 'register', 'forgot'] %}
-    overlay.hidden = false;
-    showPanel("{{ open_panel }}");
-    {% endif %}
+    if (autoOpenLogin) openLogin();
+    if (openPanel) {
+      openLogin();
+      showPanel(openPanel);
+    }
 
-    // Enlace activo del menú, según la sección visible
+    // ---------- Menú móvil ----------
+    const burger = document.getElementById("nav-burger");
+    const navLinksBox = document.getElementById("nav-links");
+
+    function closeMenu() {
+      navLinksBox.classList.remove("is-open");
+      burger.setAttribute("aria-expanded", "false");
+      burger.setAttribute("aria-label", "Abrir menú");
+    }
+    burger.addEventListener("click", () => {
+      const open = navLinksBox.classList.toggle("is-open");
+      burger.setAttribute("aria-expanded", String(open));
+      burger.setAttribute("aria-label", open ? "Cerrar menú" : "Abrir menú");
+    });
+    navLinksBox.querySelectorAll("a").forEach((a) => a.addEventListener("click", closeMenu));
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".home-nav")) closeMenu();
+    });
+
+    // ---------- Enlace activo según la sección visible ----------
     const navLinks = document.querySelectorAll(".home-nav__links a");
     const sections = document.querySelectorAll("section[id]");
     const linkObserver = new IntersectionObserver(
@@ -375,7 +484,7 @@
     );
     sections.forEach((s) => linkObserver.observe(s));
 
-    // Aparición suave de cada sección al hacer scroll
+    // ---------- Aparición suave al hacer scroll ----------
     const revealObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -388,6 +497,36 @@
       { threshold: 0.12 }
     );
     document.querySelectorAll(".home-reveal").forEach((el) => revealObserver.observe(el));
+
+    // ---------- Flujo de "Cómo funciona": se activa paso a paso ----------
+    const flow = document.getElementById("flow");
+    const flowSteps = Array.from(flow.children);
+    let flowTimers = [];
+
+    function playFlow() {
+      flowTimers.forEach(clearTimeout);
+      flowTimers = [];
+      flowSteps.forEach((s) => s.classList.remove("is-active"));
+      flowSteps.forEach((step, i) => {
+        flowTimers.push(setTimeout(() => step.classList.add("is-active"), reduceMotion ? 0 : 250 + i * 650));
+      });
+    }
+
+    const flowObserver = new IntersectionObserver(
+      (entries, obs) => {
+        if (entries[0].isIntersecting) {
+          playFlow();
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.35 }
+    );
+    flowObserver.observe(flow);
+
+    // El botón "Cómo funciona" del inicio baja a la sección y reproduce el flujo
+    document.getElementById("btn-como-funciona").addEventListener("click", () => {
+      setTimeout(playFlow, reduceMotion ? 0 : 700);
+    });
   </script>
 </body>
 </html>
