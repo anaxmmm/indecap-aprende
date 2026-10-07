@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="es">
+<!-- FASE 1 (cambio A): el idioma del documento ahora es dinámico -->
+<html lang="{{ current_lang }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -27,8 +28,9 @@
       <a href="#quienes-somos" data-section="quienes-somos">Quiénes somos</a>
     </div>
     <div class="home-nav__access">
-      <button type="button" id="btn-lang-toggle" class="home-nav__lang-btn" aria-label="Cambiar idioma">
-        <span id="lang-toggle-label">ES</span>
+      <!-- FASE 1 (cambio B): botón de idioma ahora funcional -->
+      <button type="button" id="btn-lang-toggle" class="home-nav__lang-btn" aria-label="{{ _('Cambiar idioma') }}" data-url="{{ url_for('set_language', code='en' if current_lang == 'es' else 'es') }}">
+        <span id="lang-toggle-label">{{ current_lang|upper }}</span>
       </button>
       <button type="button" class="btn btn-primary btn-sm btn-acceder">Acceder</button>
       <button type="button" class="home-nav__burger" id="nav-burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-links">
@@ -444,6 +446,14 @@
     if (openPanel) {
       openLogin();
       showPanel(openPanel);
+    }
+
+    // ---------- FASE 1 (cambio C): idioma ES/EN ----------
+    const langBtn = document.getElementById("btn-lang-toggle");
+    if (langBtn) {
+      langBtn.addEventListener("click", () => {
+        window.location.href = langBtn.dataset.url;
+      });
     }
 
     // ---------- Menú móvil ----------

@@ -1,9 +1,10 @@
 import os
+from urllib.parse import urlparse
 
-from flask import Flask
+from flask import Flask, session
 
 from app.config import config_by_name
-from app.extensions import db, migrate, login_manager
+from app.extensions import db, migrate, login_manager, babel
 
 
 def create_app(config_name: str = None) -> Flask:
@@ -22,14 +23,29 @@ def create_app(config_name: str = None) -> Flask:
     _register_user_loader()
     _register_cli(app)
     _register_root_route(app)
+    _register_i18n(app)
 
     return app
+
+
+def _select_locale() -> str:
+    """
+    Decide el idioma de cada petición: el que el usuario eligió con el botón
+    ES/EN (guardado en la sesión) o, si aún no eligió, el idioma por defecto.
+    """
+    from flask import current_app
+
+    lang = session.get("lang")
+    if lang in current_app.config["LANGUAGES"]:
+        return lang
+    return current_app.config["BABEL_DEFAULT_LOCALE"]
 
 
 def _init_extensions(app: Flask) -> None:
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    babel.init_app(app, locale_selector=_select_locale)
 
 
 def _register_blueprints(app: Flask) -> None:
@@ -101,3 +117,30 @@ def _register_root_route(app: Flask) -> None:
             next=next_page,
             auto_open_login=auto_open_login,
         )
+
+
+def _register_i18n(app: Flask) -> None:
+    """
+    Internacionalización (Flask-Babel):
+    - 'current_lang' queda disponible en todas las plantillas ("es" o "en").
+    - /lang/<code> guarda el idioma elegido en la sesión y devuelve al
+      usuario a la página donde estaba.
+    """
+    from flask import redirect, request, url_for
+    from flask_babel import get_locale
+
+    @app.context_processor
+    def inject_current_lang():
+        return {"current_lang": str(get_locale() or "es")}
+
+    @app.route("/lang/<code>")
+    def set_language(code):
+        if code in app.config["LANGUAGES"]:
+            session["lang"] = code
+
+        # Solo se regresa a la página anterior si es de este mismo sitio
+        # (evita redirecciones abiertas hacia dominios externos).
+        target = request.referrer
+        if target and urlparse(target).netloc == request.host:
+            return redirect(target)
+        return redirect(url_for("index"))

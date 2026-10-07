@@ -6,10 +6,12 @@ Evita imports circulares entre app/__init__.py y los blueprints.
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_babel import Babel
 
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+babel = Babel()
 
 # Configuración básica de Flask-Login
 login_manager.login_view = "index"

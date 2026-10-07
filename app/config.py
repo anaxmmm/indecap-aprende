@@ -38,6 +38,10 @@ class BaseConfig:
     ACTIVITY_MAX_MINUTES = 30
     ACTIVITY_MIN_MINUTES = 20
 
+    # Internacionalización (Flask-Babel): el español es el idioma fuente
+    LANGUAGES = ["es", "en"]
+    BABEL_DEFAULT_LOCALE = "es"
+
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
