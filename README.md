@@ -1,4 +1,4 @@
-# indecap-aprende
+# INDECAP-APRENDE
 
 Plataforma educativa web para INDECAP — Instituto de Ciencias Aplicadas, sede Envigado. Proyecto final de grado, programa de Desarrollo de Software.
 
