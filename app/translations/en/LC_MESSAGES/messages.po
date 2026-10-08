@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-06 19:05-0500\n"
+"POT-Creation-Date: 2026-10-07 18:44-0500\n"
 "PO-Revision-Date: 2026-10-06 19:05-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,7 +18,699 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+#: app/blueprints/auth/forms.py:25 app/blueprints/auth/forms.py:42
+#: app/blueprints/auth/forms.py:69
+#: app/templates/dashboard/student/perfil.html:10
+msgid "Correo electrónico"
+msgstr "Email"
+
+#: app/blueprints/auth/forms.py:29 app/blueprints/auth/forms.py:53
+msgid "Contraseña"
+msgstr ""
+
+#: app/blueprints/auth/forms.py:30
+msgid "Recordarme"
+msgstr ""
+
+#: app/blueprints/auth/forms.py:33 app/templates/home.html:274
+msgid "Tipo de acceso"
+msgstr "Access type"
+
+#: app/blueprints/auth/forms.py:34
+msgid "Iniciar sesión"
+msgstr ""
+
+#: app/blueprints/auth/forms.py:39
+#: app/templates/dashboard/student/perfil.html:7
+msgid "Nombre completo"
+msgstr "Full name"
+
+#: app/blueprints/auth/forms.py:47
+msgid "Tipo de cuenta"
+msgstr ""
+
+#: app/blueprints/auth/forms.py:48 app/templates/home.html:276
+msgid "Estudiante"
+msgstr "Student"
+
+#: app/blueprints/auth/forms.py:48 app/templates/home.html:278
+msgid "Docente"
+msgstr "Teacher"
+
+#: app/blueprints/auth/forms.py:54 app/blueprints/auth/forms.py:79
+msgid "Usa al menos 8 caracteres."
+msgstr ""
+
+#: app/blueprints/auth/forms.py:57
+msgid "Confirmar contraseña"
+msgstr ""
+
+#: app/blueprints/auth/forms.py:58 app/blueprints/auth/forms.py:83
+msgid "Las contraseñas no coinciden."
+msgstr ""
+
+#: app/blueprints/auth/forms.py:60 app/templates/home.html:342
+msgid "Crear cuenta"
+msgstr "Create account"
+
+#: app/blueprints/auth/forms.py:64
+msgid "Ya existe una cuenta con ese correo."
+msgstr ""
+
+#: app/blueprints/auth/forms.py:73
+msgid "Enviar enlace de recuperación"
+msgstr ""
+
+#: app/blueprints/auth/forms.py:78
+msgid "Nueva contraseña"
+msgstr ""
+
+#: app/blueprints/auth/forms.py:82
+msgid "Confirmar nueva contraseña"
+msgstr ""
+
+#: app/blueprints/auth/forms.py:85
+msgid "Restablecer contraseña"
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:54
+msgid "Base"
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:54
+msgid "Media"
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:54
+msgid "Alta"
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:54
+msgid "Muy Alta"
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:54
+msgid "Súper Difícil"
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:199
+msgid "Grupo creado correctamente."
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:218
+msgid "Estudiante añadido al grupo."
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:243
+msgid "Grupo eliminado correctamente."
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:260
+msgid "Estudiante movido de grupo."
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:272
+msgid "Estudiante desvinculado. Quedó en 'Niños inactivos' de este grupo."
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:282
+msgid "Estudiante reactivado."
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:293
+msgid "Estudiante eliminado definitivamente."
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:307
+msgid "Ese estudiante no existe o no pertenece a tus grupos."
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:317
+msgid "Trastornos asignados actualizados."
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:356
+#, python-format
+msgid "Etapa %(number)s"
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:422
+msgid "Sesión asignada correctamente."
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:447
+msgid "Notas guardadas."
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:486
+msgid "Perfil actualizado correctamente."
+msgstr ""
+
+#: app/templates/home.html:7
+msgid "indecap-aprende · Aprende de una forma que se adapte a ti"
+msgstr "indecap-aprende · Learn in a way that adapts to you"
+
+#: app/templates/home.html:8
+msgid ""
+"Plataforma educativa inclusiva que adapta actividades, accesibilidad y "
+"apoyos a diferentes formas de aprender. Proyecto de INDECAP."
+msgstr ""
+"Inclusive educational platform that adapts activities, accessibility and "
+"supports to different ways of learning. An INDECAP project."
+
+#: app/templates/home.html:16 app/templates/home.html:36
+msgid "Abrir menú"
+msgstr "Open menu"
+
+#: app/templates/home.html:16
+msgid "Cerrar menú"
+msgstr "Close menu"
+
+#: app/templates/home.html:17
+msgid "Navegación principal"
+msgstr "Main navigation"
+
+#: app/templates/home.html:19
+msgid "Ir al inicio"
+msgstr "Go to home"
+
+#: app/templates/home.html:24 app/templates/home.html:63
+msgid "Experiencia"
+msgstr "Experience"
+
+#: app/templates/home.html:25 app/templates/home.html:75
+msgid "Necesidades de apoyo"
+msgstr "Support needs"
+
+#: app/templates/home.html:26 app/templates/home.html:52
+#: app/templates/home.html:125
+msgid "Cómo funciona"
+msgstr "How it works"
+
+#: app/templates/home.html:27 app/templates/home.html:160
+msgid "Metodología"
+msgstr "Methodology"
+
+#: app/templates/home.html:28 app/templates/home.html:189
+msgid "Quiénes somos"
+msgstr "About us"
+
 #: app/templates/home.html:32
 msgid "Cambiar idioma"
 msgstr "Change language"
+
+#: app/templates/home.html:35 app/templates/home.html:51
+msgid "Acceder"
+msgstr "Sign in"
+
+#: app/templates/home.html:46
+msgid "APRENDE DE UNA FORMA"
+msgstr "LEARN"
+
+#: app/templates/home.html:46
+msgid "INTUITIVA"
+msgstr "INTUITIVELY"
+
+#: app/templates/home.html:48
+msgid ""
+"Una plataforma educativa inclusiva que adapta actividades, accesibilidad "
+"y apoyos a diferentes formas de aprender."
+msgstr ""
+"An inclusive educational platform that adapts activities, accessibility "
+"and supports to different ways of learning."
+
+#: app/templates/home.html:55 app/templates/home.html:57
+msgid "Conoce indecap-aprende"
+msgstr "Discover indecap-aprende"
+
+#: app/templates/home.html:64
+msgid "Una experiencia para todos"
+msgstr "An experience for everyone"
+
+#: app/templates/home.html:66
+msgid ""
+"El contenido se adapta a cada estudiante, teniendo en cuenta las barreras"
+" de acceso, es inclusivo en su interacción y diseño para el correcto "
+"acompañamiento de sus procesos."
+msgstr ""
+"The content adapts to each student, taking access barriers into account, "
+"and is inclusive in its interaction and design to properly support their "
+"learning processes."
+
+#: app/templates/home.html:68
+msgid "La constancia es la clave del éxito."
+msgstr "Consistency is the key to success."
+
+#: app/templates/home.html:80
+msgid "Dislexia"
+msgstr "Dyslexia"
+
+#: app/templates/home.html:81
+msgid ""
+"Facilita la lectura mediante apoyo auditivo, resaltado de palabras y "
+"contenido estructurado."
+msgstr ""
+"Makes reading easier through audio support, word highlighting and "
+"structured content."
+
+#: app/templates/home.html:85
+msgid "Discalculia"
+msgstr "Dyscalculia"
+
+#: app/templates/home.html:86
+msgid ""
+"Convierte los conceptos numéricos en experiencias visuales, concretas y "
+"fáciles de comprender."
+msgstr ""
+"Turns number concepts into visual, concrete experiences that are easy to "
+"understand."
+
+#: app/templates/home.html:89 app/templates/home.html:90
+msgid "TDAH"
+msgstr "ADHD"
+
+#: app/templates/home.html:91
+msgid ""
+"Actividades breves y estructuradas que facilitan la concentración, la "
+"organización y el seguimiento de cada objetivo."
+msgstr ""
+"Short, structured activities that support focus, organization and "
+"tracking of each goal."
+
+#: app/templates/home.html:94 app/templates/home.html:95
+msgid "TEA"
+msgstr "ASD"
+
+#: app/templates/home.html:96
+msgid ""
+"Entornos predecibles, instrucciones claras y una experiencia visual "
+"organizada para facilitar la interacción."
+msgstr ""
+"Predictable environments, clear instructions and an organized visual "
+"experience to make interaction easier."
+
+#: app/templates/home.html:99
+msgid "TOD"
+msgstr "ODD"
+
+#: app/templates/home.html:100
+msgid "Trastorno opositor desafiante"
+msgstr "Oppositional defiant disorder"
+
+#: app/templates/home.html:101
+msgid ""
+"Actividades que promueven la autonomía, la toma de decisiones y una "
+"participación activa en el aprendizaje."
+msgstr ""
+"Activities that promote autonomy, decision-making and active "
+"participation in learning."
+
+#: app/templates/home.html:105
+msgid "Discapacidad visual"
+msgstr "Visual impairment"
+
+#: app/templates/home.html:106
+msgid ""
+"Acceso al contenido mediante navegación por teclado, lectores de pantalla"
+" y opciones de contraste."
+msgstr ""
+"Access to content through keyboard navigation, screen readers and "
+"contrast options."
+
+#: app/templates/home.html:109
+msgid "Aud"
+msgstr "Hear"
+
+#: app/templates/home.html:110
+msgid "Discapacidad auditiva"
+msgstr "Hearing impairment"
+
+#: app/templates/home.html:111
+msgid ""
+"Contenido accesible mediante subtítulos, recursos visuales y materiales "
+"audiovisuales adaptados."
+msgstr ""
+"Accessible content through captions, visual resources and adapted "
+"audiovisual materials."
+
+#: app/templates/home.html:115
+msgid "Discapacidad cognitiva"
+msgstr "Cognitive disability"
+
+#: app/templates/home.html:116
+msgid ""
+"Contenidos simplificados, instrucciones claras y actividades "
+"estructuradas para facilitar la comprensión y participación."
+msgstr ""
+"Simplified content, clear instructions and structured activities to "
+"support understanding and participation."
+
+#: app/templates/home.html:130
+msgid "Registro y configuración"
+msgstr "Registration and setup"
+
+#: app/templates/home.html:131
+msgid ""
+"El docente registra al estudiante y configura el plan de entrenamiento "
+"según sus necesidades."
+msgstr ""
+"The teacher registers the student and sets up the training plan according"
+" to their needs."
+
+#: app/templates/home.html:135
+msgid "Asignación de actividades"
+msgstr "Activity assignment"
+
+#: app/templates/home.html:136
+msgid ""
+"El docente asigna las necesidades de apoyo y los juegos correspondientes "
+"desde el panel institucional."
+msgstr ""
+"The teacher assigns the support needs and the matching games from the "
+"institutional panel."
+
+#: app/templates/home.html:140
+msgid "El estudiante juega y aprende"
+msgstr "The student plays and learns"
+
+#: app/templates/home.html:141
+msgid ""
+"El estudiante ingresa a su panel, consulta sus actividades y desarrolla "
+"los juegos asignados a su propio ritmo."
+msgstr ""
+"The student signs in to their dashboard, checks their activities and "
+"plays the assigned games at their own pace."
+
+#: app/templates/home.html:145
+msgid "Seguimiento del progreso"
+msgstr "Progress tracking"
+
+#: app/templates/home.html:146
+msgid ""
+"Cada actividad realizada genera información sobre el avance del "
+"estudiante."
+msgstr ""
+"Every completed activity generates information about the student's "
+"progress."
+
+#: app/templates/home.html:150
+msgid "Acompañamiento docente"
+msgstr "Teacher support"
+
+#: app/templates/home.html:151
+msgid ""
+"El docente consulta sesiones, actividades y progreso desde su dashboard "
+"para hacer seguimiento al proceso."
+msgstr ""
+"The teacher reviews sessions, activities and progress from their "
+"dashboard to follow the process."
+
+#: app/templates/home.html:161
+msgid "Diseño Universal para el Aprendizaje (DUA)"
+msgstr "Universal Design for Learning (UDL)"
+
+#: app/templates/home.html:166
+msgid "Representar"
+msgstr "Represent"
+
+#: app/templates/home.html:167
+msgid "¿Cómo recibe la información?"
+msgstr "How do they receive information?"
+
+#: app/templates/home.html:168
+msgid "Texto, audio, imágenes, elementos visuales y contenido estructurado."
+msgstr "Text, audio, images, visual elements and structured content."
+
+#: app/templates/home.html:172
+msgid "Actuar y expresar"
+msgstr "Act and express"
+
+#: app/templates/home.html:173
+msgid "¿Cómo interactúa con lo aprendido?"
+msgstr "How do they interact with what they have learned?"
+
+#: app/templates/home.html:174
+msgid "Diferentes formas de responder, navegar y completar actividades."
+msgstr "Different ways to respond, navigate and complete activities."
+
+#: app/templates/home.html:178
+msgid "Participar"
+msgstr "Engage"
+
+#: app/templates/home.html:179
+msgid "¿Cómo se involucra en el proceso?"
+msgstr "How do they get involved in the process?"
+
+#: app/templates/home.html:180
+msgid "Opciones de apoyo, estructura, autonomía y motivación."
+msgstr "Support options, structure, autonomy and motivation."
+
+#: app/templates/home.html:191
+msgid ""
+"INDECAP-APRENDE nace como proyecto de grado para el programa de "
+"Desarrollo de Software de INDECAP en Envigado, Antioquia, Colombia. Fue "
+"diseñado a partir de las necesidades identificadas en el contexto "
+"educativo de la institución, con la participación del área de psicología."
+msgstr ""
+"INDECAP-APRENDE was born as a graduation project for the Software "
+"Development program at INDECAP in Envigado, Antioquia, Colombia. It was "
+"designed from the needs identified in the institution's educational "
+"context, with the participation of the psychology department."
+
+#: app/templates/home.html:199
+msgid "Institución educativa"
+msgstr "Educational institution"
+
+#: app/templates/home.html:199
+msgid "Contexto, necesidades y acompañamiento"
+msgstr "Context, needs and support"
+
+#: app/templates/home.html:201
+msgid "Sede INDECAP Envigado"
+msgstr "INDECAP Envigado campus"
+
+#: app/templates/home.html:201
+msgid "Sede Envigado"
+msgstr "Envigado campus"
+
+#: app/templates/home.html:204
+msgid "Facebook de INDECAP"
+msgstr "INDECAP on Facebook"
+
+#: app/templates/home.html:207
+msgid "Instagram de INDECAP"
+msgstr "INDECAP on Instagram"
+
+#: app/templates/home.html:210
+msgid "YouTube de INDECAP"
+msgstr "INDECAP on YouTube"
+
+#: app/templates/home.html:222 app/templates/home.html:250
+msgid "Desarrollado por Ana Melo"
+msgstr "Developed by Ana Melo"
+
+#: app/templates/home.html:223
+msgid "Desarrolladora de software · INDECAP"
+msgstr "Software developer · INDECAP"
+
+#: app/templates/home.html:225
+msgid "LinkedIn de Ana Melo"
+msgstr "Ana Melo on LinkedIn"
+
+#: app/templates/home.html:228
+msgid "GitHub de Ana Melo"
+msgstr "Ana Melo on GitHub"
+
+#: app/templates/home.html:242
+msgid "Calidad Educativa Certificada"
+msgstr "Certified Educational Quality"
+
+#: app/templates/home.html:245
+msgid "Contacto"
+msgstr "Contact"
+
+#: app/templates/home.html:250
+msgid "Proyecto de grado"
+msgstr "Graduation project"
+
+#: app/templates/home.html:255
+msgid "Acceso a indecap-aprende"
+msgstr "Sign in to indecap-aprende"
+
+#: app/templates/home.html:258
+msgid "Cerrar"
+msgstr "Close"
+
+#: app/templates/home.html:271
+msgid "Ingresa a tu cuenta"
+msgstr "Sign in to your account"
+
+#: app/templates/home.html:291
+msgid "Tu contraseña"
+msgstr "Your password"
+
+#: app/templates/home.html:297
+msgid "Ingresar"
+msgstr "Sign in"
+
+#: app/templates/home.html:301
+msgid "¿Olvidaste tu contraseña?"
+msgstr "Forgot your password?"
+
+#: app/templates/home.html:302
+msgid "Regístrate"
+msgstr "Sign up"
+
+#: app/templates/home.html:304
+msgid "¿Problemas para ingresar? Contacta a tu docente o al administrador."
+msgstr "Having trouble signing in? Contact your teacher or the administrator."
+
+#: app/templates/home.html:309
+msgid "Crea tu cuenta"
+msgstr "Create your account"
+
+#: app/templates/home.html:317
+msgid "Nombre y apellidos"
+msgstr "First and last name"
+
+#: app/templates/home.html:336
+msgid "Mínimo 8 caracteres"
+msgstr "At least 8 characters"
+
+#: app/templates/home.html:340
+msgid "Repite tu contraseña"
+msgstr "Repeat your password"
+
+#: app/templates/home.html:346
+msgid "¿Ya tienes cuenta? Inicia sesión"
+msgstr "Already have an account? Sign in"
+
+#: app/templates/home.html:352
+msgid "Recuperar contraseña"
+msgstr "Reset password"
+
+#: app/templates/home.html:353
+msgid "Te enviaremos instrucciones a tu correo."
+msgstr "We will send instructions to your email."
+
+#: app/templates/home.html:361
+msgid "Enviar enlace"
+msgstr "Send link"
+
+#: app/templates/home.html:365
+msgid "Volver a inicio de sesión"
+msgstr "Back to sign in"
+
+#: app/templates/dashboard/index.html:4
+msgid "Módulo: dashboard"
+msgstr "Module: dashboard"
+
+#: app/templates/dashboard/index.html:5
+msgid "Placeholder — pantalla real pendiente de diseño."
+msgstr "Placeholder — final screen pending design."
+
+#: app/templates/dashboard/student/actividades.html:2
+#: app/templates/dashboard/student/actividades.html:4
+msgid "Mis actividades"
+msgstr "My activities"
+
+#: app/templates/dashboard/student/actividades.html:9
+msgid ""
+"Todavía no tienes actividades asignadas. Tu docente las configurará "
+"pronto."
+msgstr ""
+"You don't have any assigned activities yet. Your teacher will set them up"
+" soon."
+
+#: app/templates/dashboard/student/actividades.html:34
+msgid "Completada"
+msgstr "Completed"
+
+#: app/templates/dashboard/student/actividades.html:34
+msgid "Pendiente"
+msgstr "Pending"
+
+#: app/templates/dashboard/student/actividades.html:40
+msgid "Continuar"
+msgstr "Continue"
+
+#: app/templates/dashboard/student/actividades.html:40
+#: app/templates/dashboard/student/juego_detail.html:17
+#: app/templates/dashboard/student/juego_detail.html:20
+msgid "Jugar"
+msgstr "Play"
+
+#: app/templates/dashboard/student/base_student.html:6
+msgid "Mi espacio"
+msgstr "My space"
+
+#: app/templates/dashboard/student/base_student.html:46
+#: app/templates/dashboard/student/base_student.html:51
+msgid "Notificaciones"
+msgstr "Notifications"
+
+#: app/templates/dashboard/student/base_student.html:60
+msgid "Marcar todas como leídas"
+msgstr "Mark all as read"
+
+#: app/templates/dashboard/student/base_student.html:64
+#: app/templates/dashboard/student/base_student.html:115
+msgid ""
+"Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te "
+"asigne algo nuevo."
+msgstr ""
+"You don't have any notifications yet. You will see alerts here when your "
+"teacher assigns you something new."
+
+#: app/templates/dashboard/student/base_student.html:77
+#: app/templates/dashboard/student/perfil.html:2
+#: app/templates/dashboard/student/perfil.html:4
+msgid "Mi perfil"
+msgstr "My profile"
+
+#: app/templates/dashboard/student/base_student.html:78
+msgid "Cerrar sesión"
+msgstr "Sign out"
+
+#: app/templates/dashboard/student/base_student.html:90
+msgid "Mi panel"
+msgstr "My dashboard"
+
+#: app/templates/dashboard/student/base_student.html:94
+msgid "Juegos"
+msgstr "Games"
+
+#: app/templates/dashboard/student/juego_detail.html:13
+#, python-format
+msgid "Actividad asignada por tu docente el %(fecha)s."
+msgstr "Activity assigned by your teacher on %(fecha)s."
+
+#: app/templates/dashboard/student/juego_detail.html:24
+msgid "Tu docente aún no te asignó esta actividad."
+msgstr "Your teacher has not assigned you this activity yet."
+
+#: app/templates/dashboard/student/juego_detail.html:25
+#: app/templates/dashboard/student/juego_detail.html:29
+msgid "Volver a Juegos"
+msgstr "Back to Games"
+
+#: app/templates/dashboard/student/juego_detail.html:27
+msgid "Actividad en preparación"
+msgstr "Activity in preparation"
+
+#: app/templates/dashboard/student/juego_detail.html:28
+msgid "Estamos preparando la actividad interactiva para esta área."
+msgstr "We are preparing the interactive activity for this area."
+
+#: app/templates/dashboard/student/perfil.html:14
+msgid "Alias"
+msgstr "Alias"
+
+#: app/templates/dashboard/student/perfil.html:19
+msgid ""
+"¿Necesitas cambiar algún dato? Pídele a tu docente que lo actualice desde"
+" tu perfil en el panel de administración."
+msgstr ""
+"Need to change any information? Ask your teacher to update it from your "
+"profile in the administration panel."
 

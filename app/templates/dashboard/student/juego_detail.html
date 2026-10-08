@@ -10,24 +10,23 @@
   {% if juego and acceso.allowed %}
     <h1 class="h4 mb-3">{{ juego.name }}</h1>
     <p class="text-muted mb-4">
-      Actividad asignada por tu docente el
-      {{ acceso.assignment.assigned_at.strftime('%d/%m/%Y') }}.
+      {{ _('Actividad asignada por tu docente el %(fecha)s.', fecha=acceso.assignment.assigned_at.strftime('%d/%m/%Y')) }}
     </p>
     {% if juego.has_stage_map %}
       <a href="{{ url_for('games.stages', slug=juego.slug, trastorno_id=trastorno.id) }}"
-         class="btn btn-teacher-primary">Jugar</a>
+         class="btn btn-teacher-primary">{{ _('Jugar') }}</a>
     {% else %}
       <a href="{{ url_for('games.play', slug=juego.slug, level=acceso.start_level, trastorno_id=trastorno.id) }}"
-         class="btn btn-teacher-primary">Jugar</a>
+         class="btn btn-teacher-primary">{{ _('Jugar') }}</a>
     {% endif %}
   {% elif juego and juego.available %}
     <h1 class="h4 mb-3">{{ juego.name }}</h1>
-    <p class="text-muted mb-4">Tu docente aún no te asignó esta actividad.</p>
-    <a href="{{ url_for('dashboard.student_juegos') }}" class="btn btn-teacher-primary">Volver a Juegos</a>
+    <p class="text-muted mb-4">{{ _('Tu docente aún no te asignó esta actividad.') }}</p>
+    <a href="{{ url_for('dashboard.student_juegos') }}" class="btn btn-teacher-primary">{{ _('Volver a Juegos') }}</a>
   {% else %}
-    <h1 class="h4 mb-3">Actividad en preparación</h1>
-    <p class="text-muted mb-4">Estamos preparando la actividad interactiva para esta área.</p>
-    <a href="{{ url_for('dashboard.student_juegos') }}" class="btn btn-teacher-primary">Volver a Juegos</a>
+    <h1 class="h4 mb-3">{{ _('Actividad en preparación') }}</h1>
+    <p class="text-muted mb-4">{{ _('Estamos preparando la actividad interactiva para esta área.') }}</p>
+    <a href="{{ url_for('dashboard.student_juegos') }}" class="btn btn-teacher-primary">{{ _('Volver a Juegos') }}</a>
   {% endif %}
 </div>
 {% endblock %}

@@ -1,12 +1,12 @@
 {% extends "dashboard/student/base_student.html" %}
-{% block title %}Mis actividades — indecap-aprende{% endblock %}
+{% block title %}{{ _('Mis actividades') }} — indecap-aprende{% endblock %}
 {% block student_content %}
-<h1 class="h4 mb-3">Mis actividades</h1>
+<h1 class="h4 mb-3">{{ _('Mis actividades') }}</h1>
 
 {% if not grupos %}
 <div class="teacher-card">
   <p class="text-muted mb-0">
-    Todavía no tienes actividades asignadas. Tu docente las configurará pronto.
+    {{ _('Todavía no tienes actividades asignadas. Tu docente las configurará pronto.') }}
   </p>
 </div>
 {% else %}
@@ -31,13 +31,13 @@
         <p class="mb-0 small fw-semibold">{{ sesion.actividad.title }}</p>
         <p class="mb-0 text-muted" style="font-size: 0.75rem;">
           {{ sesion.actividad.estimated_minutes }} min
-          · {{ "Completada" if sesion.status.value == "completada" else "Pendiente" }}
+          · {{ _("Completada") if sesion.status.value == "completada" else _("Pendiente") }}
         </p>
       </div>
       {% if sesion.status.value == 'pendiente' %}
       <form method="post" action="{{ url_for('dashboard.student_iniciar_actividad', sesion_id=sesion.id) }}" class="mb-0">
         <button type="submit" class="badge border-0" style="background: var(--teacher-navy); color:#fff; font-size:0.75rem; cursor: pointer;">
-          {{ 'Continuar' if sesion.started_at else 'Jugar' }}
+          {{ _('Continuar') if sesion.started_at else _('Jugar') }}
         </button>
       </form>
       {% else %}

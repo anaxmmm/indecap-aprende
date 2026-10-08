@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from flask import render_template, redirect, url_for, flash, request, abort, jsonify
+from flask_babel import gettext as _, lazy_gettext as _l
 from flask_login import login_required, current_user
 
 from app.blueprints.dashboard import bp
@@ -50,7 +51,7 @@ from app.models.content import Trastorno, Actividad
 
 # Nombres de etapa, en el mismo orden que usa games/stages.html, para que
 # "Sesiones del sistema" muestre la misma nomenclatura que ve el estudiante.
-STAGE_NAMES = ["Base", "Media", "Alta", "Muy Alta", "Súper Difícil"]
+STAGE_NAMES = [_l("Base"), _l("Media"), _l("Alta"), _l("Muy Alta"), _l("Súper Difícil")]
 
 
 def _is_teacher_or_admin() -> bool:
@@ -195,7 +196,7 @@ def registro_estudiantes():
     if request.method == "POST":
         if "submit_group" in request.form and group_form.validate_on_submit():
             create_group(current_user, group_form.name.data)
-            flash("Grupo creado correctamente.", "success")
+            flash(_("Grupo creado correctamente."), "success")
             return redirect(url_for("dashboard.registro_estudiantes"))
 
         if "submit_student" in request.form and student_form.validate_on_submit():
@@ -214,14 +215,14 @@ def registro_estudiantes():
                     has_learning_difficulties=student_form.has_learning_difficulties.data,
                     trastorno_ids=student_form.trastornos.data,
                 )
-                flash("Estudiante añadido al grupo.", "success")
+                flash(_("Estudiante añadido al grupo."), "success")
             except ValueError as exc:
                 flash(str(exc), "danger")
             return redirect(url_for("dashboard.registro_estudiantes"))
 
         for field_errors in list(group_form.errors.values()) + list(student_form.errors.values()):
             for error in field_errors:
-                flash(error, "danger")
+                flash(str(error), "danger")
 
     return render_template(
         "dashboard/teacher/registro_estudiantes.html",
@@ -239,7 +240,7 @@ def eliminar_grupo(group_id):
         return redirect(url_for("dashboard.index"))
     try:
         delete_group(current_user, group_id)
-        flash("Grupo eliminado correctamente.", "info")
+        flash(_("Grupo eliminado correctamente."), "info")
     except ValueError as exc:
         flash(str(exc), "danger")
     return redirect(url_for("dashboard.registro_estudiantes"))
@@ -256,7 +257,7 @@ def mover_estudiante(group_id):
     if student_id and target_group_id:
         try:
             move_student_to_group(current_user, student_id, target_group_id)
-            flash("Estudiante movido de grupo.", "success")
+            flash(_("Estudiante movido de grupo."), "success")
         except ValueError as exc:
             flash(str(exc), "danger")
     return redirect(url_for("dashboard.registro_estudiantes"))
@@ -268,7 +269,7 @@ def desvincular_estudiante(group_id, student_id):
     if not _is_teacher_or_admin():
         return redirect(url_for("dashboard.index"))
     deactivate_student(current_user, group_id, student_id)
-    flash("Estudiante desvinculado. Quedó en 'Niños inactivos' de este grupo.", "info")
+    flash(_("Estudiante desvinculado. Quedó en 'Niños inactivos' de este grupo."), "info")
     return redirect(url_for("dashboard.registro_estudiantes"))
 
 
@@ -278,7 +279,7 @@ def reactivar_estudiante(group_id, student_id):
     if not _is_teacher_or_admin():
         return redirect(url_for("dashboard.index"))
     reactivate_student(current_user, group_id, student_id)
-    flash("Estudiante reactivado.", "success")
+    flash(_("Estudiante reactivado."), "success")
     return redirect(url_for("dashboard.registro_estudiantes"))
 
 
@@ -289,7 +290,7 @@ def eliminar_estudiante(group_id, student_id):
         return redirect(url_for("dashboard.index"))
     try:
         delete_student_permanently(current_user, group_id, student_id)
-        flash("Estudiante eliminado definitivamente.", "info")
+        flash(_("Estudiante eliminado definitivamente."), "info")
     except ValueError as exc:
         flash(str(exc), "danger")
     return redirect(url_for("dashboard.registro_estudiantes"))
@@ -303,7 +304,7 @@ def perfil_estudiante(student_id):
 
     student = get_student_if_owned_by_teacher(current_user, student_id)
     if student is None:
-        flash("Ese estudiante no existe o no pertenece a tus grupos.", "danger")
+        flash(_("Ese estudiante no existe o no pertenece a tus grupos."), "danger")
         return redirect(url_for("dashboard.registro_estudiantes"))
 
     trastornos_form = AssignTrastornosForm()
@@ -313,7 +314,7 @@ def perfil_estudiante(student_id):
 
     if request.method == "POST" and trastornos_form.validate_on_submit():
         set_assigned_trastornos(current_user, student, trastornos_form.trastornos.data)
-        flash("Trastornos asignados actualizados.", "success")
+        flash(_("Trastornos asignados actualizados."), "success")
         return redirect(url_for("dashboard.perfil_estudiante", student_id=student.id))
 
     if request.method == "GET":
@@ -352,7 +353,7 @@ def sesiones_sistema():
                 end = s * stage_size
                 stages.append({
                     "number": s,
-                    "name": STAGE_NAMES[s - 1] if s - 1 < len(STAGE_NAMES) else f"Etapa {s}",
+                    "name": str(STAGE_NAMES[s - 1]) if s - 1 < len(STAGE_NAMES) else _("Etapa %(number)s", number=s),
                     "start": start,
                     "end": end,
                     "levels": list(range(start, end + 1)),
@@ -418,7 +419,7 @@ def actividad_detail(actividad_id):
                 start_date=assign_form.start_date.data,
                 end_date=assign_form.end_date.data,
             )
-            flash("Sesión asignada correctamente.", "success")
+            flash(_("Sesión asignada correctamente."), "success")
         except ValueError as exc:
             flash(str(exc), "danger")
         return redirect(url_for("dashboard.actividad_detail", actividad_id=actividad.id))
@@ -443,7 +444,7 @@ def actualizar_notas_sesion(asignacion_id):
         actividad_id = update_session_notes(
             current_user, asignacion_id, request.form.get("clinical_notes", "")
         )
-        flash("Notas guardadas.", "success")
+        flash(_("Notas guardadas."), "success")
     except ValueError as exc:
         flash(str(exc), "danger")
         return redirect(url_for("dashboard.sesiones_sistema"))
@@ -482,7 +483,7 @@ def perfil():
             form.area.data,
             new_password=form.new_password.data,
         )
-        flash("Perfil actualizado correctamente.", "success")
+        flash(_("Perfil actualizado correctamente."), "success")
         return redirect(url_for("dashboard.perfil"))
 
     return render_template(

@@ -4,8 +4,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>indecap-aprende · Aprende de una forma que se adapte a ti</title>
-  <meta name="description" content="Plataforma educativa inclusiva que adapta actividades, accesibilidad y apoyos a diferentes formas de aprender. Proyecto de INDECAP.">
+  <title>{{ _('indecap-aprende · Aprende de una forma que se adapte a ti') }}</title>
+  <meta name="description" content="{{ _('Plataforma educativa inclusiva que adapta actividades, accesibilidad y apoyos a diferentes formas de aprender. Proyecto de INDECAP.') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,27 +13,27 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
 </head>
-<body>
-  <nav class="home-nav" aria-label="Navegación principal">
+<body data-label-open-menu="{{ _('Abrir menú') }}" data-label-close-menu="{{ _('Cerrar menú') }}">
+  <nav class="home-nav" aria-label="{{ _('Navegación principal') }}">
     <div class="home-nav__brand-group">
-      <a href="#inicio" aria-label="Ir al inicio">
+      <a href="#inicio" aria-label="{{ _('Ir al inicio') }}">
         <img src="{{ url_for('static', filename='images/logo-indecap-aprende.png') }}" alt="INDECAP — indecap-aprende" class="home-nav__logo">
       </a>
     </div>
     <div class="home-nav__links" id="nav-links">
-      <a href="#experiencia" data-section="experiencia">Experiencia</a>
-      <a href="#necesidades" data-section="necesidades">Necesidades de apoyo</a>
-      <a href="#como-funciona" data-section="como-funciona">Cómo funciona</a>
-      <a href="#dua" data-section="dua">Metodología</a>
-      <a href="#quienes-somos" data-section="quienes-somos">Quiénes somos</a>
+      <a href="#experiencia" data-section="experiencia">{{ _('Experiencia') }}</a>
+      <a href="#necesidades" data-section="necesidades">{{ _('Necesidades de apoyo') }}</a>
+      <a href="#como-funciona" data-section="como-funciona">{{ _('Cómo funciona') }}</a>
+      <a href="#dua" data-section="dua">{{ _('Metodología') }}</a>
+      <a href="#quienes-somos" data-section="quienes-somos">{{ _('Quiénes somos') }}</a>
     </div>
     <div class="home-nav__access">
       <!-- FASE 1 (cambio B): botón de idioma ahora funcional -->
       <button type="button" id="btn-lang-toggle" class="home-nav__lang-btn" aria-label="{{ _('Cambiar idioma') }}" data-url="{{ url_for('set_language', code='en' if current_lang == 'es' else 'es') }}">
         <span id="lang-toggle-label">{{ current_lang|upper }}</span>
       </button>
-      <button type="button" class="btn btn-primary btn-sm btn-acceder">Acceder</button>
-      <button type="button" class="home-nav__burger" id="nav-burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-links">
+      <button type="button" class="btn btn-primary btn-sm btn-acceder">{{ _('Acceder') }}</button>
+      <button type="button" class="home-nav__burger" id="nav-burger" aria-label="{{ _('Abrir menú') }}" aria-expanded="false" aria-controls="nav-links">
         <span></span><span></span><span></span>
       </button>
     </div>
@@ -43,77 +43,77 @@
     <div class="home-hero__shape"></div>
     <div class="home-hero__shape home-hero__shape--2"></div>
     <div class="home-hero__content">
-      <h1 class="home-hero__title">APRENDE DE UNA FORMA <em> INTUITIVA</em></h1>
+      <h1 class="home-hero__title">{{ _('APRENDE DE UNA FORMA') }} <em> {{ _('INTUITIVA') }}</em></h1>
       <p class="home-hero__subtitle">
-        Una plataforma educativa inclusiva que adapta actividades, accesibilidad y apoyos a diferentes formas de aprender.
+        {{ _('Una plataforma educativa inclusiva que adapta actividades, accesibilidad y apoyos a diferentes formas de aprender.') }}
       </p>
       <div class="home-hero__actions">
-        <button type="button" class="home-btn home-btn--gold btn-acceder">Acceder</button>
-        <a href="#como-funciona" id="btn-como-funciona" class="home-btn home-btn--ghost">Cómo funciona</a>
+        <button type="button" class="home-btn home-btn--gold btn-acceder">{{ _('Acceder') }}</button>
+        <a href="#como-funciona" id="btn-como-funciona" class="home-btn home-btn--ghost">{{ _('Cómo funciona') }}</a>
       </div>
     </div>
-    <a href="#experiencia" class="home-scroll-hint" aria-label="Conoce indecap-aprende">
+    <a href="#experiencia" class="home-scroll-hint" aria-label="{{ _('Conoce indecap-aprende') }}">
       <span>↓</span>
-      <small>Conoce indecap-aprende</small>
+      <small>{{ _('Conoce indecap-aprende') }}</small>
     </a>
   </header>
 
   <section id="experiencia" class="home-section">
     <div class="home-container home-reveal">
-      <p class="home-section__eyebrow">Experiencia</p>
-      <h2 class="home-section__title">Una experiencia para todos</h2>
+      <p class="home-section__eyebrow">{{ _('Experiencia') }}</p>
+      <h2 class="home-section__title">{{ _('Una experiencia para todos') }}</h2>
       <p class="home-section__text">
-        El contenido se adapta a cada estudiante, teniendo en cuenta las barreras de acceso, es inclusivo en su interacción y diseño para el correcto acompañamiento de sus procesos.
-      </p
-      <p class="home-section__highlight">La constancia es la clave del éxito.</p>
+        {{ _('El contenido se adapta a cada estudiante, teniendo en cuenta las barreras de acceso, es inclusivo en su interacción y diseño para el correcto acompañamiento de sus procesos.') }}
+      </p>
+      <p class="home-section__highlight">{{ _('La constancia es la clave del éxito.') }}</p>
     </div>
   </section>
 
   <section id="necesidades" class="home-section home-section--alt">
     <div class="home-container">
       <div class="home-reveal">
-        <p class="home-section__eyebrow">Necesidades de apoyo</p>
+        <p class="home-section__eyebrow">{{ _('Necesidades de apoyo') }}</p>
       </div>
       <div class="home-grid">
         <div class="home-grid__card home-reveal" style="--d:.00s">
           <span class="home-grid__badge" aria-hidden="true">Dx</span>
-          <p class="home-grid__card-title">Dislexia</p>
-          <p class="home-grid__card-text">Facilita la lectura mediante apoyo auditivo, resaltado de palabras y contenido estructurado.</p>
+          <p class="home-grid__card-title">{{ _('Dislexia') }}</p>
+          <p class="home-grid__card-text">{{ _('Facilita la lectura mediante apoyo auditivo, resaltado de palabras y contenido estructurado.') }}</p>
         </div>
         <div class="home-grid__card home-reveal" style="--d:.06s">
           <span class="home-grid__badge" aria-hidden="true">Dc</span>
-          <p class="home-grid__card-title">Discalculia</p>
-          <p class="home-grid__card-text">Convierte los conceptos numéricos en experiencias visuales, concretas y fáciles de comprender.</p>
+          <p class="home-grid__card-title">{{ _('Discalculia') }}</p>
+          <p class="home-grid__card-text">{{ _('Convierte los conceptos numéricos en experiencias visuales, concretas y fáciles de comprender.') }}</p>
         </div>
         <div class="home-grid__card home-reveal" style="--d:.12s">
-          <span class="home-grid__badge" aria-hidden="true">TDAH</span>
-          <p class="home-grid__card-title">TDAH</p>
-          <p class="home-grid__card-text">Actividades breves y estructuradas que facilitan la concentración, la organización y el seguimiento de cada objetivo.</p>
+          <span class="home-grid__badge" aria-hidden="true">{{ _('TDAH') }}</span>
+          <p class="home-grid__card-title">{{ _('TDAH') }}</p>
+          <p class="home-grid__card-text">{{ _('Actividades breves y estructuradas que facilitan la concentración, la organización y el seguimiento de cada objetivo.') }}</p>
         </div>
         <div class="home-grid__card home-reveal" style="--d:.18s">
-          <span class="home-grid__badge" aria-hidden="true">TEA</span>
-          <p class="home-grid__card-title">TEA</p>
-          <p class="home-grid__card-text">Entornos predecibles, instrucciones claras y una experiencia visual organizada para facilitar la interacción.</p>
+          <span class="home-grid__badge" aria-hidden="true">{{ _('TEA') }}</span>
+          <p class="home-grid__card-title">{{ _('TEA') }}</p>
+          <p class="home-grid__card-text">{{ _('Entornos predecibles, instrucciones claras y una experiencia visual organizada para facilitar la interacción.') }}</p>
         </div>
         <div class="home-grid__card home-reveal" style="--d:.00s">
-          <span class="home-grid__badge" aria-hidden="true">TOD</span>
-          <p class="home-grid__card-title">Trastorno opositor desafiante</p>
-          <p class="home-grid__card-text">Actividades que promueven la autonomía, la toma de decisiones y una participación activa en el aprendizaje.</p>
+          <span class="home-grid__badge" aria-hidden="true">{{ _('TOD') }}</span>
+          <p class="home-grid__card-title">{{ _('Trastorno opositor desafiante') }}</p>
+          <p class="home-grid__card-text">{{ _('Actividades que promueven la autonomía, la toma de decisiones y una participación activa en el aprendizaje.') }}</p>
         </div>
         <div class="home-grid__card home-reveal" style="--d:.06s">
           <span class="home-grid__badge" aria-hidden="true">Vis</span>
-          <p class="home-grid__card-title">Discapacidad visual</p>
-          <p class="home-grid__card-text">Acceso al contenido mediante navegación por teclado, lectores de pantalla y opciones de contraste.</p>
+          <p class="home-grid__card-title">{{ _('Discapacidad visual') }}</p>
+          <p class="home-grid__card-text">{{ _('Acceso al contenido mediante navegación por teclado, lectores de pantalla y opciones de contraste.') }}</p>
         </div>
         <div class="home-grid__card home-reveal" style="--d:.12s">
-          <span class="home-grid__badge" aria-hidden="true">Aud</span>
-          <p class="home-grid__card-title">Discapacidad auditiva</p>
-          <p class="home-grid__card-text">Contenido accesible mediante subtítulos, recursos visuales y materiales audiovisuales adaptados.</p>
+          <span class="home-grid__badge" aria-hidden="true">{{ _('Aud') }}</span>
+          <p class="home-grid__card-title">{{ _('Discapacidad auditiva') }}</p>
+          <p class="home-grid__card-text">{{ _('Contenido accesible mediante subtítulos, recursos visuales y materiales audiovisuales adaptados.') }}</p>
         </div>
         <div class="home-grid__card home-reveal" style="--d:.18s">
           <span class="home-grid__badge" aria-hidden="true">Cog</span>
-          <p class="home-grid__card-title">Discapacidad cognitiva</p>
-          <p class="home-grid__card-text">Contenidos simplificados, instrucciones claras y actividades estructuradas para facilitar la comprensión y participación.</p>
+          <p class="home-grid__card-title">{{ _('Discapacidad cognitiva') }}</p>
+          <p class="home-grid__card-text">{{ _('Contenidos simplificados, instrucciones claras y actividades estructuradas para facilitar la comprensión y participación.') }}</p>
         </div>
       </div>
     </div>
@@ -122,33 +122,33 @@
   <section id="como-funciona" class="home-section">
     <div class="home-container">
       <div class="home-reveal">
-        <p class="home-section__eyebrow">Cómo funciona</p>
+        <p class="home-section__eyebrow">{{ _('Cómo funciona') }}</p>
       </div>
       <ol class="flow" id="flow">
         <li class="flow__step">
           <span class="flow__num">1</span>
-          <p class="flow__title">Registro y configuración</p>
-          <p class="flow__text">El docente registra al estudiante y configura el plan de entrenamiento según sus necesidades.</p>
+          <p class="flow__title">{{ _('Registro y configuración') }}</p>
+          <p class="flow__text">{{ _('El docente registra al estudiante y configura el plan de entrenamiento según sus necesidades.') }}</p>
         </li>
         <li class="flow__step">
           <span class="flow__num">2</span>
-          <p class="flow__title">Asignación de actividades</p>
-          <p class="flow__text">El docente asigna las necesidades de apoyo y los juegos correspondientes desde el panel institucional.</p>
+          <p class="flow__title">{{ _('Asignación de actividades') }}</p>
+          <p class="flow__text">{{ _('El docente asigna las necesidades de apoyo y los juegos correspondientes desde el panel institucional.') }}</p>
         </li>
         <li class="flow__step">
           <span class="flow__num">3</span>
-          <p class="flow__title">El estudiante juega y aprende</p>
-          <p class="flow__text">El estudiante ingresa a su panel, consulta sus actividades y desarrolla los juegos asignados a su propio ritmo.</p>
+          <p class="flow__title">{{ _('El estudiante juega y aprende') }}</p>
+          <p class="flow__text">{{ _('El estudiante ingresa a su panel, consulta sus actividades y desarrolla los juegos asignados a su propio ritmo.') }}</p>
         </li>
         <li class="flow__step">
           <span class="flow__num">4</span>
-          <p class="flow__title">Seguimiento del progreso</p>
-          <p class="flow__text">Cada actividad realizada genera información sobre el avance del estudiante.</p>
+          <p class="flow__title">{{ _('Seguimiento del progreso') }}</p>
+          <p class="flow__text">{{ _('Cada actividad realizada genera información sobre el avance del estudiante.') }}</p>
         </li>
         <li class="flow__step">
           <span class="flow__num">5</span>
-          <p class="flow__title">Acompañamiento docente</p>
-          <p class="flow__text">El docente consulta sesiones, actividades y progreso desde su dashboard para hacer seguimiento al proceso.</p>
+          <p class="flow__title">{{ _('Acompañamiento docente') }}</p>
+          <p class="flow__text">{{ _('El docente consulta sesiones, actividades y progreso desde su dashboard para hacer seguimiento al proceso.') }}</p>
         </li>
       </ol>
     </div>
@@ -157,27 +157,27 @@
   <section id="dua" class="home-section home-section--alt">
     <div class="home-container">
       <div class="home-reveal">
-        <p class="home-section__eyebrow">Metodología</p>
-        <h2 class="home-section__title">Diseño Universal para el Aprendizaje (DUA)</h2>
+        <p class="home-section__eyebrow">{{ _('Metodología') }}</p>
+        <h2 class="home-section__title">{{ _('Diseño Universal para el Aprendizaje (DUA)') }}</h2>
       </div>
       <div class="dua">
         <article class="dua__block home-reveal" style="--d:0s">
           <span class="dua__num" aria-hidden="true">01</span>
-          <h3 class="dua__title">Representar</h3>
-          <p class="dua__question">¿Cómo recibe la información?</p>
-          <p class="dua__text">Texto, audio, imágenes, elementos visuales y contenido estructurado.</p>
+          <h3 class="dua__title">{{ _('Representar') }}</h3>
+          <p class="dua__question">{{ _('¿Cómo recibe la información?') }}</p>
+          <p class="dua__text">{{ _('Texto, audio, imágenes, elementos visuales y contenido estructurado.') }}</p>
         </article>
         <article class="dua__block home-reveal" style="--d:.1s">
           <span class="dua__num" aria-hidden="true">02</span>
-          <h3 class="dua__title">Actuar y expresar</h3>
-          <p class="dua__question">¿Cómo interactúa con lo aprendido?</p>
-          <p class="dua__text">Diferentes formas de responder, navegar y completar actividades.</p>
+          <h3 class="dua__title">{{ _('Actuar y expresar') }}</h3>
+          <p class="dua__question">{{ _('¿Cómo interactúa con lo aprendido?') }}</p>
+          <p class="dua__text">{{ _('Diferentes formas de responder, navegar y completar actividades.') }}</p>
         </article>
         <article class="dua__block home-reveal" style="--d:.2s">
           <span class="dua__num" aria-hidden="true">03</span>
-          <h3 class="dua__title">Participar</h3>
-          <p class="dua__question">¿Cómo se involucra en el proceso?</p>
-          <p class="dua__text">Opciones de apoyo, estructura, autonomía y motivación.</p>
+          <h3 class="dua__title">{{ _('Participar') }}</h3>
+          <p class="dua__question">{{ _('¿Cómo se involucra en el proceso?') }}</p>
+          <p class="dua__text">{{ _('Opciones de apoyo, estructura, autonomía y motivación.') }}</p>
         </article>
       </div>
     </div>
@@ -186,10 +186,9 @@
   <section id="quienes-somos" class="home-section">
     <div class="home-container">
       <div class="home-reveal">
-        <p class="home-section__eyebrow">Quiénes somos</p>
+        <p class="home-section__eyebrow">{{ _('Quiénes somos') }}</p>
         <p class="home-section__text">
-          INDECAP-APRENDE nace como proyecto de grado para el programa de Desarrollo de Software de INDECAP en Envigado, Antioquia, Colombia. Fue
-          diseñado a partir de las necesidades identificadas en el contexto educativo de la institución, con la participación del área de psicología.
+          {{ _('INDECAP-APRENDE nace como proyecto de grado para el programa de Desarrollo de Software de INDECAP en Envigado, Antioquia, Colombia. Fue diseñado a partir de las necesidades identificadas en el contexto educativo de la institución, con la participación del área de psicología.') }}
         </p>
       </div>
 
@@ -197,18 +196,18 @@
         <!-- Tarjeta de la institución: logo, texto y redes (solo iconos) -->
         <article class="home-card home-reveal" style="--d:0s">
           <img src="{{ url_for('static', filename='images/logo-indecap-aprende.png') }}" alt="INDECAP" class="home-card__logo">
-          <p class="home-card__text">Institución educativa<br>Contexto, necesidades y acompañamiento</p>
+          <p class="home-card__text">{{ _('Institución educativa') }}<br>{{ _('Contexto, necesidades y acompañamiento') }}</p>
           <div class="social-row">
-            <a class="social-btn" href="https://indecap.edu.co/sedes/envigado" target="_blank" rel="noopener noreferrer" aria-label="Sede INDECAP Envigado" title="Sede Envigado">
+            <a class="social-btn" href="https://indecap.edu.co/sedes/envigado" target="_blank" rel="noopener noreferrer" aria-label="{{ _('Sede INDECAP Envigado') }}" title="{{ _('Sede Envigado') }}">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             </a>
-            <a class="social-btn" href="https://www.facebook.com/indecapedu/" target="_blank" rel="noopener noreferrer" aria-label="Facebook de INDECAP" title="Facebook">
+            <a class="social-btn" href="https://www.facebook.com/indecapedu/" target="_blank" rel="noopener noreferrer" aria-label="{{ _('Facebook de INDECAP') }}" title="Facebook">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
             </a>
-            <a class="social-btn" href="https://www.instagram.com/instindecap/" target="_blank" rel="noopener noreferrer" aria-label="Instagram de INDECAP" title="Instagram">
+            <a class="social-btn" href="https://www.instagram.com/instindecap/" target="_blank" rel="noopener noreferrer" aria-label="{{ _('Instagram de INDECAP') }}" title="Instagram">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6"/></svg>
             </a>
-            <a class="social-btn" href="https://www.youtube.com/@CorporacionEducativaINDECAP" target="_blank" rel="noopener noreferrer" aria-label="YouTube de INDECAP" title="YouTube">
+            <a class="social-btn" href="https://www.youtube.com/@CorporacionEducativaINDECAP" target="_blank" rel="noopener noreferrer" aria-label="{{ _('YouTube de INDECAP') }}" title="YouTube">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
             </a>
           </div>
@@ -220,13 +219,13 @@
             <span class="home-card__initials" aria-hidden="true">AM</span>
             <img src="{{ url_for('static', filename='images/profesionaljpg.jpg') }}" alt="Ana Melo" onerror="this.style.display='none'">
           </div>
-          <p class="home-card__name">Desarrollado por Ana Melo</p>
-          <p class="home-card__role">Desarrolladora de software · INDECAP</p>
+          <p class="home-card__name">{{ _('Desarrollado por Ana Melo') }}</p>
+          <p class="home-card__role">{{ _('Desarrolladora de software · INDECAP') }}</p>
           <div class="social-row">
-            <a class="social-btn" href="https://www.linkedin.com/in/ancreart/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn de Ana Melo" title="LinkedIn">
+            <a class="social-btn" href="https://www.linkedin.com/in/ancreart/" target="_blank" rel="noopener noreferrer" aria-label="{{ _('LinkedIn de Ana Melo') }}" title="LinkedIn">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
             </a>
-            <a class="social-btn" href="https://github.com/ancreart" target="_blank" rel="noopener noreferrer" aria-label="GitHub de Ana Melo" title="GitHub">
+            <a class="social-btn" href="https://github.com/ancreart" target="_blank" rel="noopener noreferrer" aria-label="{{ _('GitHub de Ana Melo') }}" title="GitHub">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
             </a>
           </div>
@@ -240,23 +239,23 @@
       <div>
         <img src="{{ url_for('static', filename='images/logo-indecap-aprende-blanco.png') }}" alt="INDECAP — indecap-aprende" class="home-footer__logo">
         <p>Corporación Educativa INDECAP — Instituto de Ciencias Aplicadas ®</p>
-        <p class="home-footer__badge">Calidad Educativa Certificada</p>
+        <p class="home-footer__badge">{{ _('Calidad Educativa Certificada') }}</p>
       </div>
       <div>
-        <p class="home-footer__heading">Contacto</p>
+        <p class="home-footer__heading">{{ _('Contacto') }}</p>
         <p>indecap@indecap.edu.co</p>
         <p>(604) 448 4794</p>
       </div>
     </div>
-    <p class="home-footer__copyright">© 2026 indecap-aprende · Proyecto de grado — INDECAP · Desarrollado por Ana Melo</p>
+    <p class="home-footer__copyright">© 2026 indecap-aprende · {{ _('Proyecto de grado') }} — INDECAP · {{ _('Desarrollado por Ana Melo') }}</p>
   </footer>
 
   <!-- Panel de ingreso con superposición: login / registro / olvidé contraseña -->
   <div id="login-overlay" class="login-overlay" hidden>
-    <div class="login-panel" role="dialog" aria-modal="true" aria-label="Acceso a indecap-aprende">
+    <div class="login-panel" role="dialog" aria-modal="true" aria-label="{{ _('Acceso a indecap-aprende') }}">
       <div class="login-panel__header">
         <img src="{{ url_for('static', filename='images/logo-indecap-aprende.png') }}" alt="INDECAP — indecap-aprende" class="login-panel__logo">
-        <button type="button" id="btn-cerrar-login" class="login-panel__close" aria-label="Cerrar">×</button>
+        <button type="button" id="btn-cerrar-login" class="login-panel__close" aria-label="{{ _('Cerrar') }}">×</button>
       </div>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
@@ -269,14 +268,14 @@
 
       <!-- Vista: iniciar sesión -->
       <div id="view-login" class="login-panel__view">
-        <p class="login-panel__title">Ingresa a tu cuenta</p>
+        <p class="login-panel__title">{{ _('Ingresa a tu cuenta') }}</p>
         <p class="login-panel__subtitle">Corporación Educativa INDECAP</p>
 
-        <div class="role-switch" role="radiogroup" aria-label="Tipo de acceso">
+        <div class="role-switch" role="radiogroup" aria-label="{{ _('Tipo de acceso') }}">
           <input type="radio" name="login_role_toggle" id="login-role-estudiante" autocomplete="off" checked>
-          <label for="login-role-estudiante">Estudiante</label>
+          <label for="login-role-estudiante">{{ _('Estudiante') }}</label>
           <input type="radio" name="login_role_toggle" id="login-role-docente" autocomplete="off">
-          <label for="login-role-docente">Docente</label>
+          <label for="login-role-docente">{{ _('Docente') }}</label>
         </div>
 
         <form method="post" action="{{ url_for('auth.login') }}">
@@ -289,25 +288,25 @@
           </div>
           <div class="mb-3">
             {{ form.password.label(class_="login-panel__label") }}
-            {{ form.password(class_="form-control", placeholder="Tu contraseña") }}
+            {{ form.password(class_="form-control", placeholder=_("Tu contraseña")) }}
           </div>
           <div class="form-check mb-3">
             {{ form.remember_me(class_="form-check-input") }}
             {{ form.remember_me.label(class_="form-check-label") }}
           </div>
-          {{ form.submit(class_="btn btn-primary w-100", value="Ingresar") }}
+          {{ form.submit(class_="btn btn-primary w-100", value=_("Ingresar")) }}
         </form>
 
         <div class="login-panel__links mt-3">
-          <a href="#" data-panel="forgot">¿Olvidaste tu contraseña?</a>
-          <a href="#" data-panel="register">Regístrate</a>
+          <a href="#" data-panel="forgot">{{ _('¿Olvidaste tu contraseña?') }}</a>
+          <a href="#" data-panel="register">{{ _('Regístrate') }}</a>
         </div>
-        <p class="login-panel__help">¿Problemas para ingresar? Contacta a tu docente o al administrador.</p>
+        <p class="login-panel__help">{{ _('¿Problemas para ingresar? Contacta a tu docente o al administrador.') }}</p>
       </div>
 
       <!-- Vista: registrarse -->
       <div id="view-register" class="login-panel__view" hidden>
-        <p class="login-panel__title">Crea tu cuenta</p>
+        <p class="login-panel__title">{{ _('Crea tu cuenta') }}</p>
         <p class="login-panel__subtitle">Corporación Educativa INDECAP</p>
 
         <form method="post" action="{{ url_for('auth.register') }}">
@@ -315,7 +314,7 @@
           <input type="hidden" name="next" value="{{ next }}">
           <div class="mb-3">
             {{ register_form.full_name.label(class_="login-panel__label") }}
-            {{ register_form.full_name(class_="form-control", placeholder="Nombre y apellidos") }}
+            {{ register_form.full_name(class_="form-control", placeholder=_("Nombre y apellidos")) }}
           </div>
           <div class="mb-3">
             {{ register_form.email.label(class_="login-panel__label") }}
@@ -334,24 +333,24 @@
           </div>
           <div class="mb-3">
             {{ register_form.password.label(class_="login-panel__label") }}
-            {{ register_form.password(class_="form-control", placeholder="Mínimo 8 caracteres") }}
+            {{ register_form.password(class_="form-control", placeholder=_("Mínimo 8 caracteres")) }}
           </div>
           <div class="mb-3">
             {{ register_form.confirm_password.label(class_="login-panel__label") }}
-            {{ register_form.confirm_password(class_="form-control", placeholder="Repite tu contraseña") }}
+            {{ register_form.confirm_password(class_="form-control", placeholder=_("Repite tu contraseña")) }}
           </div>
-          {{ register_form.submit(class_="btn btn-primary w-100", value="Crear cuenta") }}
+          {{ register_form.submit(class_="btn btn-primary w-100", value=_("Crear cuenta")) }}
         </form>
 
         <div class="login-panel__links mt-3">
-          <a href="#" data-panel="login">¿Ya tienes cuenta? Inicia sesión</a>
+          <a href="#" data-panel="login">{{ _('¿Ya tienes cuenta? Inicia sesión') }}</a>
         </div>
       </div>
 
       <!-- Vista: olvidé mi contraseña -->
       <div id="view-forgot" class="login-panel__view" hidden>
-        <p class="login-panel__title">Recuperar contraseña</p>
-        <p class="login-panel__subtitle">Te enviaremos instrucciones a tu correo.</p>
+        <p class="login-panel__title">{{ _('Recuperar contraseña') }}</p>
+        <p class="login-panel__subtitle">{{ _('Te enviaremos instrucciones a tu correo.') }}</p>
 
         <form method="post" action="{{ url_for('auth.forgot_password') }}">
           {{ forgot_form.hidden_tag() }}
@@ -359,11 +358,11 @@
             {{ forgot_form.email.label(class_="login-panel__label") }}
             {{ forgot_form.email(class_="form-control", placeholder="nombre@indecap.edu.co") }}
           </div>
-          {{ forgot_form.submit(class_="btn btn-primary w-100", value="Enviar enlace") }}
+          {{ forgot_form.submit(class_="btn btn-primary w-100", value=_("Enviar enlace")) }}
         </form>
 
         <div class="login-panel__links mt-3">
-          <a href="#" data-panel="login">Volver a inicio de sesión</a>
+          <a href="#" data-panel="login">{{ _('Volver a inicio de sesión') }}</a>
         </div>
       </div>
     </div>
@@ -371,6 +370,10 @@
 
   <script>
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // FASE 2: textos del menú móvil traducidos desde Flask-Babel
+    const LABEL_OPEN_MENU = document.body.dataset.labelOpenMenu || "Abrir menú";
+    const LABEL_CLOSE_MENU = document.body.dataset.labelCloseMenu || "Cerrar menú";
 
     // ---------- Panel de ingreso ----------
     const overlay = document.getElementById("login-overlay");
@@ -463,12 +466,12 @@
     function closeMenu() {
       navLinksBox.classList.remove("is-open");
       burger.setAttribute("aria-expanded", "false");
-      burger.setAttribute("aria-label", "Abrir menú");
+      burger.setAttribute("aria-label", LABEL_OPEN_MENU);
     }
     burger.addEventListener("click", () => {
       const open = navLinksBox.classList.toggle("is-open");
       burger.setAttribute("aria-expanded", String(open));
-      burger.setAttribute("aria-label", open ? "Cerrar menú" : "Abrir menú");
+      burger.setAttribute("aria-label", open ? LABEL_CLOSE_MENU : LABEL_OPEN_MENU);
     });
     navLinksBox.querySelectorAll("a").forEach((a) => a.addEventListener("click", closeMenu));
     document.addEventListener("click", (e) => {
