@@ -1,4 +1,5 @@
 from flask import render_template, jsonify, request, redirect, url_for, flash, abort
+from flask_babel import gettext as _, lazy_gettext as _l
 from flask_login import login_required, current_user
 
 from app.blueprints.games import bp
@@ -16,7 +17,7 @@ from app.models.content import Trastorno
 # Nombres genéricos de etapa, en orden de dificultad. Aplican a cualquier
 # juego que declare "has_stage_map": True en el registry, agrupado en
 # bloques de "stage_size" niveles cada uno.
-STAGE_NAMES = ["Base", "Media", "Alta", "Muy Alta", "Súper Difícil"]
+STAGE_NAMES = [_l("Base"), _l("Media"), _l("Alta"), _l("Muy Alta"), _l("Súper Difícil")]
 
 
 @bp.context_processor
@@ -89,7 +90,7 @@ def stages(slug):
         return redirect(url_for("games.play", slug=slug))
 
     if not game["available"]:
-        flash("Este juego todavía está en construcción.", "info")
+        flash(_("Este juego todavía está en construcción."), "info")
         return redirect(url_for("dashboard.student_juegos"))
 
     if not current_user.is_student:
@@ -98,7 +99,7 @@ def stages(slug):
         scores = {}
     else:
         if get_active_assignment(current_user, game) is None:
-            flash("Tu docente aún no te asignó esta actividad.", "info")
+            flash(_("Tu docente aún no te asignó esta actividad."), "info")
             return redirect(url_for("dashboard.student_juegos"))
         preview = False
         unlocked = get_unlocked_level(current_user, slug)
@@ -123,7 +124,7 @@ def stages(slug):
             })
         stages_data.append({
             "number": s,
-            "name": STAGE_NAMES[s - 1] if s - 1 < len(STAGE_NAMES) else f"Etapa {s}",
+            "name": str(STAGE_NAMES[s - 1]) if s - 1 < len(STAGE_NAMES) else _("Etapa %(number)s", number=s),
             "start": start,
             "end": end,
             "unlocked": start <= unlocked,
@@ -153,7 +154,7 @@ def play(slug, level=None):
         abort(404)
 
     if not game["available"]:
-        flash("Este juego todavía está en construcción.", "info")
+        flash(_("Este juego todavía está en construcción."), "info")
         return redirect(url_for("dashboard.student_juegos"))
 
     a11y = get_accessibility_context(current_user)
@@ -166,7 +167,7 @@ def play(slug, level=None):
         # El acceso lo controla el docente: sin actividad asignada y vigente
         # no se entra, aunque el estudiante conozca la URL.
         if get_active_assignment(current_user, game) is None:
-            flash("Tu docente aún no te asignó esta actividad.", "info")
+            flash(_("Tu docente aún no te asignó esta actividad."), "info")
             return redirect(url_for("dashboard.student_juegos"))
         preview = False
         unlocked = get_unlocked_level(current_user, slug)
@@ -176,7 +177,7 @@ def play(slug, level=None):
     if level < 1 or level > game["levels"]:
         abort(404)
     if level > unlocked:
-        flash("Primero completa los niveles anteriores.", "info")
+        flash(_("Primero completa los niveles anteriores."), "info")
         return redirect(url_for("games.play", slug=slug, level=unlocked))
 
     trastorno = _resolve_trastorno()

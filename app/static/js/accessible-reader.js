@@ -20,6 +20,26 @@
  * la lógica corre en el navegador sobre el HTML que ya se sirve.
  */
 
+// Textos propios de este archivo. Un archivo estático no puede usar gettext,
+// así que se elige por el idioma que la plantilla declara en <html lang>.
+const READER_I18N = {
+  es: {
+    sinVoz: "Tu navegador no soporta lectura en voz alta. Prueba con Chrome o Edge actualizados.",
+    paso: function (actual, total) { return "Paso " + actual + " de " + total; },
+    vozLang: "es-ES"
+  },
+  en: {
+    sinVoz: "Your browser does not support reading aloud. Try an up-to-date version of Chrome or Edge.",
+    paso: function (actual, total) { return "Step " + actual + " of " + total; },
+    vozLang: "en-US"
+  }
+};
+
+function readerTexts() {
+  var idioma = (document.documentElement.lang || "es").slice(0, 2);
+  return READER_I18N[idioma] || READER_I18N.es;
+}
+
 class AccessibleReader {
   constructor(containerEl) {
     this.container = containerEl;
@@ -58,16 +78,14 @@ class AccessibleReader {
   /** Inicia (o reinicia) la lectura en voz alta con resaltado sincronizado. */
   play() {
     if (!("speechSynthesis" in window)) {
-      alert(
-        "Tu navegador no soporta lectura en voz alta. Prueba con Chrome o Edge actualizados."
-      );
+      alert(readerTexts().sinVoz);
       return;
     }
     this.stop(); // evita lecturas superpuestas
 
     const fullText = this.container.textContent;
     this.utterance = new SpeechSynthesisUtterance(fullText);
-    this.utterance.lang = "es-ES";
+    this.utterance.lang = readerTexts().vozLang;
     this.utterance.rate = 0.95; // ligeramente más lento que el default
 
     // Mapa de posición de carácter -> índice de palabra, para ubicar
@@ -184,7 +202,7 @@ class StepMode {
   }
 
   get progressLabel() {
-    return `Paso ${this.currentIndex + 1} de ${this.blocks.length}`;
+    return readerTexts().paso(this.currentIndex + 1, this.blocks.length);
   }
 }
 

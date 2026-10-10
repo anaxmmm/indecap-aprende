@@ -1,5 +1,5 @@
 {% extends "dashboard/student/base_student.html" %}
-{% block title %}Mi panel — indecap-aprende{% endblock %}
+{% block title %}{{ _('Mi panel') }} — indecap-aprende{% endblock %}
 {% block student_content %}
 {% set total_all = trastornos | sum(attribute='total') %}
 {% set done_all = trastornos | sum(attribute='completadas') %}
@@ -8,17 +8,17 @@
 
 <section class="dx-hero dx-rise">
   <div>
-    <p class="dx-eyebrow">Mi espacio</p>
-    <h1 class="dx-hero__title">¡Hola, <em>{{ nombre }}</em>!</h1>
+    <p class="dx-eyebrow">{{ _('Mi espacio') }}</p>
+    <h1 class="dx-hero__title">{{ _('¡Hola,') }} <em>{{ nombre }}</em>!</h1>
     <p class="dx-hero__text">
       {% if racha > 0 %}
-      Llevas {{ racha }} día{{ 's' if racha != 1 else '' }} activo{{ 's' if racha != 1 else '' }} este mes. ¡Sigue así!
+      {{ ngettext('Llevas %(num)d día activo este mes. ¡Sigue así!', 'Llevas %(num)d días activos este mes. ¡Sigue así!', racha) }}
       {% else %}
-      Hoy es un buen día para jugar tu primera actividad. Avanzas a tu propio ritmo.
+      {{ _('Hoy es un buen día para jugar tu primera actividad. Avanzas a tu propio ritmo.') }}
       {% endif %}
     </p>
   </div>
-  <a href="{{ url_for('dashboard.student_juegos') }}" class="dx-btn dx-btn--gold">Ir a Juegos</a>
+  <a href="{{ url_for('dashboard.student_juegos') }}" class="dx-btn dx-btn--gold">{{ _('Ir a Juegos') }}</a>
 </section>
 
 <div class="dx-kpis">
@@ -27,8 +27,8 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
     </div>
     <div>
-      <p class="dx-kpi__label">Racha este mes</p>
-      <p class="dx-kpi__value">{{ racha }} día{{ 's' if racha != 1 else '' }}</p>
+      <p class="dx-kpi__label">{{ _('Racha este mes') }}</p>
+      <p class="dx-kpi__value">{{ ngettext('%(num)d día', '%(num)d días', racha) }}</p>
     </div>
   </div>
 
@@ -37,7 +37,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
     </div>
     <div>
-      <p class="dx-kpi__label">Actividades iniciadas</p>
+      <p class="dx-kpi__label">{{ _('Actividades iniciadas') }}</p>
       <p class="dx-kpi__value">{{ actividades_iniciadas|length }}</p>
     </div>
   </div>
@@ -47,18 +47,18 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
     </div>
     <div>
-      <p class="dx-kpi__label">Avance general</p>
+      <p class="dx-kpi__label">{{ _('Avance general') }}</p>
       <p class="dx-kpi__value">{{ avance }}%</p>
     </div>
   </div>
 </div>
 
-<p class="dx-highlight dx-rise" style="--d:.18s">La constancia es la clave del éxito.</p>
+<p class="dx-highlight dx-rise" style="--d:.18s">{{ _('La constancia es la clave del éxito.') }}</p>
 
 {% if actividades_iniciadas %}
 <div class="dx-card dx-rise mb-3" style="--d:.2s">
-  <p class="dx-eyebrow">Continúa</p>
-  <h2 class="dx-card__title">Sigue donde quedaste</h2>
+  <p class="dx-eyebrow">{{ _('Continúa') }}</p>
+  <h2 class="dx-card__title">{{ _('Sigue donde quedaste') }}</h2>
   <div class="d-flex flex-column gap-2 mt-3">
     {% for sesion in actividades_iniciadas %}
     <div class="dx-resume">
@@ -68,7 +68,7 @@
       </div>
       <a href="{{ url_for('dashboard.student_juego_detail', trastorno_id=sesion.actividad.trastorno_id) }}"
          class="dx-btn dx-btn--gold" style="padding: .35rem 1rem; font-size: .8rem;">
-        Continuar
+        {{ _('Continuar') }}
       </a>
     </div>
     {% endfor %}
@@ -77,17 +77,17 @@
 {% endif %}
 
 <div class="dx-card dx-rise mb-3" style="--d:.25s">
-  <p class="dx-eyebrow">Tu plan</p>
-  <h2 class="dx-card__title">Mis trastornos asignados</h2>
+  <p class="dx-eyebrow">{{ _('Tu plan') }}</p>
+  <h2 class="dx-card__title">{{ _('Mis trastornos asignados') }}</h2>
   {% if not trastornos %}
-  <p class="dx-empty">Todavía no tienes trastornos asignados. Tu docente los configurará pronto.</p>
+  <p class="dx-empty">{{ _('Todavía no tienes trastornos asignados. Tu docente los configurará pronto.') }}</p>
   {% else %}
   <div class="dx-subjects">
     {% for item in trastornos %}
     {% set pct = [item.porcentaje, 100] | min %}
     {% set ring_offset = (213.63 * (1 - pct / 100)) | round(2) %}
     <div class="dx-subject dx-rise" style="--d: {{ 0.3 + loop.index0 * 0.06 }}s">
-      <div class="dx-ring" role="img" aria-label="{{ pct }}% completado">
+      <div class="dx-ring" role="img" aria-label="{{ pct }}% {{ _('completado') }}">
         <svg width="76" height="76" viewBox="0 0 80 80" aria-hidden="true">
           <circle class="dx-ring__track" cx="40" cy="40" r="34" fill="none" stroke-width="7"/>
           <circle class="dx-ring__value" cx="40" cy="40" r="34" fill="none" stroke-width="7"
@@ -99,9 +99,9 @@
       <div>
         <p class="dx-subject__name">{{ item.trastorno.name }}</p>
         <p class="dx-subject__meta">
-          {{ item.completadas }} de {{ item.total }} actividades completadas ({{ item.porcentaje }}%)
+          {{ _('%(done)s de %(total)s actividades completadas', done=item.completadas, total=item.total) }} ({{ item.porcentaje }}%)
         </p>
-        <a class="dx-link" href="{{ url_for('dashboard.student_juego_detail', trastorno_id=item.trastorno.id) }}">Jugar →</a>
+        <a class="dx-link" href="{{ url_for('dashboard.student_juego_detail', trastorno_id=item.trastorno.id) }}">{{ _('Jugar') }} →</a>
       </div>
     </div>
     {% endfor %}
@@ -110,12 +110,12 @@
 </div>
 
 <div class="dx-card dx-rise" style="--d:.35s">
-  <p class="dx-eyebrow">Avisos</p>
-  <h2 class="dx-card__title">Notificaciones</h2>
+  <p class="dx-eyebrow">{{ _('Avisos') }}</p>
+  <h2 class="dx-card__title">{{ _('Notificaciones') }}</h2>
   <div class="dx-feed" data-live-feed
-       data-empty="Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te asigne algo nuevo.">
+       data-empty="{{ _('Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te asigne algo nuevo.') }}">
     {% if not recent_notifications %}
-    <p class="dx-empty">Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te asigne algo nuevo.</p>
+    <p class="dx-empty">{{ _('Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te asigne algo nuevo.') }}</p>
     {% else %}
     {% for n in recent_notifications %}
     <div class="dx-feed__item{{ '' if n.is_read else ' is-unread' }}">

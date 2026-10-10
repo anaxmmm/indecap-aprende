@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-07 18:44-0500\n"
+"POT-Creation-Date: 2026-10-09 17:16-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,13 +17,103 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+#: app/extensions.py:26
+msgid "Por favor inicia sesión para continuar."
+msgstr ""
+
+#: app/blueprints/admin/forms.py:10
+msgid "Nombre (ej. Dislexia, TDAH, Discalculia)"
+msgstr ""
+
+#: app/blueprints/admin/forms.py:12
+msgid "Slug (identificador para URL, sin espacios ni tildes)"
+msgstr ""
+
+#: app/blueprints/admin/forms.py:15
+msgid "Descripción"
+msgstr ""
+
+#: app/blueprints/admin/forms.py:16
+msgid "Ícono (ej. brain, ear, eye)"
+msgstr ""
+
+#: app/blueprints/admin/forms.py:17 app/blueprints/admin/forms.py:40
+msgid "Guardar"
+msgstr ""
+
+#: app/blueprints/admin/forms.py:21
+msgid "Trastorno"
+msgstr ""
+
+#: app/blueprints/admin/forms.py:22
+msgid "Título de la actividad"
+msgstr ""
+
+#: app/blueprints/admin/forms.py:24
+msgid "Contenido (se permite HTML simple: <p>, <strong>, <em>)"
+msgstr ""
+
+#: app/blueprints/admin/forms.py:27
+msgid "Orden dentro del trastorno"
+msgstr ""
+
+#: app/blueprints/admin/forms.py:29
+msgid "Minutos estimados (20-30 recomendado)"
+msgstr ""
+
+#: app/blueprints/admin/forms.py:33
+msgid "URL de imagen de apoyo (opcional)"
+msgstr ""
+
+#: app/blueprints/admin/forms.py:34
+msgid "URL de video en LSC (opcional)"
+msgstr ""
+
+#: app/blueprints/admin/forms.py:36
+msgid "Componente interactivo"
+msgstr ""
+
+#: app/blueprints/admin/routes.py:47
+msgid "Trastorno creado correctamente."
+msgstr ""
+
+#: app/blueprints/admin/routes.py:66
+msgid "Trastorno actualizado."
+msgstr ""
+
+#: app/blueprints/admin/routes.py:75
+msgid "Trastorno eliminado."
+msgstr ""
+
+#: app/blueprints/admin/routes.py:110
+msgid "Actividad creada correctamente."
+msgstr ""
+
+#: app/blueprints/admin/routes.py:134
+msgid "Actividad actualizada."
+msgstr ""
+
+#: app/blueprints/admin/routes.py:144
+msgid "Actividad eliminada."
+msgstr ""
+
+#: app/blueprints/admin/routes.py:166
+msgid "Cuenta eliminada correctamente."
+msgstr ""
+
+#: app/blueprints/admin/services.py:99
+msgid "Esa cuenta no existe o no es de un estudiante."
+msgstr ""
+
 #: app/blueprints/auth/forms.py:25 app/blueprints/auth/forms.py:42
-#: app/blueprints/auth/forms.py:69
+#: app/blueprints/auth/forms.py:69 app/blueprints/dashboard/forms.py:30
+#: app/blueprints/dashboard/forms.py:79
 #: app/templates/dashboard/student/perfil.html:10
 msgid "Correo electrónico"
 msgstr ""
 
 #: app/blueprints/auth/forms.py:29 app/blueprints/auth/forms.py:53
+#: app/blueprints/dashboard/forms.py:33
 msgid "Contraseña"
 msgstr ""
 
@@ -39,7 +129,7 @@ msgstr ""
 msgid "Iniciar sesión"
 msgstr ""
 
-#: app/blueprints/auth/forms.py:39
+#: app/blueprints/auth/forms.py:39 app/blueprints/dashboard/forms.py:76
 #: app/templates/dashboard/student/perfil.html:7
 msgid "Nombre completo"
 msgstr ""
@@ -48,7 +138,8 @@ msgstr ""
 msgid "Tipo de cuenta"
 msgstr ""
 
-#: app/blueprints/auth/forms.py:48 app/templates/home.html:276
+#: app/blueprints/auth/forms.py:48 app/blueprints/dashboard/forms.py:112
+#: app/templates/home.html:276
 msgid "Estudiante"
 msgstr ""
 
@@ -65,6 +156,7 @@ msgid "Confirmar contraseña"
 msgstr ""
 
 #: app/blueprints/auth/forms.py:58 app/blueprints/auth/forms.py:83
+#: app/blueprints/dashboard/forms.py:108
 msgid "Las contraseñas no coinciden."
 msgstr ""
 
@@ -72,7 +164,8 @@ msgstr ""
 msgid "Crear cuenta"
 msgstr ""
 
-#: app/blueprints/auth/forms.py:64
+#: app/blueprints/auth/forms.py:64 app/blueprints/dashboard/services.py:116
+#: app/blueprints/dashboard/services.py:128
 msgid "Ya existe una cuenta con ese correo."
 msgstr ""
 
@@ -84,31 +177,183 @@ msgstr ""
 msgid "Nueva contraseña"
 msgstr ""
 
-#: app/blueprints/auth/forms.py:82
+#: app/blueprints/auth/forms.py:82 app/blueprints/dashboard/forms.py:87
 msgid "Confirmar nueva contraseña"
 msgstr ""
 
-#: app/blueprints/auth/forms.py:85
+#: app/blueprints/auth/forms.py:85 app/templates/auth/reset_password.html:6
+#: app/templates/auth/reset_password.html:17
+#: app/templates/auth/reset_password.html:38
 msgid "Restablecer contraseña"
 msgstr ""
 
-#: app/blueprints/dashboard/routes.py:54
+#: app/blueprints/auth/routes.py:41
+msgid "Correo o contraseña incorrectos."
+msgstr ""
+
+#: app/blueprints/auth/routes.py:46 app/templates/admin/usuarios_list.html:6
+msgid "docente"
+msgstr ""
+
+#: app/blueprints/auth/routes.py:46 app/templates/admin/usuarios_list.html:5
+msgid "estudiante"
+msgstr ""
+
+#: app/blueprints/auth/routes.py:48
+#, python-format
+msgid "Esta cuenta es de %(role)s. Te llevamos a tu panel correspondiente."
+msgstr ""
+
+#: app/blueprints/auth/routes.py:55
+msgid "Revisa los datos ingresados e intenta de nuevo."
+msgstr ""
+
+#: app/blueprints/auth/routes.py:63
+msgid "Sesión cerrada correctamente."
+msgstr ""
+
+#: app/blueprints/auth/routes.py:86
+msgid "Cuenta creada correctamente. ¡Bienvenido/a a indecap-aprende!"
+msgstr ""
+
+#: app/blueprints/auth/routes.py:114
+#, python-format
+msgid "Enlace de recuperación (temporal, solo en desarrollo): %(url)s"
+msgstr ""
+
+#: app/blueprints/auth/routes.py:121
+msgid ""
+"Si el correo está registrado, recibirás instrucciones para restablecer tu"
+" contraseña."
+msgstr ""
+
+#: app/blueprints/auth/routes.py:139
+msgid "El enlace de recuperación no es válido o ha expirado. Solicita uno nuevo."
+msgstr ""
+
+#: app/blueprints/auth/routes.py:145
+msgid "Tu contraseña se actualizó correctamente. Ya puedes iniciar sesión."
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:21
+#: app/templates/dashboard/teacher/registro_estudiantes.html:19
+msgid "Nombre del grupo"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:23
+msgid "Crear grupo"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:27
+msgid "Nombres"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:28
+msgid "Apellidos"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:35
+msgid "Grupo"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:36
+msgid "Alias / Apodo"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:38
+msgid "Correo del acudiente"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:40
+msgid "Género"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:42
+msgid "Fecha de nacimiento"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:44
+msgid "Presenta dificultades de aprendizaje"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:46 app/blueprints/dashboard/forms.py:69
+#: app/templates/dashboard/teacher/student_profile.html:8
+msgid "Trastornos asignados"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:48
+msgid "Añadir estudiante"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:57
+msgid "Nina"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:58
+msgid "Nino"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:59
+msgid "Otro"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:61
+msgid "Seleccionar..."
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:71
+msgid "Guardar asignación"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:81
+msgid "Área / Especialidad"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:83
+msgid "Nueva contraseña (opcional)"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:89
+msgid "Guardar cambios"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:98
+msgid "Ya existe otra cuenta con ese correo electrónico."
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:106
+msgid "Confirma la nueva contraseña."
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:114
+msgid "Fecha de inicio"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:117
+msgid "Fecha de fin"
+msgstr ""
+
+#: app/blueprints/dashboard/forms.py:119
+msgid "Asignar sesión"
+msgstr ""
+
+#: app/blueprints/dashboard/routes.py:54 app/blueprints/games/routes.py:20
 msgid "Base"
 msgstr ""
 
-#: app/blueprints/dashboard/routes.py:54
+#: app/blueprints/dashboard/routes.py:54 app/blueprints/games/routes.py:20
 msgid "Media"
 msgstr ""
 
-#: app/blueprints/dashboard/routes.py:54
+#: app/blueprints/dashboard/routes.py:54 app/blueprints/games/routes.py:20
 msgid "Alta"
 msgstr ""
 
-#: app/blueprints/dashboard/routes.py:54
+#: app/blueprints/dashboard/routes.py:54 app/blueprints/games/routes.py:20
 msgid "Muy Alta"
 msgstr ""
 
-#: app/blueprints/dashboard/routes.py:54
+#: app/blueprints/dashboard/routes.py:54 app/blueprints/games/routes.py:20
 msgid "Súper Difícil"
 msgstr ""
 
@@ -148,7 +393,8 @@ msgstr ""
 msgid "Trastornos asignados actualizados."
 msgstr ""
 
-#: app/blueprints/dashboard/routes.py:356
+#: app/blueprints/dashboard/routes.py:356 app/blueprints/games/routes.py:127
+#: app/templates/games/stages.html:84
 #, python-format
 msgid "Etapa %(number)s"
 msgstr ""
@@ -163,6 +409,68 @@ msgstr ""
 
 #: app/blueprints/dashboard/routes.py:486
 msgid "Perfil actualizado correctamente."
+msgstr ""
+
+#: app/blueprints/dashboard/services.py:44
+#: app/blueprints/dashboard/services.py:112
+msgid "El grupo no existe o no pertenece a este docente."
+msgstr ""
+
+#: app/blueprints/dashboard/services.py:48
+msgid ""
+"Este grupo todavía tiene niños asignados (activos o inactivos). Muévelos "
+"a otro grupo o elimínalos antes de eliminar el grupo."
+msgstr ""
+
+#: app/blueprints/dashboard/services.py:158
+msgid "El grupo destino no existe o no pertenece a este docente."
+msgstr ""
+
+#: app/blueprints/dashboard/services.py:162
+msgid "El estudiante no existe."
+msgstr ""
+
+#: app/blueprints/dashboard/services.py:202
+msgid "El estudiante no existe o no pertenece a este grupo."
+msgstr ""
+
+#: app/blueprints/dashboard/services.py:337
+msgid "Ese estudiante no pertenece a tus grupos."
+msgstr ""
+
+#: app/blueprints/dashboard/services.py:340
+msgid "La fecha de fin no puede ser anterior a la de inicio."
+msgstr ""
+
+#: app/blueprints/dashboard/services.py:373
+msgid "Esa sesión asignada no existe o no te pertenece."
+msgstr ""
+
+#: app/blueprints/dashboard/services.py:600
+msgid "Esa actividad no existe o no te pertenece."
+msgstr ""
+
+#: app/blueprints/games/routes.py:93 app/blueprints/games/routes.py:157
+msgid "Este juego todavía está en construcción."
+msgstr ""
+
+#: app/blueprints/games/routes.py:102 app/blueprints/games/routes.py:170
+#: app/templates/dashboard/student/juego_detail.html:24
+msgid "Tu docente aún no te asignó esta actividad."
+msgstr ""
+
+#: app/blueprints/games/routes.py:180
+msgid "Primero completa los niveles anteriores."
+msgstr ""
+
+#: app/templates/admin/index.html:14 app/templates/admin/trastornos_list.html:2
+#: app/templates/admin/trastornos_list.html:5 app/templates/base.html:19
+#: app/templates/modules/index.html:2 app/templates/modules/index.html:4
+msgid "Trastornos"
+msgstr ""
+
+#: app/templates/base.html:21 app/templates/games/play.html:103
+msgid "Salir"
 msgstr ""
 
 #: app/templates/home.html:7
@@ -249,7 +557,7 @@ msgid ""
 "acompañamiento de sus procesos."
 msgstr ""
 
-#: app/templates/home.html:68
+#: app/templates/dashboard/student/index.html:56 app/templates/home.html:68
 msgid "La constancia es la clave del éxito."
 msgstr ""
 
@@ -535,11 +843,11 @@ msgstr ""
 msgid "Nombre y apellidos"
 msgstr ""
 
-#: app/templates/home.html:336
+#: app/templates/auth/reset_password.html:32 app/templates/home.html:336
 msgid "Mínimo 8 caracteres"
 msgstr ""
 
-#: app/templates/home.html:340
+#: app/templates/auth/reset_password.html:36 app/templates/home.html:340
 msgid "Repite tu contraseña"
 msgstr ""
 
@@ -563,11 +871,155 @@ msgstr ""
 msgid "Volver a inicio de sesión"
 msgstr ""
 
+#: app/templates/admin/actividad_form.html:2
+#: app/templates/admin/actividad_form.html:4
+msgid "Editar actividad"
+msgstr ""
+
+#: app/templates/admin/actividad_form.html:2
+#: app/templates/admin/actividad_form.html:4
+#: app/templates/admin/actividades_list.html:6
+msgid "Nueva actividad"
+msgstr ""
+
+#: app/templates/admin/actividades_list.html:2
+#: app/templates/admin/actividades_list.html:5
+#, python-format
+msgid "Actividades de %(name)s"
+msgstr ""
+
+#: app/templates/admin/actividades_list.html:9
+msgid "Orden"
+msgstr ""
+
+#: app/templates/admin/actividades_list.html:9
+msgid "Título"
+msgstr ""
+
+#: app/templates/admin/actividades_list.html:9
+msgid "Minutos"
+msgstr ""
+
+#: app/templates/admin/actividades_list.html:9
+msgid "Componente"
+msgstr ""
+
+#: app/templates/admin/actividades_list.html:18
+msgid "Ver"
+msgstr ""
+
+#: app/templates/admin/actividades_list.html:19
+#: app/templates/admin/trastornos_list.html:17
+msgid "Editar"
+msgstr ""
+
+#: app/templates/admin/actividades_list.html:20
+msgid "¿Eliminar esta actividad?"
+msgstr ""
+
+#: app/templates/admin/actividades_list.html:21
+#: app/templates/admin/trastornos_list.html:19
+#: app/templates/admin/usuarios_list.html:29
+msgid "Eliminar"
+msgstr ""
+
+#: app/templates/admin/actividades_list.html:26
+msgid "Todavía no hay actividades en este trastorno."
+msgstr ""
+
+#: app/templates/admin/actividades_list.html:30
+msgid "Volver a trastornos"
+msgstr ""
+
+#: app/templates/admin/index.html:2 app/templates/admin/index.html:4
+msgid "Panel administrador"
+msgstr ""
+
+#: app/templates/admin/index.html:8 app/templates/admin/usuarios_list.html:2
+#: app/templates/admin/usuarios_list.html:9
+#: app/templates/dashboard/teacher/base_teacher.html:68
+#: app/templates/dashboard/teacher/base_teacher.html:93
+msgid "Usuarios"
+msgstr ""
+
+#: app/templates/admin/index.html:20 app/templates/admin/trastornos_list.html:9
+msgid "Actividades"
+msgstr ""
+
+#: app/templates/admin/index.html:25
+msgid "Gestionar trastornos y actividades"
+msgstr ""
+
+#: app/templates/admin/trastorno_form.html:2
+#: app/templates/admin/trastorno_form.html:4
+msgid "Editar trastorno"
+msgstr ""
+
+#: app/templates/admin/trastorno_form.html:2
+#: app/templates/admin/trastorno_form.html:4
+#: app/templates/admin/trastornos_list.html:6
+msgid "Nuevo trastorno"
+msgstr ""
+
+#: app/templates/admin/trastornos_list.html:9
+#: app/templates/admin/usuarios_list.html:12
+msgid "Nombre"
+msgstr ""
+
+#: app/templates/admin/trastornos_list.html:15
+#: app/templates/modules/index.html:12
+#, python-format
+msgid "%(num)d actividad"
+msgid_plural "%(num)d actividades"
+msgstr[0] ""
+msgstr[1] ""
+
+#: app/templates/admin/trastornos_list.html:18
+msgid "¿Eliminar este trastorno y todas sus actividades?"
+msgstr ""
+
+#: app/templates/admin/trastornos_list.html:24
+msgid "Todavía no hay trastornos creados."
+msgstr ""
+
+#: app/templates/admin/usuarios_list.html:7
+msgid "administrador"
+msgstr ""
+
+#: app/templates/admin/usuarios_list.html:12
+msgid "Correo"
+msgstr ""
+
+#: app/templates/admin/usuarios_list.html:12
+msgid "Rol"
+msgstr ""
+
+#: app/templates/admin/usuarios_list.html:12
+msgid "Estado"
+msgstr ""
+
+#: app/templates/admin/usuarios_list.html:19
+msgid "Activo"
+msgstr ""
+
+#: app/templates/admin/usuarios_list.html:19
+msgid "Inactivo"
+msgstr ""
+
+#: app/templates/admin/usuarios_list.html:26
+#, python-format
+msgid "¿Eliminar definitivamente a %(name)s? Esta acción no se puede deshacer."
+msgstr ""
+
+#: app/templates/admin/usuarios_list.html:37
+msgid "No hay usuarios registrados."
+msgstr ""
+
 #: app/templates/dashboard/index.html:4
 msgid "Módulo: dashboard"
 msgstr ""
 
-#: app/templates/dashboard/index.html:5
+#: app/templates/dashboard/index.html:5 app/templates/inclusive/index.html:5
 msgid "Placeholder — pantalla real pendiente de diseño."
 msgstr ""
 
@@ -591,30 +1043,43 @@ msgid "Pendiente"
 msgstr ""
 
 #: app/templates/dashboard/student/actividades.html:40
+#: app/templates/dashboard/student/index.html:71
 msgid "Continuar"
 msgstr ""
 
 #: app/templates/dashboard/student/actividades.html:40
+#: app/templates/dashboard/student/index.html:104
 #: app/templates/dashboard/student/juego_detail.html:17
 #: app/templates/dashboard/student/juego_detail.html:20
+#: app/templates/dashboard/student/juegos.html:26
+#: app/templates/dashboard/student/juegos.html:29
+#: app/templates/dashboard/student/juegos.html:32
+#: app/templates/games/stages.html:100
 msgid "Jugar"
 msgstr ""
 
 #: app/templates/dashboard/student/base_student.html:6
+#: app/templates/dashboard/student/index.html:11
 msgid "Mi espacio"
 msgstr ""
 
 #: app/templates/dashboard/student/base_student.html:46
 #: app/templates/dashboard/student/base_student.html:51
+#: app/templates/dashboard/student/index.html:114
+#: app/templates/dashboard/teacher/base_teacher.html:36
+#: app/templates/dashboard/teacher/base_teacher.html:41
 msgid "Notificaciones"
 msgstr ""
 
 #: app/templates/dashboard/student/base_student.html:60
+#: app/templates/dashboard/teacher/base_teacher.html:50
 msgid "Marcar todas como leídas"
 msgstr ""
 
 #: app/templates/dashboard/student/base_student.html:64
 #: app/templates/dashboard/student/base_student.html:115
+#: app/templates/dashboard/student/index.html:116
+#: app/templates/dashboard/student/index.html:118
 msgid ""
 "Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te "
 "asigne algo nuevo."
@@ -623,19 +1088,97 @@ msgstr ""
 #: app/templates/dashboard/student/base_student.html:77
 #: app/templates/dashboard/student/perfil.html:2
 #: app/templates/dashboard/student/perfil.html:4
+#: app/templates/dashboard/teacher/perfil.html:2
+#: app/templates/dashboard/teacher/perfil.html:4
 msgid "Mi perfil"
 msgstr ""
 
 #: app/templates/dashboard/student/base_student.html:78
+#: app/templates/dashboard/teacher/base_teacher.html:71
 msgid "Cerrar sesión"
 msgstr ""
 
 #: app/templates/dashboard/student/base_student.html:90
+#: app/templates/dashboard/student/index.html:2
 msgid "Mi panel"
 msgstr ""
 
 #: app/templates/dashboard/student/base_student.html:94
+#: app/templates/dashboard/student/juegos.html:2
 msgid "Juegos"
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:12
+msgid "¡Hola,"
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:15
+#, python-format
+msgid "Llevas %(num)d día activo este mes. ¡Sigue así!"
+msgid_plural "Llevas %(num)d días activos este mes. ¡Sigue así!"
+msgstr[0] ""
+msgstr[1] ""
+
+#: app/templates/dashboard/student/index.html:17
+msgid ""
+"Hoy es un buen día para jugar tu primera actividad. Avanzas a tu propio "
+"ritmo."
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:21
+msgid "Ir a Juegos"
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:30
+msgid "Racha este mes"
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:31
+#, python-format
+msgid "%(num)d día"
+msgid_plural "%(num)d días"
+msgstr[0] ""
+msgstr[1] ""
+
+#: app/templates/dashboard/student/index.html:40
+msgid "Actividades iniciadas"
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:50
+msgid "Avance general"
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:60
+msgid "Continúa"
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:61
+msgid "Sigue donde quedaste"
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:80
+msgid "Tu plan"
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:81
+msgid "Mis trastornos asignados"
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:83
+msgid "Todavía no tienes trastornos asignados. Tu docente los configurará pronto."
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:90
+msgid "completado"
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:102
+#, python-format
+msgid "%(done)s de %(total)s actividades completadas"
+msgstr ""
+
+#: app/templates/dashboard/student/index.html:113
+msgid "Avisos"
 msgstr ""
 
 #: app/templates/dashboard/student/juego_detail.html:13
@@ -643,12 +1186,9 @@ msgstr ""
 msgid "Actividad asignada por tu docente el %(fecha)s."
 msgstr ""
 
-#: app/templates/dashboard/student/juego_detail.html:24
-msgid "Tu docente aún no te asignó esta actividad."
-msgstr ""
-
 #: app/templates/dashboard/student/juego_detail.html:25
 #: app/templates/dashboard/student/juego_detail.html:29
+#: app/templates/games/stages.html:71
 msgid "Volver a Juegos"
 msgstr ""
 
@@ -660,6 +1200,14 @@ msgstr ""
 msgid "Estamos preparando la actividad interactiva para esta área."
 msgstr ""
 
+#: app/templates/dashboard/student/juegos.html:7
+msgid "Todavía no hay juegos configurados en el sistema."
+msgstr ""
+
+#: app/templates/dashboard/student/juegos.html:20
+msgid "Actividad en preparación."
+msgstr ""
+
 #: app/templates/dashboard/student/perfil.html:14
 msgid "Alias"
 msgstr ""
@@ -668,5 +1216,548 @@ msgstr ""
 msgid ""
 "¿Necesitas cambiar algún dato? Pídele a tu docente que lo actualice desde"
 " tu perfil en el panel de administración."
+msgstr ""
+
+#: app/templates/dashboard/teacher/base_teacher.html:6
+#: app/templates/dashboard/teacher/panel_general.html:7
+msgid "Panel docente"
+msgstr ""
+
+#: app/templates/dashboard/teacher/base_teacher.html:54
+#: app/templates/dashboard/teacher/base_teacher.html:132
+msgid ""
+"Todavía no tienes notificaciones. Aquí verás avisos cuando tus "
+"estudiantes superen niveles de los juegos."
+msgstr ""
+
+#: app/templates/dashboard/teacher/base_teacher.html:70
+#: app/templates/dashboard/teacher/base_teacher.html:86
+msgid "Perfil"
+msgstr ""
+
+#: app/templates/dashboard/teacher/base_teacher.html:83
+#: app/templates/dashboard/teacher/base_teacher.html:90
+msgid "Volver al panel"
+msgstr ""
+
+#: app/templates/dashboard/teacher/base_teacher.html:98
+#: app/templates/dashboard/teacher/panel_general.html:2
+msgid "Panel general"
+msgstr ""
+
+#: app/templates/dashboard/teacher/base_teacher.html:102
+#: app/templates/dashboard/teacher/panel_general.html:125
+#: app/templates/dashboard/teacher/registro_estudiantes.html:2
+msgid "Registro de estudiantes"
+msgstr ""
+
+#: app/templates/dashboard/teacher/base_teacher.html:106
+msgid "Sesiones sistema"
+msgstr ""
+
+#: app/templates/dashboard/teacher/base_teacher.html:110
+msgid "Guías de uso"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:8
+msgid "Panel"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:8
+msgid "general"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:10
+msgid ""
+"Sigue el avance de tus estudiantes en tiempo real. Cambia el periodo, "
+"agrupa por semana o toca a un estudiante del ranking para ver solo su "
+"actividad."
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:14
+msgid "Actualizado en vivo"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:15
+msgid "Actualizar"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:25
+msgid "Estudiantes activos"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:35
+#: app/templates/dashboard/teacher/panel_general.html:119
+msgid "Planes activos"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:45
+msgid "Trastorno más trabajado"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:55
+msgid "Partidas en el periodo"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:57
+#: app/templates/dashboard/teacher/panel_general.html:159
+msgid "niveles superados"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:68
+msgid "Rendimiento general"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:69
+#: app/templates/dashboard/teacher/panel_general.html:164
+msgid "Partidas completadas"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:74
+msgid "Periodo"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:75
+msgid "7 días"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:76
+msgid "30 días"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:77
+msgid "2 meses"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:78
+msgid "3 meses"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:79
+msgid "1 año"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:81
+msgid "Agrupar por"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:82
+msgid "Por día"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:83
+msgid "Por semana"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:86
+msgid "Desde"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:88
+msgid "Hasta"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:94
+msgid "Quitar filtro de estudiante"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:98
+msgid "Gráfico de partidas completadas y niveles superados"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:100
+#: app/templates/dashboard/teacher/panel_general.html:157
+msgid "Aún no hay partidas completadas en este periodo."
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:105
+msgid "Ranking"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:106
+msgid "Estudiantes con más actividades realizadas"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:107
+msgid "Toca a un estudiante para ver solo su actividad en el gráfico."
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:111
+msgid ""
+"Aquí verás el avance de cada estudiante cuando completen su primera "
+"actividad."
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:120
+msgid "Trastornos en entrenamiento"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:124
+msgid "Aparecerán aquí al asignar trastornos en"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:134
+msgid "est."
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:152
+msgid "Sem"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:153
+msgid "Semana del"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:154
+msgid "Viendo:"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:155
+msgid "Ver perfil"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:156
+msgid "Revisa el rango de fechas: la fecha inicial debe ser anterior a la final."
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:158
+msgid "nivel superado"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:160
+msgid "partida"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:161
+msgid "partidas"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:162
+#, python-brace-format
+msgid "Del {from} al {to}"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:163
+msgid "Actualizado"
+msgstr ""
+
+#: app/templates/dashboard/teacher/panel_general.html:165
+msgid "Niveles superados (≥ 60)"
+msgstr ""
+
+#: app/templates/dashboard/teacher/perfil.html:19
+msgid "ej. Psicología, Matemáticas"
+msgstr ""
+
+#: app/templates/dashboard/teacher/perfil.html:26
+msgid "Mínimo 6 caracteres"
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:8
+msgid "Listado de grupos"
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:10
+msgid "Añadir grupo"
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:28
+msgid "Todavía no tienes grupos. Crea el primero arriba."
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:39
+msgid "Añadir niño"
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:45
+#, python-format
+msgid "¿Eliminar el grupo %(name)s? Esta acción no se puede deshacer."
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:48
+msgid "Eliminar grupo"
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:56
+msgid "Nuevo niño"
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:75
+msgid "correo del niño"
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:79
+msgid "correo del tutor"
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:120
+msgid "No hay trastornos cargados en el sistema todavía."
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:124
+msgid ""
+"Al marcar un trastorno, el estudiante queda inscrito automáticamente en "
+"la primera sesión del plan de entrenamiento correspondiente."
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:146
+msgid "Mover"
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:150
+msgid "Desvincular"
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:157
+msgid "Sin niños asignados todavía."
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:163
+msgid "Niños inactivos"
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:172
+msgid "Reactivar"
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:178
+#, python-format
+msgid ""
+"¿Eliminar definitivamente a %(name)s? Esta acción borra todo su historial"
+" y no se puede deshacer."
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:181
+msgid "Eliminar definitivamente"
+msgstr ""
+
+#: app/templates/dashboard/teacher/student_profile.html:2
+#, python-format
+msgid "Perfil de %(name)s"
+msgstr ""
+
+#: app/templates/dashboard/teacher/student_profile.html:10
+msgid ""
+"Marca los trastornos que este estudiante debe trabajar. Esto define qué "
+"actividades verá en su dashboard."
+msgstr ""
+
+#: app/templates/dashboard/teacher/student_profile.html:34
+msgid "Progreso"
+msgstr ""
+
+#: app/templates/dashboard/teacher/student_profile.html:36
+msgid ""
+"El histórico de sesiones y evolución se conecta en la siguiente "
+"iteración, junto con el reproductor de actividades."
+msgstr ""
+
+#: app/templates/games/play.html:23
+msgid ""
+"Modo vista previa: puedes jugar para conocer la actividad, pero no se "
+"guarda progreso."
+msgstr ""
+
+#: app/templates/games/play.html:28
+msgid "Ajustes de accesibilidad"
+msgstr ""
+
+#: app/templates/games/play.html:30 app/templates/modules/lesson.html:17
+msgid "Leer en voz alta"
+msgstr ""
+
+#: app/templates/games/play.html:32
+msgid "Alto contraste"
+msgstr ""
+
+#: app/templates/games/play.html:33 app/templates/games/play.html:34
+msgid "Texto"
+msgstr ""
+
+#: app/templates/games/play.html:36
+msgid "Reducir movimiento"
+msgstr ""
+
+#: app/templates/games/play.html:38
+msgid "Necesito una pista"
+msgstr ""
+
+#: app/templates/games/play.html:50
+msgid "Salir del juego"
+msgstr ""
+
+#: app/templates/games/play.html:55
+msgid "Nivel"
+msgstr ""
+
+#: app/templates/games/play.html:56
+msgid "Reto"
+msgstr ""
+
+#: app/templates/games/play.html:57
+msgid "Estrellas"
+msgstr ""
+
+#: app/templates/games/play.html:72 app/templates/games/play.html:95
+msgid "tu guía"
+msgstr ""
+
+#: app/templates/games/play.html:73
+msgid "Cargando la misión…"
+msgstr ""
+
+#: app/templates/games/play.html:77
+msgid "Comenzar la misión"
+msgstr ""
+
+#: app/templates/games/play.html:86
+msgid "Opciones de respuesta"
+msgstr ""
+
+#: app/templates/games/play.html:101
+msgid "Repetir nivel"
+msgstr ""
+
+#: app/templates/games/play.html:102
+msgid "Siguiente nivel"
+msgstr ""
+
+#: app/templates/games/play.html:116
+msgid "Qué trabaja esta actividad"
+msgstr ""
+
+#: app/templates/games/play.html:118
+msgid "Habilidad núcleo:"
+msgstr ""
+
+#: app/templates/games/play.html:119
+msgid "Regiones cerebrales implicadas:"
+msgstr ""
+
+#: app/templates/games/play.html:123
+msgid "Representación:"
+msgstr ""
+
+#: app/templates/games/play.html:124
+msgid "Acción y expresión:"
+msgstr ""
+
+#: app/templates/games/play.html:125
+msgid "Implicación:"
+msgstr ""
+
+#: app/templates/games/play.html:127
+msgid ""
+"El nivel de apoyo (pistas, tiempo y repeticiones) se calibra según el "
+"desempeño. Es un ajuste pedagógico, no un instrumento diagnóstico."
+msgstr ""
+
+#: app/templates/games/stages.html:2
+msgid "Etapas"
+msgstr ""
+
+#: app/templates/games/stages.html:76
+msgid ""
+"Modo vista previa: como docente puedes ver todas las etapas y niveles, "
+"pero el progreso no se guarda."
+msgstr ""
+
+#: app/templates/games/stages.html:85
+#, python-format
+msgid "Niveles %(start)s–%(end)s"
+msgstr ""
+
+#: app/templates/games/stages.html:87
+msgid "superados"
+msgstr ""
+
+#: app/templates/games/stages.html:91
+msgid "Completa la etapa anterior para desbloquear esta."
+msgstr ""
+
+#: app/templates/games/stages.html:98
+#, python-format
+msgid "Nivel %(pos)s de la etapa %(stage)s, superado"
+msgstr ""
+
+#: app/templates/games/stages.html:98
+#, python-format
+msgid "Nivel %(pos)s de la etapa %(stage)s"
+msgstr ""
+
+#: app/templates/games/stages.html:103
+#, python-format
+msgid "Nivel %(pos)s bloqueado"
+msgstr ""
+
+#: app/templates/inclusive/index.html:4
+msgid "Módulo: inclusive"
+msgstr ""
+
+#: app/templates/modules/index.html:17
+msgid "Todavía no hay trastornos cargados."
+msgstr ""
+
+#: app/templates/modules/lesson.html:6
+msgid "bajo"
+msgstr ""
+
+#: app/templates/modules/lesson.html:7
+msgid "medio"
+msgstr ""
+
+#: app/templates/modules/lesson.html:8
+msgid "alto"
+msgstr ""
+
+#: app/templates/modules/lesson.html:11
+msgid "Nivel de apoyo actual:"
+msgstr ""
+
+#: app/templates/modules/lesson.html:13
+msgid ""
+"Todavía no tienes un check previo para este trastorno — próximamente "
+"podrás hacerlo antes de empezar."
+msgstr ""
+
+#: app/templates/modules/lesson.html:16
+msgid "Herramientas de accesibilidad de lectura"
+msgstr ""
+
+#: app/templates/modules/lesson.html:18
+msgid "Pausar"
+msgstr ""
+
+#: app/templates/modules/lesson.html:19
+msgid "Detener"
+msgstr ""
+
+#: app/templates/modules/lesson.html:21
+msgid "Reducir tamaño de texto"
+msgstr ""
+
+#: app/templates/modules/lesson.html:22
+msgid "Aumentar tamaño de texto"
+msgstr ""
+
+#: app/templates/modules/lesson.html:26
+msgid "Un paso a la vez"
+msgstr ""
+
+#: app/templates/modules/lesson.html:31
+#, python-format
+msgid "%(minutes)s min aprox."
+msgstr ""
+
+#: app/templates/modules/lesson.html:42
+msgid "Anterior"
+msgstr ""
+
+#: app/templates/modules/lesson.html:44
+msgid "Siguiente"
+msgstr ""
+
+#: app/templates/modules/lesson.html:49
+msgid "Video en Lengua de Señas Colombiana"
 msgstr ""
 

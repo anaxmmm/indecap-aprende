@@ -1,4 +1,5 @@
 from flask import render_template, redirect, url_for, flash, abort
+from flask_babel import gettext as _
 from flask_login import current_user
 
 from app.blueprints.admin import bp
@@ -43,7 +44,7 @@ def trastorno_new():
                 "icon": form.icon.data,
             }
         )
-        flash("Trastorno creado correctamente.", "success")
+        flash(_("Trastorno creado correctamente."), "success")
         return redirect(url_for("admin.trastornos_list"))
     return render_template("admin/trastorno_form.html", form=form, mode="new")
 
@@ -62,7 +63,7 @@ def trastorno_edit(trastorno_id):
                 "icon": form.icon.data,
             },
         )
-        flash("Trastorno actualizado.", "success")
+        flash(_("Trastorno actualizado."), "success")
         return redirect(url_for("admin.trastornos_list"))
     return render_template("admin/trastorno_form.html", form=form, mode="edit", trastorno=trastorno)
 
@@ -71,7 +72,7 @@ def trastorno_edit(trastorno_id):
 def trastorno_delete(trastorno_id):
     trastorno = services.get_trastorno_or_404(trastorno_id)
     services.delete_trastorno(trastorno)
-    flash("Trastorno eliminado.", "info")
+    flash(_("Trastorno eliminado."), "info")
     return redirect(url_for("admin.trastornos_list"))
 
 
@@ -106,7 +107,7 @@ def actividad_new(trastorno_id):
                 "interactive_widget": form.interactive_widget.data,
             }
         )
-        flash("Actividad creada correctamente.", "success")
+        flash(_("Actividad creada correctamente."), "success")
         return redirect(url_for("admin.actividades_list", trastorno_id=trastorno_id))
     return render_template("admin/actividad_form.html", form=form, mode="new", trastorno=trastorno)
 
@@ -130,7 +131,7 @@ def actividad_edit(actividad_id):
                 "interactive_widget": form.interactive_widget.data,
             },
         )
-        flash("Actividad actualizada.", "success")
+        flash(_("Actividad actualizada."), "success")
         return redirect(url_for("admin.actividades_list", trastorno_id=actividad.trastorno_id))
     return render_template("admin/actividad_form.html", form=form, mode="edit", trastorno=actividad.trastorno)
 
@@ -140,7 +141,7 @@ def actividad_delete(actividad_id):
     actividad = services.get_actividad_or_404(actividad_id)
     trastorno_id = actividad.trastorno_id
     services.delete_actividad(actividad)
-    flash("Actividad eliminada.", "info")
+    flash(_("Actividad eliminada."), "info")
     return redirect(url_for("admin.actividades_list", trastorno_id=trastorno_id))
 
 
@@ -162,7 +163,7 @@ def usuarios_list():
 def usuario_delete(user_id):
     try:
         services.delete_student_account(user_id)
-        flash("Cuenta eliminada correctamente.", "info")
+        flash(_("Cuenta eliminada correctamente."), "info")
     except ValueError as exc:
         flash(str(exc), "danger")
     return redirect(url_for("admin.usuarios_list"))

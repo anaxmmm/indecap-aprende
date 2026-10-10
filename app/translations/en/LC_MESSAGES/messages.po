@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-07 18:44-0500\n"
+"POT-Creation-Date: 2026-10-09 17:16-0500\n"
 "PO-Revision-Date: 2026-10-06 19:05-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,19 +18,109 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+#: app/extensions.py:26
+msgid "Por favor inicia sesión para continuar."
+msgstr "Please sign in to continue."
+
+#: app/blueprints/admin/forms.py:10
+msgid "Nombre (ej. Dislexia, TDAH, Discalculia)"
+msgstr "Name (e.g. Dyslexia, ADHD, Dyscalculia)"
+
+#: app/blueprints/admin/forms.py:12
+msgid "Slug (identificador para URL, sin espacios ni tildes)"
+msgstr "Slug (URL identifier, no spaces or accents)"
+
+#: app/blueprints/admin/forms.py:15
+msgid "Descripción"
+msgstr "Description"
+
+#: app/blueprints/admin/forms.py:16
+msgid "Ícono (ej. brain, ear, eye)"
+msgstr "Icon (e.g. brain, ear, eye)"
+
+#: app/blueprints/admin/forms.py:17 app/blueprints/admin/forms.py:40
+msgid "Guardar"
+msgstr "Save"
+
+#: app/blueprints/admin/forms.py:21
+msgid "Trastorno"
+msgstr "Condition"
+
+#: app/blueprints/admin/forms.py:22
+msgid "Título de la actividad"
+msgstr "Activity title"
+
+#: app/blueprints/admin/forms.py:24
+msgid "Contenido (se permite HTML simple: <p>, <strong>, <em>)"
+msgstr "Content (simple HTML allowed: <p>, <strong>, <em>)"
+
+#: app/blueprints/admin/forms.py:27
+msgid "Orden dentro del trastorno"
+msgstr "Order within the condition"
+
+#: app/blueprints/admin/forms.py:29
+msgid "Minutos estimados (20-30 recomendado)"
+msgstr "Estimated minutes (20-30 recommended)"
+
+#: app/blueprints/admin/forms.py:33
+msgid "URL de imagen de apoyo (opcional)"
+msgstr "Support image URL (optional)"
+
+#: app/blueprints/admin/forms.py:34
+msgid "URL de video en LSC (opcional)"
+msgstr "LSC (Colombian Sign Language) video URL (optional)"
+
+#: app/blueprints/admin/forms.py:36
+msgid "Componente interactivo"
+msgstr "Interactive component"
+
+#: app/blueprints/admin/routes.py:47
+msgid "Trastorno creado correctamente."
+msgstr "Condition created successfully."
+
+#: app/blueprints/admin/routes.py:66
+msgid "Trastorno actualizado."
+msgstr "Condition updated."
+
+#: app/blueprints/admin/routes.py:75
+msgid "Trastorno eliminado."
+msgstr "Condition deleted."
+
+#: app/blueprints/admin/routes.py:110
+msgid "Actividad creada correctamente."
+msgstr "Activity created successfully."
+
+#: app/blueprints/admin/routes.py:134
+msgid "Actividad actualizada."
+msgstr "Activity updated."
+
+#: app/blueprints/admin/routes.py:144
+msgid "Actividad eliminada."
+msgstr "Activity deleted."
+
+#: app/blueprints/admin/routes.py:166
+msgid "Cuenta eliminada correctamente."
+msgstr "Account deleted successfully."
+
+#: app/blueprints/admin/services.py:99
+msgid "Esa cuenta no existe o no es de un estudiante."
+msgstr "That account does not exist or is not a student account."
+
 #: app/blueprints/auth/forms.py:25 app/blueprints/auth/forms.py:42
-#: app/blueprints/auth/forms.py:69
+#: app/blueprints/auth/forms.py:69 app/blueprints/dashboard/forms.py:30
+#: app/blueprints/dashboard/forms.py:79
 #: app/templates/dashboard/student/perfil.html:10
 msgid "Correo electrónico"
 msgstr "Email"
 
 #: app/blueprints/auth/forms.py:29 app/blueprints/auth/forms.py:53
+#: app/blueprints/dashboard/forms.py:33
 msgid "Contraseña"
-msgstr ""
+msgstr "Password"
 
 #: app/blueprints/auth/forms.py:30
 msgid "Recordarme"
-msgstr ""
+msgstr "Remember me"
 
 #: app/blueprints/auth/forms.py:33 app/templates/home.html:274
 msgid "Tipo de acceso"
@@ -38,18 +128,19 @@ msgstr "Access type"
 
 #: app/blueprints/auth/forms.py:34
 msgid "Iniciar sesión"
-msgstr ""
+msgstr "Sign in"
 
-#: app/blueprints/auth/forms.py:39
+#: app/blueprints/auth/forms.py:39 app/blueprints/dashboard/forms.py:76
 #: app/templates/dashboard/student/perfil.html:7
 msgid "Nombre completo"
 msgstr "Full name"
 
 #: app/blueprints/auth/forms.py:47
 msgid "Tipo de cuenta"
-msgstr ""
+msgstr "Account type"
 
-#: app/blueprints/auth/forms.py:48 app/templates/home.html:276
+#: app/blueprints/auth/forms.py:48 app/blueprints/dashboard/forms.py:112
+#: app/templates/home.html:276
 msgid "Estudiante"
 msgstr "Student"
 
@@ -59,112 +150,333 @@ msgstr "Teacher"
 
 #: app/blueprints/auth/forms.py:54 app/blueprints/auth/forms.py:79
 msgid "Usa al menos 8 caracteres."
-msgstr ""
+msgstr "Use at least 8 characters."
 
 #: app/blueprints/auth/forms.py:57
 msgid "Confirmar contraseña"
-msgstr ""
+msgstr "Confirm password"
 
 #: app/blueprints/auth/forms.py:58 app/blueprints/auth/forms.py:83
+#: app/blueprints/dashboard/forms.py:108
 msgid "Las contraseñas no coinciden."
-msgstr ""
+msgstr "Passwords do not match."
 
 #: app/blueprints/auth/forms.py:60 app/templates/home.html:342
 msgid "Crear cuenta"
 msgstr "Create account"
 
-#: app/blueprints/auth/forms.py:64
+#: app/blueprints/auth/forms.py:64 app/blueprints/dashboard/services.py:116
+#: app/blueprints/dashboard/services.py:128
 msgid "Ya existe una cuenta con ese correo."
-msgstr ""
+msgstr "An account with that email already exists."
 
 #: app/blueprints/auth/forms.py:73
 msgid "Enviar enlace de recuperación"
-msgstr ""
+msgstr "Send recovery link"
 
 #: app/blueprints/auth/forms.py:78
 msgid "Nueva contraseña"
-msgstr ""
+msgstr "New password"
 
-#: app/blueprints/auth/forms.py:82
+#: app/blueprints/auth/forms.py:82 app/blueprints/dashboard/forms.py:87
 msgid "Confirmar nueva contraseña"
-msgstr ""
+msgstr "Confirm new password"
 
-#: app/blueprints/auth/forms.py:85
+#: app/blueprints/auth/forms.py:85 app/templates/auth/reset_password.html:6
+#: app/templates/auth/reset_password.html:17
+#: app/templates/auth/reset_password.html:38
 msgid "Restablecer contraseña"
-msgstr ""
+msgstr "Reset password"
 
-#: app/blueprints/dashboard/routes.py:54
+#: app/blueprints/auth/routes.py:41
+msgid "Correo o contraseña incorrectos."
+msgstr "Incorrect email or password."
+
+#: app/blueprints/auth/routes.py:46 app/templates/admin/usuarios_list.html:6
+msgid "docente"
+msgstr "teacher"
+
+#: app/blueprints/auth/routes.py:46 app/templates/admin/usuarios_list.html:5
+msgid "estudiante"
+msgstr "student"
+
+#: app/blueprints/auth/routes.py:48
+#, python-format
+msgid "Esta cuenta es de %(role)s. Te llevamos a tu panel correspondiente."
+msgstr "This is a %(role)s account. We are taking you to the matching dashboard."
+
+#: app/blueprints/auth/routes.py:55
+msgid "Revisa los datos ingresados e intenta de nuevo."
+msgstr "Check the information you entered and try again."
+
+#: app/blueprints/auth/routes.py:63
+msgid "Sesión cerrada correctamente."
+msgstr "Signed out successfully."
+
+#: app/blueprints/auth/routes.py:86
+msgid "Cuenta creada correctamente. ¡Bienvenido/a a indecap-aprende!"
+msgstr "Account created successfully. Welcome to indecap-aprende!"
+
+#: app/blueprints/auth/routes.py:114
+#, python-format
+msgid "Enlace de recuperación (temporal, solo en desarrollo): %(url)s"
+msgstr "Recovery link (temporary, development only): %(url)s"
+
+#: app/blueprints/auth/routes.py:121
+msgid ""
+"Si el correo está registrado, recibirás instrucciones para restablecer tu"
+" contraseña."
+msgstr ""
+"If the email is registered, you will receive instructions to reset your "
+"password."
+
+#: app/blueprints/auth/routes.py:139
+msgid "El enlace de recuperación no es válido o ha expirado. Solicita uno nuevo."
+msgstr "The recovery link is not valid or has expired. Request a new one."
+
+#: app/blueprints/auth/routes.py:145
+msgid "Tu contraseña se actualizó correctamente. Ya puedes iniciar sesión."
+msgstr "Your password was updated successfully. You can now sign in."
+
+#: app/blueprints/dashboard/forms.py:21
+#: app/templates/dashboard/teacher/registro_estudiantes.html:19
+msgid "Nombre del grupo"
+msgstr "Group name"
+
+#: app/blueprints/dashboard/forms.py:23
+msgid "Crear grupo"
+msgstr "Create group"
+
+#: app/blueprints/dashboard/forms.py:27
+msgid "Nombres"
+msgstr "First name"
+
+#: app/blueprints/dashboard/forms.py:28
+msgid "Apellidos"
+msgstr "Last name"
+
+#: app/blueprints/dashboard/forms.py:35
+msgid "Grupo"
+msgstr "Group"
+
+#: app/blueprints/dashboard/forms.py:36
+msgid "Alias / Apodo"
+msgstr "Alias / Nickname"
+
+#: app/blueprints/dashboard/forms.py:38
+msgid "Correo del acudiente"
+msgstr "Parent or guardian email"
+
+#: app/blueprints/dashboard/forms.py:40
+msgid "Género"
+msgstr "Gender"
+
+#: app/blueprints/dashboard/forms.py:42
+msgid "Fecha de nacimiento"
+msgstr "Date of birth"
+
+#: app/blueprints/dashboard/forms.py:44
+msgid "Presenta dificultades de aprendizaje"
+msgstr "Has learning difficulties"
+
+#: app/blueprints/dashboard/forms.py:46 app/blueprints/dashboard/forms.py:69
+#: app/templates/dashboard/teacher/student_profile.html:8
+msgid "Trastornos asignados"
+msgstr "Assigned conditions"
+
+#: app/blueprints/dashboard/forms.py:48
+msgid "Añadir estudiante"
+msgstr "Add student"
+
+#: app/blueprints/dashboard/forms.py:57
+msgid "Nina"
+msgstr "Girl"
+
+#: app/blueprints/dashboard/forms.py:58
+msgid "Nino"
+msgstr "Boy"
+
+#: app/blueprints/dashboard/forms.py:59
+msgid "Otro"
+msgstr "Other"
+
+#: app/blueprints/dashboard/forms.py:61
+msgid "Seleccionar..."
+msgstr "Select..."
+
+#: app/blueprints/dashboard/forms.py:71
+msgid "Guardar asignación"
+msgstr "Save assignment"
+
+#: app/blueprints/dashboard/forms.py:81
+msgid "Área / Especialidad"
+msgstr "Area / Specialty"
+
+#: app/blueprints/dashboard/forms.py:83
+msgid "Nueva contraseña (opcional)"
+msgstr "New password (optional)"
+
+#: app/blueprints/dashboard/forms.py:89
+msgid "Guardar cambios"
+msgstr "Save changes"
+
+#: app/blueprints/dashboard/forms.py:98
+msgid "Ya existe otra cuenta con ese correo electrónico."
+msgstr "Another account with that email already exists."
+
+#: app/blueprints/dashboard/forms.py:106
+msgid "Confirma la nueva contraseña."
+msgstr "Confirm the new password."
+
+#: app/blueprints/dashboard/forms.py:114
+msgid "Fecha de inicio"
+msgstr "Start date"
+
+#: app/blueprints/dashboard/forms.py:117
+msgid "Fecha de fin"
+msgstr "End date"
+
+#: app/blueprints/dashboard/forms.py:119
+msgid "Asignar sesión"
+msgstr "Assign session"
+
+#: app/blueprints/dashboard/routes.py:54 app/blueprints/games/routes.py:20
 msgid "Base"
-msgstr ""
+msgstr "Basic"
 
-#: app/blueprints/dashboard/routes.py:54
+#: app/blueprints/dashboard/routes.py:54 app/blueprints/games/routes.py:20
 msgid "Media"
-msgstr ""
+msgstr "Medium"
 
-#: app/blueprints/dashboard/routes.py:54
+#: app/blueprints/dashboard/routes.py:54 app/blueprints/games/routes.py:20
 msgid "Alta"
-msgstr ""
+msgstr "High"
 
-#: app/blueprints/dashboard/routes.py:54
+#: app/blueprints/dashboard/routes.py:54 app/blueprints/games/routes.py:20
 msgid "Muy Alta"
-msgstr ""
+msgstr "Very High"
 
-#: app/blueprints/dashboard/routes.py:54
+#: app/blueprints/dashboard/routes.py:54 app/blueprints/games/routes.py:20
 msgid "Súper Difícil"
-msgstr ""
+msgstr "Super Hard"
 
 #: app/blueprints/dashboard/routes.py:199
 msgid "Grupo creado correctamente."
-msgstr ""
+msgstr "Group created successfully."
 
 #: app/blueprints/dashboard/routes.py:218
 msgid "Estudiante añadido al grupo."
-msgstr ""
+msgstr "Student added to the group."
 
 #: app/blueprints/dashboard/routes.py:243
 msgid "Grupo eliminado correctamente."
-msgstr ""
+msgstr "Group deleted successfully."
 
 #: app/blueprints/dashboard/routes.py:260
 msgid "Estudiante movido de grupo."
-msgstr ""
+msgstr "Student moved to another group."
 
 #: app/blueprints/dashboard/routes.py:272
 msgid "Estudiante desvinculado. Quedó en 'Niños inactivos' de este grupo."
-msgstr ""
+msgstr "Student unlinked. They are now under 'Inactive children' in this group."
 
 #: app/blueprints/dashboard/routes.py:282
 msgid "Estudiante reactivado."
-msgstr ""
+msgstr "Student reactivated."
 
 #: app/blueprints/dashboard/routes.py:293
 msgid "Estudiante eliminado definitivamente."
-msgstr ""
+msgstr "Student permanently deleted."
 
 #: app/blueprints/dashboard/routes.py:307
 msgid "Ese estudiante no existe o no pertenece a tus grupos."
-msgstr ""
+msgstr "That student does not exist or does not belong to your groups."
 
 #: app/blueprints/dashboard/routes.py:317
 msgid "Trastornos asignados actualizados."
-msgstr ""
+msgstr "Assigned conditions updated."
 
-#: app/blueprints/dashboard/routes.py:356
+#: app/blueprints/dashboard/routes.py:356 app/blueprints/games/routes.py:127
+#: app/templates/games/stages.html:84
 #, python-format
 msgid "Etapa %(number)s"
-msgstr ""
+msgstr "Stage %(number)s"
 
 #: app/blueprints/dashboard/routes.py:422
 msgid "Sesión asignada correctamente."
-msgstr ""
+msgstr "Session assigned successfully."
 
 #: app/blueprints/dashboard/routes.py:447
 msgid "Notas guardadas."
-msgstr ""
+msgstr "Notes saved."
 
 #: app/blueprints/dashboard/routes.py:486
 msgid "Perfil actualizado correctamente."
+msgstr "Profile updated successfully."
+
+#: app/blueprints/dashboard/services.py:44
+#: app/blueprints/dashboard/services.py:112
+msgid "El grupo no existe o no pertenece a este docente."
+msgstr "The group does not exist or does not belong to this teacher."
+
+#: app/blueprints/dashboard/services.py:48
+msgid ""
+"Este grupo todavía tiene niños asignados (activos o inactivos). Muévelos "
+"a otro grupo o elimínalos antes de eliminar el grupo."
 msgstr ""
+"This group still has children assigned (active or inactive). Move them to"
+" another group or delete them before deleting the group."
+
+#: app/blueprints/dashboard/services.py:158
+msgid "El grupo destino no existe o no pertenece a este docente."
+msgstr "The destination group does not exist or does not belong to this teacher."
+
+#: app/blueprints/dashboard/services.py:162
+msgid "El estudiante no existe."
+msgstr "The student does not exist."
+
+#: app/blueprints/dashboard/services.py:202
+msgid "El estudiante no existe o no pertenece a este grupo."
+msgstr "The student does not exist or does not belong to this group."
+
+#: app/blueprints/dashboard/services.py:337
+msgid "Ese estudiante no pertenece a tus grupos."
+msgstr "That student does not belong to your groups."
+
+#: app/blueprints/dashboard/services.py:340
+msgid "La fecha de fin no puede ser anterior a la de inicio."
+msgstr "The end date cannot be earlier than the start date."
+
+#: app/blueprints/dashboard/services.py:373
+msgid "Esa sesión asignada no existe o no te pertenece."
+msgstr "That assigned session does not exist or does not belong to you."
+
+#: app/blueprints/dashboard/services.py:600
+msgid "Esa actividad no existe o no te pertenece."
+msgstr "That activity does not exist or does not belong to you."
+
+#: app/blueprints/games/routes.py:93 app/blueprints/games/routes.py:157
+msgid "Este juego todavía está en construcción."
+msgstr "This game is still under construction."
+
+#: app/blueprints/games/routes.py:102 app/blueprints/games/routes.py:170
+#: app/templates/dashboard/student/juego_detail.html:24
+msgid "Tu docente aún no te asignó esta actividad."
+msgstr "Your teacher has not assigned you this activity yet."
+
+#: app/blueprints/games/routes.py:180
+msgid "Primero completa los niveles anteriores."
+msgstr "Complete the previous levels first."
+
+#: app/templates/admin/index.html:14 app/templates/admin/trastornos_list.html:2
+#: app/templates/admin/trastornos_list.html:5 app/templates/base.html:19
+#: app/templates/modules/index.html:2 app/templates/modules/index.html:4
+msgid "Trastornos"
+msgstr "Conditions"
+
+#: app/templates/base.html:21 app/templates/games/play.html:103
+msgid "Salir"
+msgstr "Exit"
 
 #: app/templates/home.html:7
 msgid "indecap-aprende · Aprende de una forma que se adapte a ti"
@@ -257,7 +569,7 @@ msgstr ""
 "and is inclusive in its interaction and design to properly support their "
 "learning processes."
 
-#: app/templates/home.html:68
+#: app/templates/dashboard/student/index.html:56 app/templates/home.html:68
 msgid "La constancia es la clave del éxito."
 msgstr "Consistency is the key to success."
 
@@ -573,11 +885,11 @@ msgstr "Create your account"
 msgid "Nombre y apellidos"
 msgstr "First and last name"
 
-#: app/templates/home.html:336
+#: app/templates/auth/reset_password.html:32 app/templates/home.html:336
 msgid "Mínimo 8 caracteres"
 msgstr "At least 8 characters"
 
-#: app/templates/home.html:340
+#: app/templates/auth/reset_password.html:36 app/templates/home.html:340
 msgid "Repite tu contraseña"
 msgstr "Repeat your password"
 
@@ -601,11 +913,155 @@ msgstr "Send link"
 msgid "Volver a inicio de sesión"
 msgstr "Back to sign in"
 
+#: app/templates/admin/actividad_form.html:2
+#: app/templates/admin/actividad_form.html:4
+msgid "Editar actividad"
+msgstr "Edit activity"
+
+#: app/templates/admin/actividad_form.html:2
+#: app/templates/admin/actividad_form.html:4
+#: app/templates/admin/actividades_list.html:6
+msgid "Nueva actividad"
+msgstr "New activity"
+
+#: app/templates/admin/actividades_list.html:2
+#: app/templates/admin/actividades_list.html:5
+#, python-format
+msgid "Actividades de %(name)s"
+msgstr "Activities of %(name)s"
+
+#: app/templates/admin/actividades_list.html:9
+msgid "Orden"
+msgstr "Order"
+
+#: app/templates/admin/actividades_list.html:9
+msgid "Título"
+msgstr "Title"
+
+#: app/templates/admin/actividades_list.html:9
+msgid "Minutos"
+msgstr "Minutes"
+
+#: app/templates/admin/actividades_list.html:9
+msgid "Componente"
+msgstr "Component"
+
+#: app/templates/admin/actividades_list.html:18
+msgid "Ver"
+msgstr "View"
+
+#: app/templates/admin/actividades_list.html:19
+#: app/templates/admin/trastornos_list.html:17
+msgid "Editar"
+msgstr "Edit"
+
+#: app/templates/admin/actividades_list.html:20
+msgid "¿Eliminar esta actividad?"
+msgstr "Delete this activity?"
+
+#: app/templates/admin/actividades_list.html:21
+#: app/templates/admin/trastornos_list.html:19
+#: app/templates/admin/usuarios_list.html:29
+msgid "Eliminar"
+msgstr "Delete"
+
+#: app/templates/admin/actividades_list.html:26
+msgid "Todavía no hay actividades en este trastorno."
+msgstr "There are no activities in this condition yet."
+
+#: app/templates/admin/actividades_list.html:30
+msgid "Volver a trastornos"
+msgstr "Back to conditions"
+
+#: app/templates/admin/index.html:2 app/templates/admin/index.html:4
+msgid "Panel administrador"
+msgstr "Administrator dashboard"
+
+#: app/templates/admin/index.html:8 app/templates/admin/usuarios_list.html:2
+#: app/templates/admin/usuarios_list.html:9
+#: app/templates/dashboard/teacher/base_teacher.html:68
+#: app/templates/dashboard/teacher/base_teacher.html:93
+msgid "Usuarios"
+msgstr "Users"
+
+#: app/templates/admin/index.html:20 app/templates/admin/trastornos_list.html:9
+msgid "Actividades"
+msgstr "Activities"
+
+#: app/templates/admin/index.html:25
+msgid "Gestionar trastornos y actividades"
+msgstr "Manage conditions and activities"
+
+#: app/templates/admin/trastorno_form.html:2
+#: app/templates/admin/trastorno_form.html:4
+msgid "Editar trastorno"
+msgstr "Edit condition"
+
+#: app/templates/admin/trastorno_form.html:2
+#: app/templates/admin/trastorno_form.html:4
+#: app/templates/admin/trastornos_list.html:6
+msgid "Nuevo trastorno"
+msgstr "New condition"
+
+#: app/templates/admin/trastornos_list.html:9
+#: app/templates/admin/usuarios_list.html:12
+msgid "Nombre"
+msgstr ""
+
+#: app/templates/admin/trastornos_list.html:15
+#: app/templates/modules/index.html:12
+#, python-format
+msgid "%(num)d actividad"
+msgid_plural "%(num)d actividades"
+msgstr[0] "%(num)d activity"
+msgstr[1] "%(num)d activities"
+
+#: app/templates/admin/trastornos_list.html:18
+msgid "¿Eliminar este trastorno y todas sus actividades?"
+msgstr "Delete this condition and all its activities?"
+
+#: app/templates/admin/trastornos_list.html:24
+msgid "Todavía no hay trastornos creados."
+msgstr "There are no conditions created yet."
+
+#: app/templates/admin/usuarios_list.html:7
+msgid "administrador"
+msgstr "administrator"
+
+#: app/templates/admin/usuarios_list.html:12
+msgid "Correo"
+msgstr "Email"
+
+#: app/templates/admin/usuarios_list.html:12
+msgid "Rol"
+msgstr "Role"
+
+#: app/templates/admin/usuarios_list.html:12
+msgid "Estado"
+msgstr "Status"
+
+#: app/templates/admin/usuarios_list.html:19
+msgid "Activo"
+msgstr "Active"
+
+#: app/templates/admin/usuarios_list.html:19
+msgid "Inactivo"
+msgstr "Inactive"
+
+#: app/templates/admin/usuarios_list.html:26
+#, python-format
+msgid "¿Eliminar definitivamente a %(name)s? Esta acción no se puede deshacer."
+msgstr "Permanently delete %(name)s? This action cannot be undone."
+
+#: app/templates/admin/usuarios_list.html:37
+msgid "No hay usuarios registrados."
+msgstr "There are no registered users."
+
 #: app/templates/dashboard/index.html:4
 msgid "Módulo: dashboard"
 msgstr "Module: dashboard"
 
-#: app/templates/dashboard/index.html:5
+#: app/templates/dashboard/index.html:5 app/templates/inclusive/index.html:5
 msgid "Placeholder — pantalla real pendiente de diseño."
 msgstr "Placeholder — final screen pending design."
 
@@ -631,30 +1087,43 @@ msgid "Pendiente"
 msgstr "Pending"
 
 #: app/templates/dashboard/student/actividades.html:40
+#: app/templates/dashboard/student/index.html:71
 msgid "Continuar"
 msgstr "Continue"
 
 #: app/templates/dashboard/student/actividades.html:40
+#: app/templates/dashboard/student/index.html:104
 #: app/templates/dashboard/student/juego_detail.html:17
 #: app/templates/dashboard/student/juego_detail.html:20
+#: app/templates/dashboard/student/juegos.html:26
+#: app/templates/dashboard/student/juegos.html:29
+#: app/templates/dashboard/student/juegos.html:32
+#: app/templates/games/stages.html:100
 msgid "Jugar"
 msgstr "Play"
 
 #: app/templates/dashboard/student/base_student.html:6
+#: app/templates/dashboard/student/index.html:11
 msgid "Mi espacio"
 msgstr "My space"
 
 #: app/templates/dashboard/student/base_student.html:46
 #: app/templates/dashboard/student/base_student.html:51
+#: app/templates/dashboard/student/index.html:114
+#: app/templates/dashboard/teacher/base_teacher.html:36
+#: app/templates/dashboard/teacher/base_teacher.html:41
 msgid "Notificaciones"
 msgstr "Notifications"
 
 #: app/templates/dashboard/student/base_student.html:60
+#: app/templates/dashboard/teacher/base_teacher.html:50
 msgid "Marcar todas como leídas"
 msgstr "Mark all as read"
 
 #: app/templates/dashboard/student/base_student.html:64
 #: app/templates/dashboard/student/base_student.html:115
+#: app/templates/dashboard/student/index.html:116
+#: app/templates/dashboard/student/index.html:118
 msgid ""
 "Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te "
 "asigne algo nuevo."
@@ -665,32 +1134,111 @@ msgstr ""
 #: app/templates/dashboard/student/base_student.html:77
 #: app/templates/dashboard/student/perfil.html:2
 #: app/templates/dashboard/student/perfil.html:4
+#: app/templates/dashboard/teacher/perfil.html:2
+#: app/templates/dashboard/teacher/perfil.html:4
 msgid "Mi perfil"
 msgstr "My profile"
 
 #: app/templates/dashboard/student/base_student.html:78
+#: app/templates/dashboard/teacher/base_teacher.html:71
 msgid "Cerrar sesión"
 msgstr "Sign out"
 
 #: app/templates/dashboard/student/base_student.html:90
+#: app/templates/dashboard/student/index.html:2
 msgid "Mi panel"
 msgstr "My dashboard"
 
 #: app/templates/dashboard/student/base_student.html:94
+#: app/templates/dashboard/student/juegos.html:2
 msgid "Juegos"
 msgstr "Games"
+
+#: app/templates/dashboard/student/index.html:12
+msgid "¡Hola,"
+msgstr "Hello,"
+
+#: app/templates/dashboard/student/index.html:15
+#, python-format
+msgid "Llevas %(num)d día activo este mes. ¡Sigue así!"
+msgid_plural "Llevas %(num)d días activos este mes. ¡Sigue así!"
+msgstr[0] "You have been active for %(num)d day this month. Keep it up!"
+msgstr[1] "You have been active for %(num)d days this month. Keep it up!"
+
+#: app/templates/dashboard/student/index.html:17
+msgid ""
+"Hoy es un buen día para jugar tu primera actividad. Avanzas a tu propio "
+"ritmo."
+msgstr ""
+"Today is a good day to play your first activity. You move at your own "
+"pace."
+
+#: app/templates/dashboard/student/index.html:21
+msgid "Ir a Juegos"
+msgstr "Go to Games"
+
+#: app/templates/dashboard/student/index.html:30
+msgid "Racha este mes"
+msgstr "Streak this month"
+
+#: app/templates/dashboard/student/index.html:31
+#, python-format
+msgid "%(num)d día"
+msgid_plural "%(num)d días"
+msgstr[0] "%(num)d day"
+msgstr[1] "%(num)d days"
+
+#: app/templates/dashboard/student/index.html:40
+msgid "Actividades iniciadas"
+msgstr "Activities started"
+
+#: app/templates/dashboard/student/index.html:50
+msgid "Avance general"
+msgstr "Overall progress"
+
+#: app/templates/dashboard/student/index.html:60
+msgid "Continúa"
+msgstr "Keep going"
+
+#: app/templates/dashboard/student/index.html:61
+msgid "Sigue donde quedaste"
+msgstr "Pick up where you left off"
+
+#: app/templates/dashboard/student/index.html:80
+msgid "Tu plan"
+msgstr "Your plan"
+
+#: app/templates/dashboard/student/index.html:81
+msgid "Mis trastornos asignados"
+msgstr "My assigned conditions"
+
+#: app/templates/dashboard/student/index.html:83
+msgid "Todavía no tienes trastornos asignados. Tu docente los configurará pronto."
+msgstr ""
+"You don't have any conditions assigned yet. Your teacher will set them up"
+" soon."
+
+#: app/templates/dashboard/student/index.html:90
+msgid "completado"
+msgstr "completed"
+
+#: app/templates/dashboard/student/index.html:102
+#, python-format
+msgid "%(done)s de %(total)s actividades completadas"
+msgstr "%(done)s of %(total)s activities completed"
+
+#: app/templates/dashboard/student/index.html:113
+msgid "Avisos"
+msgstr "Alerts"
 
 #: app/templates/dashboard/student/juego_detail.html:13
 #, python-format
 msgid "Actividad asignada por tu docente el %(fecha)s."
 msgstr "Activity assigned by your teacher on %(fecha)s."
 
-#: app/templates/dashboard/student/juego_detail.html:24
-msgid "Tu docente aún no te asignó esta actividad."
-msgstr "Your teacher has not assigned you this activity yet."
-
 #: app/templates/dashboard/student/juego_detail.html:25
 #: app/templates/dashboard/student/juego_detail.html:29
+#: app/templates/games/stages.html:71
 msgid "Volver a Juegos"
 msgstr "Back to Games"
 
@@ -701,6 +1249,14 @@ msgstr "Activity in preparation"
 #: app/templates/dashboard/student/juego_detail.html:28
 msgid "Estamos preparando la actividad interactiva para esta área."
 msgstr "We are preparing the interactive activity for this area."
+
+#: app/templates/dashboard/student/juegos.html:7
+msgid "Todavía no hay juegos configurados en el sistema."
+msgstr "There are no games set up in the system yet."
+
+#: app/templates/dashboard/student/juegos.html:20
+msgid "Actividad en preparación."
+msgstr "Activity in preparation."
 
 #: app/templates/dashboard/student/perfil.html:14
 msgid "Alias"
@@ -713,4 +1269,573 @@ msgid ""
 msgstr ""
 "Need to change any information? Ask your teacher to update it from your "
 "profile in the administration panel."
+
+#: app/templates/dashboard/teacher/base_teacher.html:6
+#: app/templates/dashboard/teacher/panel_general.html:7
+msgid "Panel docente"
+msgstr "Teacher dashboard"
+
+#: app/templates/dashboard/teacher/base_teacher.html:54
+#: app/templates/dashboard/teacher/base_teacher.html:132
+msgid ""
+"Todavía no tienes notificaciones. Aquí verás avisos cuando tus "
+"estudiantes superen niveles de los juegos."
+msgstr ""
+"You don't have any notifications yet. You will see alerts here when your "
+"students clear game levels."
+
+#: app/templates/dashboard/teacher/base_teacher.html:70
+#: app/templates/dashboard/teacher/base_teacher.html:86
+msgid "Perfil"
+msgstr "Profile"
+
+#: app/templates/dashboard/teacher/base_teacher.html:83
+#: app/templates/dashboard/teacher/base_teacher.html:90
+msgid "Volver al panel"
+msgstr "Back to dashboard"
+
+#: app/templates/dashboard/teacher/base_teacher.html:98
+#: app/templates/dashboard/teacher/panel_general.html:2
+msgid "Panel general"
+msgstr "General dashboard"
+
+#: app/templates/dashboard/teacher/base_teacher.html:102
+#: app/templates/dashboard/teacher/panel_general.html:125
+#: app/templates/dashboard/teacher/registro_estudiantes.html:2
+msgid "Registro de estudiantes"
+msgstr "Student registry"
+
+#: app/templates/dashboard/teacher/base_teacher.html:106
+msgid "Sesiones sistema"
+msgstr "System sessions"
+
+#: app/templates/dashboard/teacher/base_teacher.html:110
+msgid "Guías de uso"
+msgstr "User guides"
+
+#: app/templates/dashboard/teacher/panel_general.html:8
+msgid "Panel"
+msgstr "Main"
+
+#: app/templates/dashboard/teacher/panel_general.html:8
+msgid "general"
+msgstr "dashboard"
+
+#: app/templates/dashboard/teacher/panel_general.html:10
+msgid ""
+"Sigue el avance de tus estudiantes en tiempo real. Cambia el periodo, "
+"agrupa por semana o toca a un estudiante del ranking para ver solo su "
+"actividad."
+msgstr ""
+"Follow your students' progress in real time. Change the period, group by "
+"week or tap a student in the ranking to see only their activity."
+
+#: app/templates/dashboard/teacher/panel_general.html:14
+msgid "Actualizado en vivo"
+msgstr "Updated live"
+
+#: app/templates/dashboard/teacher/panel_general.html:15
+msgid "Actualizar"
+msgstr "Refresh"
+
+#: app/templates/dashboard/teacher/panel_general.html:25
+msgid "Estudiantes activos"
+msgstr "Active students"
+
+#: app/templates/dashboard/teacher/panel_general.html:35
+#: app/templates/dashboard/teacher/panel_general.html:119
+msgid "Planes activos"
+msgstr "Active plans"
+
+#: app/templates/dashboard/teacher/panel_general.html:45
+msgid "Trastorno más trabajado"
+msgstr "Most practiced condition"
+
+#: app/templates/dashboard/teacher/panel_general.html:55
+msgid "Partidas en el periodo"
+msgstr "Games in the period"
+
+#: app/templates/dashboard/teacher/panel_general.html:57
+#: app/templates/dashboard/teacher/panel_general.html:159
+msgid "niveles superados"
+msgstr "levels cleared"
+
+#: app/templates/dashboard/teacher/panel_general.html:68
+msgid "Rendimiento general"
+msgstr "Overall performance"
+
+#: app/templates/dashboard/teacher/panel_general.html:69
+#: app/templates/dashboard/teacher/panel_general.html:164
+msgid "Partidas completadas"
+msgstr "Games completed"
+
+#: app/templates/dashboard/teacher/panel_general.html:74
+msgid "Periodo"
+msgstr "Period"
+
+#: app/templates/dashboard/teacher/panel_general.html:75
+msgid "7 días"
+msgstr "7 days"
+
+#: app/templates/dashboard/teacher/panel_general.html:76
+msgid "30 días"
+msgstr "30 days"
+
+#: app/templates/dashboard/teacher/panel_general.html:77
+msgid "2 meses"
+msgstr "2 months"
+
+#: app/templates/dashboard/teacher/panel_general.html:78
+msgid "3 meses"
+msgstr "3 months"
+
+#: app/templates/dashboard/teacher/panel_general.html:79
+msgid "1 año"
+msgstr "1 year"
+
+#: app/templates/dashboard/teacher/panel_general.html:81
+msgid "Agrupar por"
+msgstr "Group by"
+
+#: app/templates/dashboard/teacher/panel_general.html:82
+msgid "Por día"
+msgstr "By day"
+
+#: app/templates/dashboard/teacher/panel_general.html:83
+msgid "Por semana"
+msgstr "By week"
+
+#: app/templates/dashboard/teacher/panel_general.html:86
+msgid "Desde"
+msgstr "From"
+
+#: app/templates/dashboard/teacher/panel_general.html:88
+msgid "Hasta"
+msgstr "To"
+
+#: app/templates/dashboard/teacher/panel_general.html:94
+msgid "Quitar filtro de estudiante"
+msgstr "Remove student filter"
+
+#: app/templates/dashboard/teacher/panel_general.html:98
+msgid "Gráfico de partidas completadas y niveles superados"
+msgstr "Chart of games completed and levels cleared"
+
+#: app/templates/dashboard/teacher/panel_general.html:100
+#: app/templates/dashboard/teacher/panel_general.html:157
+msgid "Aún no hay partidas completadas en este periodo."
+msgstr "There are no completed games in this period yet."
+
+#: app/templates/dashboard/teacher/panel_general.html:105
+msgid "Ranking"
+msgstr "Ranking"
+
+#: app/templates/dashboard/teacher/panel_general.html:106
+msgid "Estudiantes con más actividades realizadas"
+msgstr "Students with the most activities completed"
+
+#: app/templates/dashboard/teacher/panel_general.html:107
+msgid "Toca a un estudiante para ver solo su actividad en el gráfico."
+msgstr "Tap a student to see only their activity in the chart."
+
+#: app/templates/dashboard/teacher/panel_general.html:111
+msgid ""
+"Aquí verás el avance de cada estudiante cuando completen su primera "
+"actividad."
+msgstr ""
+"You will see each student's progress here once they complete their first "
+"activity."
+
+#: app/templates/dashboard/teacher/panel_general.html:120
+msgid "Trastornos en entrenamiento"
+msgstr "Conditions in training"
+
+#: app/templates/dashboard/teacher/panel_general.html:124
+msgid "Aparecerán aquí al asignar trastornos en"
+msgstr "They will appear here when you assign conditions in"
+
+#: app/templates/dashboard/teacher/panel_general.html:134
+msgid "est."
+msgstr "stud."
+
+#: app/templates/dashboard/teacher/panel_general.html:152
+msgid "Sem"
+msgstr "Wk"
+
+#: app/templates/dashboard/teacher/panel_general.html:153
+msgid "Semana del"
+msgstr "Week of"
+
+#: app/templates/dashboard/teacher/panel_general.html:154
+msgid "Viendo:"
+msgstr "Viewing:"
+
+#: app/templates/dashboard/teacher/panel_general.html:155
+msgid "Ver perfil"
+msgstr "View profile"
+
+#: app/templates/dashboard/teacher/panel_general.html:156
+msgid "Revisa el rango de fechas: la fecha inicial debe ser anterior a la final."
+msgstr "Check the date range: the start date must be before the end date."
+
+#: app/templates/dashboard/teacher/panel_general.html:158
+msgid "nivel superado"
+msgstr "level cleared"
+
+#: app/templates/dashboard/teacher/panel_general.html:160
+msgid "partida"
+msgstr "game"
+
+#: app/templates/dashboard/teacher/panel_general.html:161
+msgid "partidas"
+msgstr "games"
+
+#: app/templates/dashboard/teacher/panel_general.html:162
+#, python-brace-format
+msgid "Del {from} al {to}"
+msgstr "From {from} to {to}"
+
+#: app/templates/dashboard/teacher/panel_general.html:163
+msgid "Actualizado"
+msgstr "Updated"
+
+#: app/templates/dashboard/teacher/panel_general.html:165
+msgid "Niveles superados (≥ 60)"
+msgstr "Levels cleared (≥ 60)"
+
+#: app/templates/dashboard/teacher/perfil.html:19
+msgid "ej. Psicología, Matemáticas"
+msgstr "e.g. Psychology, Mathematics"
+
+#: app/templates/dashboard/teacher/perfil.html:26
+msgid "Mínimo 6 caracteres"
+msgstr "At least 6 characters"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:8
+msgid "Listado de grupos"
+msgstr "Group list"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:10
+msgid "Añadir grupo"
+msgstr "Add group"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:28
+msgid "Todavía no tienes grupos. Crea el primero arriba."
+msgstr "You don't have any groups yet. Create the first one above."
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:39
+msgid "Añadir niño"
+msgstr "Add child"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:45
+#, python-format
+msgid "¿Eliminar el grupo %(name)s? Esta acción no se puede deshacer."
+msgstr ""
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:48
+msgid "Eliminar grupo"
+msgstr "Delete group"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:56
+msgid "Nuevo niño"
+msgstr "New child"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:75
+msgid "correo del niño"
+msgstr "child's email"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:79
+msgid "correo del tutor"
+msgstr "guardian's email"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:120
+msgid "No hay trastornos cargados en el sistema todavía."
+msgstr "There are no conditions loaded in the system yet."
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:124
+msgid ""
+"Al marcar un trastorno, el estudiante queda inscrito automáticamente en "
+"la primera sesión del plan de entrenamiento correspondiente."
+msgstr ""
+"When you check a condition, the student is automatically enrolled in the "
+"first session of the matching training plan."
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:146
+msgid "Mover"
+msgstr "Move"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:150
+msgid "Desvincular"
+msgstr "Unlink"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:157
+msgid "Sin niños asignados todavía."
+msgstr "No children assigned yet."
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:163
+msgid "Niños inactivos"
+msgstr "Inactive children"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:172
+msgid "Reactivar"
+msgstr "Reactivate"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:178
+#, python-format
+msgid ""
+"¿Eliminar definitivamente a %(name)s? Esta acción borra todo su historial"
+" y no se puede deshacer."
+msgstr ""
+"Permanently delete %(name)s? This action erases their entire history and "
+"cannot be undone."
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:181
+msgid "Eliminar definitivamente"
+msgstr "Delete permanently"
+
+#: app/templates/dashboard/teacher/student_profile.html:2
+#, python-format
+msgid "Perfil de %(name)s"
+msgstr "Profile of %(name)s"
+
+#: app/templates/dashboard/teacher/student_profile.html:10
+msgid ""
+"Marca los trastornos que este estudiante debe trabajar. Esto define qué "
+"actividades verá en su dashboard."
+msgstr ""
+"Check the conditions this student should work on. This defines which "
+"activities they will see in their dashboard."
+
+#: app/templates/dashboard/teacher/student_profile.html:34
+msgid "Progreso"
+msgstr "Progress"
+
+#: app/templates/dashboard/teacher/student_profile.html:36
+msgid ""
+"El histórico de sesiones y evolución se conecta en la siguiente "
+"iteración, junto con el reproductor de actividades."
+msgstr ""
+"The session history and progress will be connected in the next iteration,"
+" together with the activity player."
+
+#: app/templates/games/play.html:23
+msgid ""
+"Modo vista previa: puedes jugar para conocer la actividad, pero no se "
+"guarda progreso."
+msgstr ""
+"Preview mode: you can play to get to know the activity, but progress is "
+"not saved."
+
+#: app/templates/games/play.html:28
+msgid "Ajustes de accesibilidad"
+msgstr "Accessibility settings"
+
+#: app/templates/games/play.html:30 app/templates/modules/lesson.html:17
+msgid "Leer en voz alta"
+msgstr "Read aloud"
+
+#: app/templates/games/play.html:32
+msgid "Alto contraste"
+msgstr "High contrast"
+
+#: app/templates/games/play.html:33 app/templates/games/play.html:34
+msgid "Texto"
+msgstr "Text"
+
+#: app/templates/games/play.html:36
+msgid "Reducir movimiento"
+msgstr "Reduce motion"
+
+#: app/templates/games/play.html:38
+msgid "Necesito una pista"
+msgstr "I need a hint"
+
+#: app/templates/games/play.html:50
+msgid "Salir del juego"
+msgstr "Exit game"
+
+#: app/templates/games/play.html:55
+msgid "Nivel"
+msgstr "Level"
+
+#: app/templates/games/play.html:56
+msgid "Reto"
+msgstr "Challenge"
+
+#: app/templates/games/play.html:57
+msgid "Estrellas"
+msgstr "Stars"
+
+#: app/templates/games/play.html:72 app/templates/games/play.html:95
+msgid "tu guía"
+msgstr "your guide"
+
+#: app/templates/games/play.html:73
+msgid "Cargando la misión…"
+msgstr "Loading the mission…"
+
+#: app/templates/games/play.html:77
+msgid "Comenzar la misión"
+msgstr "Start the mission"
+
+#: app/templates/games/play.html:86
+msgid "Opciones de respuesta"
+msgstr "Answer options"
+
+#: app/templates/games/play.html:101
+msgid "Repetir nivel"
+msgstr "Repeat level"
+
+#: app/templates/games/play.html:102
+msgid "Siguiente nivel"
+msgstr "Next level"
+
+#: app/templates/games/play.html:116
+msgid "Qué trabaja esta actividad"
+msgstr "What this activity works on"
+
+#: app/templates/games/play.html:118
+msgid "Habilidad núcleo:"
+msgstr "Core skill:"
+
+#: app/templates/games/play.html:119
+msgid "Regiones cerebrales implicadas:"
+msgstr "Brain regions involved:"
+
+#: app/templates/games/play.html:123
+msgid "Representación:"
+msgstr "Representation:"
+
+#: app/templates/games/play.html:124
+msgid "Acción y expresión:"
+msgstr "Action and expression:"
+
+#: app/templates/games/play.html:125
+msgid "Implicación:"
+msgstr "Engagement:"
+
+#: app/templates/games/play.html:127
+msgid ""
+"El nivel de apoyo (pistas, tiempo y repeticiones) se calibra según el "
+"desempeño. Es un ajuste pedagógico, no un instrumento diagnóstico."
+msgstr ""
+"The support level (hints, time and repetitions) is calibrated according "
+"to performance. It is a pedagogical adjustment, not a diagnostic "
+"instrument."
+
+#: app/templates/games/stages.html:2
+msgid "Etapas"
+msgstr "Stages"
+
+#: app/templates/games/stages.html:76
+msgid ""
+"Modo vista previa: como docente puedes ver todas las etapas y niveles, "
+"pero el progreso no se guarda."
+msgstr ""
+"Preview mode: as a teacher you can see all stages and levels, but "
+"progress is not saved."
+
+#: app/templates/games/stages.html:85
+#, python-format
+msgid "Niveles %(start)s–%(end)s"
+msgstr "Levels %(start)s–%(end)s"
+
+#: app/templates/games/stages.html:87
+msgid "superados"
+msgstr "cleared"
+
+#: app/templates/games/stages.html:91
+msgid "Completa la etapa anterior para desbloquear esta."
+msgstr "Complete the previous stage to unlock this one."
+
+#: app/templates/games/stages.html:98
+#, python-format
+msgid "Nivel %(pos)s de la etapa %(stage)s, superado"
+msgstr "Level %(pos)s of stage %(stage)s, cleared"
+
+#: app/templates/games/stages.html:98
+#, python-format
+msgid "Nivel %(pos)s de la etapa %(stage)s"
+msgstr "Level %(pos)s of stage %(stage)s"
+
+#: app/templates/games/stages.html:103
+#, python-format
+msgid "Nivel %(pos)s bloqueado"
+msgstr "Level %(pos)s locked"
+
+#: app/templates/inclusive/index.html:4
+msgid "Módulo: inclusive"
+msgstr "Module: inclusive"
+
+#: app/templates/modules/index.html:17
+msgid "Todavía no hay trastornos cargados."
+msgstr "There are no conditions loaded yet."
+
+#: app/templates/modules/lesson.html:6
+msgid "bajo"
+msgstr "low"
+
+#: app/templates/modules/lesson.html:7
+msgid "medio"
+msgstr "medium"
+
+#: app/templates/modules/lesson.html:8
+msgid "alto"
+msgstr "high"
+
+#: app/templates/modules/lesson.html:11
+msgid "Nivel de apoyo actual:"
+msgstr "Current support level:"
+
+#: app/templates/modules/lesson.html:13
+msgid ""
+"Todavía no tienes un check previo para este trastorno — próximamente "
+"podrás hacerlo antes de empezar."
+msgstr ""
+"You don't have a previous check for this condition yet — soon you will be"
+" able to take it before starting."
+
+#: app/templates/modules/lesson.html:16
+msgid "Herramientas de accesibilidad de lectura"
+msgstr "Reading accessibility tools"
+
+#: app/templates/modules/lesson.html:18
+msgid "Pausar"
+msgstr "Pause"
+
+#: app/templates/modules/lesson.html:19
+msgid "Detener"
+msgstr "Stop"
+
+#: app/templates/modules/lesson.html:21
+msgid "Reducir tamaño de texto"
+msgstr "Decrease text size"
+
+#: app/templates/modules/lesson.html:22
+msgid "Aumentar tamaño de texto"
+msgstr "Increase text size"
+
+#: app/templates/modules/lesson.html:26
+msgid "Un paso a la vez"
+msgstr "One step at a time"
+
+#: app/templates/modules/lesson.html:31
+#, python-format
+msgid "%(minutes)s min aprox."
+msgstr "approx. %(minutes)s min"
+
+#: app/templates/modules/lesson.html:42
+msgid "Anterior"
+msgstr "Previous"
+
+#: app/templates/modules/lesson.html:44
+msgid "Siguiente"
+msgstr "Next"
+
+#: app/templates/modules/lesson.html:49
+msgid "Video en Lengua de Señas Colombiana"
+msgstr "Colombian Sign Language video"
+
+#~ msgid "¿Eliminar el grupo '%(name)s'? Esta acción no se puede deshacer."
+#~ msgstr "Delete the group '%(name)s'? This action cannot be undone."
 

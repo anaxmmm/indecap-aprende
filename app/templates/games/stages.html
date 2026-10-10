@@ -1,5 +1,5 @@
 {% extends "dashboard/student/base_student.html" %}
-{% block title %}Etapas — {{ game.name }} — indecap-aprende{% endblock %}
+{% block title %}{{ _('Etapas') }} — {{ game.name }} — indecap-aprende{% endblock %}
 
 {% block student_content %}
 <style>
@@ -68,12 +68,12 @@
 
 <div class="stage-map">
   <div class="stage-map__header">
-    <a href="{{ url_for('dashboard.student_juegos') }}" class="stage-map__exit" aria-label="Volver a Juegos">✕</a>
+    <a href="{{ url_for('dashboard.student_juegos') }}" class="stage-map__exit" aria-label="{{ _('Volver a Juegos') }}">✕</a>
   </div>
 
   {% if preview %}
   <div class="teacher-card">
-    <p class="text-muted mb-0">Modo vista previa: como docente puedes ver todas las etapas y niveles, pero el progreso no se guarda.</p>
+    <p class="text-muted mb-0">{{ _('Modo vista previa: como docente puedes ver todas las etapas y niveles, pero el progreso no se guarda.') }}</p>
   </div>
   {% endif %}
 
@@ -81,26 +81,26 @@
   <div class="teacher-card stage-card {{ '' if stage.unlocked else 'is-locked' }}">
     <div class="stage-card__header">
       <div>
-        <p class="stage-card__title">Etapa {{ stage.number }} · {{ stage.name }}</p>
-        <p class="stage-card__subtitle">Niveles {{ stage.start }}–{{ stage.end }}</p>
+        <p class="stage-card__title">{{ _('Etapa %(number)s', number=stage.number) }} · {{ stage.name }}</p>
+        <p class="stage-card__subtitle">{{ _('Niveles %(start)s–%(end)s', start=stage.start, end=stage.end) }}</p>
       </div>
-      <span class="stage-card__progress">{{ stage.completed_count }}/{{ stage.levels | length }} superados</span>
+      <span class="stage-card__progress">{{ stage.completed_count }}/{{ stage.levels | length }} {{ _('superados') }}</span>
     </div>
 
     {% if not stage.unlocked %}
-      <p class="stage-card__lock-note">🔒 Completa la etapa anterior para desbloquear esta.</p>
+      <p class="stage-card__lock-note">🔒 {{ _('Completa la etapa anterior para desbloquear esta.') }}</p>
     {% else %}
       <div class="stage-levels">
         {% for lvl in stage.levels %}
           {% if lvl.unlocked %}
             <a href="{{ url_for('games.play', slug=game.slug, level=lvl.level, trastorno_id=trastorno.id if trastorno else '') }}"
                class="stage-level {{ 'is-completed' if lvl.completed else '' }}"
-               aria-label="Nivel {{ lvl.position }} de la etapa {{ stage.number }}{{ ', superado' if lvl.completed else '' }}">
+               aria-label="{% if lvl.completed %}{{ _('Nivel %(pos)s de la etapa %(stage)s, superado', pos=lvl.position, stage=stage.number) }}{% else %}{{ _('Nivel %(pos)s de la etapa %(stage)s', pos=lvl.position, stage=stage.number) }}{% endif %}">
               {{ lvl.position }}
-              <span class="stage-level__caption">{{ '✓' if lvl.completed else 'Jugar' }}</span>
+              <span class="stage-level__caption">{{ '✓' if lvl.completed else _('Jugar') }}</span>
             </a>
           {% else %}
-            <span class="stage-level is-locked" aria-label="Nivel {{ lvl.position }} bloqueado">
+            <span class="stage-level is-locked" aria-label="{{ _('Nivel %(pos)s bloqueado', pos=lvl.position) }}">
               🔒
               <span class="stage-level__caption">{{ lvl.position }}</span>
             </span>

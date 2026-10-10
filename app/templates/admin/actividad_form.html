@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}{{ "Editar" if mode == "edit" else "Nueva" }} actividad — Admin{% endblock %}
+{% block title %}{{ _('Editar actividad') if mode == "edit" else _('Nueva actividad') }} — Admin{% endblock %}
 {% block content %}
-<h1 class="h3 mb-4">{{ "Editar actividad" if mode == "edit" else "Nueva actividad" }} — {{ trastorno.name }}</h1>
+<h1 class="h3 mb-4">{{ _('Editar actividad') if mode == "edit" else _('Nueva actividad') }} — {{ trastorno.name }}</h1>
 <form method="post" novalidate style="max-width:640px;">
   {{ form.hidden_tag() }}
   {% for field in [form.trastorno_id, form.title, form.content_body, form.order_index, form.estimated_minutes, form.support_image_url, form.lsc_video_url, form.interactive_widget] %}

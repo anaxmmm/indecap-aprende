@@ -1,26 +1,32 @@
 {% extends "dashboard/teacher/base_teacher.html" %}
-{% block title %}Usuarios — indecap-aprende{% endblock %}
+{% block title %}{{ _('Usuarios') }} — indecap-aprende{% endblock %}
 {% block teacher_content %}
-<h1 class="h4 mb-3">Usuarios</h1>
+{% set roles = {
+  'estudiante': _('estudiante'),
+  'docente': _('docente'),
+  'administrador': _('administrador')
+} %}
+<h1 class="h4 mb-3">{{ _('Usuarios') }}</h1>
 <div class="teacher-card">
   <table class="table teacher-table">
-    <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th></th></tr></thead>
+    <thead><tr><th>{{ _('Nombre') }}</th><th>{{ _('Correo') }}</th><th>{{ _('Rol') }}</th><th>{{ _('Estado') }}</th><th></th></tr></thead>
     <tbody>
       {% for usuario in usuarios %}
       <tr>
         <td>{{ usuario.full_name }}</td>
         <td>{{ usuario.email }}</td>
-        <td>{{ usuario.role.value }}</td>
-        <td>{{ "Activo" if usuario.is_active_account else "Inactivo" }}</td>
+        <td>{{ roles.get(usuario.role.value, usuario.role.value) }}</td>
+        <td>{{ _("Activo") if usuario.is_active_account else _("Inactivo") }}</td>
         <td>
           {% if usuario.is_student %}
           <form
             method="post"
             action="{{ url_for('admin.usuario_delete', user_id=usuario.id) }}"
             style="display:inline"
-            onsubmit="return confirm('¿Eliminar definitivamente a {{ usuario.full_name }}? Esta acción no se puede deshacer.');"
+            data-confirm="{{ _("¿Eliminar definitivamente a %(name)s? Esta acción no se puede deshacer.", name=usuario.full_name)|e }}"
+            onsubmit="return confirm(this.dataset.confirm);"
           >
-            <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+            <button type="submit" class="btn btn-sm btn-outline-danger">{{ _('Eliminar') }}</button>
           </form>
           {% else %}
           <span class="text-muted small">—</span>
@@ -28,7 +34,7 @@
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="5" class="text-muted">No hay usuarios registrados.</td></tr>
+      <tr><td colspan="5" class="text-muted">{{ _('No hay usuarios registrados.') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Trastornos — indecap-aprende{% endblock %}
+{% block title %}{{ _('Trastornos') }} — indecap-aprende{% endblock %}
 {% block content %}
-<h1 class="h3 mb-4">Trastornos</h1>
+<h1 class="h3 mb-4">{{ _('Trastornos') }}</h1>
 <div class="row g-3">
   {% for trastorno in trastornos %}
   <div class="col-md-4">
@@ -9,12 +9,12 @@
       <p class="fw-semibold mb-1">{{ trastorno.name }}</p>
       <p class="text-muted small mb-2">{{ trastorno.description or "" }}</p>
       <a href="{{ url_for('admin.actividades_list', trastorno_id=trastorno.id) if current_user.is_admin else '#' }}" class="small">
-        {{ trastorno.actividades|length }} actividades
+        {{ ngettext('%(num)d actividad', '%(num)d actividades', trastorno.actividades|length) }}
       </a>
     </div>
   </div>
   {% else %}
-  <p class="text-muted">Todavía no hay trastornos cargados.</p>
+  <p class="text-muted">{{ _('Todavía no hay trastornos cargados.') }}</p>
   {% endfor %}
 </div>
 {% endblock %}

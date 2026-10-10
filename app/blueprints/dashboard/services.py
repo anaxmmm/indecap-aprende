@@ -4,6 +4,7 @@ para mantenerlas delgadas y facilitar pruebas unitarias.
 from datetime import date, datetime, timedelta
 from typing import List, Optional
 
+from flask_babel import gettext as _
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
@@ -40,12 +41,11 @@ def delete_group(teacher: User, group_id: int) -> None:
     quedarían sin grupo y sin forma de gestionarlos desde la UI."""
     grupo = Grupo.query.filter_by(id=group_id, teacher_id=teacher.id).first()
     if grupo is None:
-        raise ValueError("El grupo no existe o no pertenece a este docente.")
+        raise ValueError(_("El grupo no existe o no pertenece a este docente."))
 
     if grupo.estudiantes:
         raise ValueError(
-            "Este grupo todavía tiene niños asignados (activos o inactivos). "
-            "Muévelos a otro grupo o elimínalos antes de eliminar el grupo."
+            _("Este grupo todavía tiene niños asignados (activos o inactivos). Muévelos a otro grupo o elimínalos antes de eliminar el grupo.")
         )
 
     db.session.delete(grupo)
@@ -109,11 +109,11 @@ def create_student_in_group(
 ) -> User:
     grupo = Grupo.query.filter_by(id=group_id, teacher_id=teacher.id).first()
     if grupo is None:
-        raise ValueError("El grupo no existe o no pertenece a este docente.")
+        raise ValueError(_("El grupo no existe o no pertenece a este docente."))
 
     email = email.lower().strip()
     if User.query.filter_by(email=email).first():
-        raise ValueError("Ya existe una cuenta con ese correo.")
+        raise ValueError(_("Ya existe una cuenta con ese correo."))
 
     full_name = f"{first_name.strip()} {last_name.strip()}".strip()
     student = User(full_name=full_name, email=email, role=RoleEnum.STUDENT)
@@ -125,7 +125,7 @@ def create_student_in_group(
         db.session.flush()
     except IntegrityError:
         db.session.rollback()
-        raise ValueError("Ya existe una cuenta con ese correo.")
+        raise ValueError(_("Ya existe una cuenta con ese correo."))
 
     db.session.add(
         StudentProfile(
@@ -155,11 +155,11 @@ def create_student_in_group(
 def move_student_to_group(teacher: User, student_id: int, target_group_id: int) -> None:
     target = Grupo.query.filter_by(id=target_group_id, teacher_id=teacher.id).first()
     if target is None:
-        raise ValueError("El grupo destino no existe o no pertenece a este docente.")
+        raise ValueError(_("El grupo destino no existe o no pertenece a este docente."))
 
     student = User.query.get(student_id)
     if student is None:
-        raise ValueError("El estudiante no existe.")
+        raise ValueError(_("El estudiante no existe."))
 
     for grupo in list(student.grupos):
         if grupo.teacher_id == teacher.id:
@@ -199,7 +199,7 @@ def delete_student_permanently(teacher: User, group_id: int, student_id: int) ->
     grupo = Grupo.query.filter_by(id=group_id, teacher_id=teacher.id).first()
     student = User.query.get(student_id)
     if grupo is None or student is None or student not in grupo.estudiantes:
-        raise ValueError("El estudiante no existe o no pertenece a este grupo.")
+        raise ValueError(_("El estudiante no existe o no pertenece a este grupo."))
 
     TrastornoAsignado.query.filter_by(student_id=student.id).delete()
     SesionAsignada.query.filter_by(student_id=student.id).delete()
@@ -334,10 +334,10 @@ def assign_session(
 ) -> SesionAsignada:
     student = User.query.get(student_id)
     if student is None or not any(g.teacher_id == teacher.id for g in student.grupos):
-        raise ValueError("Ese estudiante no pertenece a tus grupos.")
+        raise ValueError(_("Ese estudiante no pertenece a tus grupos."))
 
     if end_date < start_date:
-        raise ValueError("La fecha de fin no puede ser anterior a la de inicio.")
+        raise ValueError(_("La fecha de fin no puede ser anterior a la de inicio."))
 
     sesion = SesionAsignada(
         student_id=student_id,
@@ -370,7 +370,7 @@ def get_sesiones_asignadas_for_actividad(actividad_id: int, teacher: User) -> Li
 def update_session_notes(teacher: User, sesion_id: int, notes: str) -> int:
     sesion = SesionAsignada.query.filter_by(id=sesion_id, assigned_by_id=teacher.id).first()
     if sesion is None:
-        raise ValueError("Esa sesión asignada no existe o no te pertenece.")
+        raise ValueError(_("Esa sesión asignada no existe o no te pertenece."))
     sesion.clinical_notes = notes.strip() or None
     db.session.commit()
     return sesion.actividad_id
@@ -597,7 +597,7 @@ def start_session(student: User, sesion_id: int) -> SesionAsignada:
     estudiante la abre desde 'Mis actividades'."""
     sesion = SesionAsignada.query.filter_by(id=sesion_id, student_id=student.id).first()
     if sesion is None:
-        raise ValueError("Esa actividad no existe o no te pertenece.")
+        raise ValueError(_("Esa actividad no existe o no te pertenece."))
     if sesion.started_at is None:
         sesion.started_at = datetime.utcnow()
         db.session.commit()

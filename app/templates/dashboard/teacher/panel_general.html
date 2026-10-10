@@ -1,19 +1,18 @@
 {% extends "dashboard/teacher/base_teacher.html" %}
-{% block title %}Panel general — indecap-aprende{% endblock %}
+{% block title %}{{ _('Panel general') }} — indecap-aprende{% endblock %}
 {% block teacher_content %}
 
 <section class="dx-hero dx-rise">
   <div>
-    <p class="dx-eyebrow">Panel docente</p>
-    <h1 class="dx-hero__title">Panel <em>general</em></h1>
+    <p class="dx-eyebrow">{{ _('Panel docente') }}</p>
+    <h1 class="dx-hero__title">{{ _('Panel') }} <em>{{ _('general') }}</em></h1>
     <p class="dx-hero__text">
-      Sigue el avance de tus estudiantes en tiempo real. Cambia el periodo, agrupa por semana
-      o toca a un estudiante del ranking para ver solo su actividad.
+      {{ _('Sigue el avance de tus estudiantes en tiempo real. Cambia el periodo, agrupa por semana o toca a un estudiante del ranking para ver solo su actividad.') }}
     </p>
   </div>
   <div class="dx-hero__side">
-    <span class="dx-live" id="dx-live-label"><i></i><span>Actualizado en vivo</span></span>
-    <button type="button" class="dx-btn dx-btn--ghost" id="dx-refresh">Actualizar</button>
+    <span class="dx-live" id="dx-live-label"><i></i><span>{{ _('Actualizado en vivo') }}</span></span>
+    <button type="button" class="dx-btn dx-btn--ghost" id="dx-refresh">{{ _('Actualizar') }}</button>
   </div>
 </section>
 
@@ -23,7 +22,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     </div>
     <div>
-      <p class="dx-kpi__label">Estudiantes activos</p>
+      <p class="dx-kpi__label">{{ _('Estudiantes activos') }}</p>
       <p class="dx-kpi__value" data-sync="estudiantes">{{ total_estudiantes }}</p>
     </div>
   </div>
@@ -33,7 +32,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
     </div>
     <div>
-      <p class="dx-kpi__label">Planes activos</p>
+      <p class="dx-kpi__label">{{ _('Planes activos') }}</p>
       <p class="dx-kpi__value" data-sync="planes">{{ planes_activos|length }}</p>
     </div>
   </div>
@@ -43,7 +42,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     </div>
     <div>
-      <p class="dx-kpi__label">Trastorno más trabajado</p>
+      <p class="dx-kpi__label">{{ _('Trastorno más trabajado') }}</p>
       <p class="dx-kpi__value dx-kpi__value--text" data-sync="top">{{ trastornos_top[0].trastorno.name if trastornos_top else "—" }}</p>
     </div>
   </div>
@@ -53,9 +52,9 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     </div>
     <div>
-      <p class="dx-kpi__label">Partidas en el periodo</p>
+      <p class="dx-kpi__label">{{ _('Partidas en el periodo') }}</p>
       <p class="dx-kpi__value" id="kpi-partidas">0</p>
-      <p class="dx-kpi__hint" id="kpi-niveles">0 niveles superados</p>
+      <p class="dx-kpi__hint" id="kpi-niveles">0 {{ _('niveles superados') }}</p>
     </div>
   </div>
 </div>
@@ -66,50 +65,50 @@
 
     <div class="dx-card dx-rise" style="--d:.25s">
       <div class="dx-card__head">
-        <p class="dx-eyebrow">Rendimiento general</p>
-        <h2 class="dx-card__title">Partidas completadas</h2>
+        <p class="dx-eyebrow">{{ _('Rendimiento general') }}</p>
+        <h2 class="dx-card__title">{{ _('Partidas completadas') }}</h2>
         <p class="dx-card__sub" id="dx-range-label"></p>
       </div>
 
       <div class="dx-controls">
-        <div class="dx-segment" id="dx-range" role="group" aria-label="Periodo">
-          <button type="button" data-days="7" aria-pressed="false">7 días</button>
-          <button type="button" data-days="30" class="is-active" aria-pressed="true">30 días</button>
-          <button type="button" data-days="60" aria-pressed="false">2 meses</button>
-          <button type="button" data-days="90" aria-pressed="false">3 meses</button>
-          <button type="button" data-days="365" aria-pressed="false">1 año</button>
+        <div class="dx-segment" id="dx-range" role="group" aria-label="{{ _('Periodo') }}">
+          <button type="button" data-days="7" aria-pressed="false">{{ _('7 días') }}</button>
+          <button type="button" data-days="30" class="is-active" aria-pressed="true">{{ _('30 días') }}</button>
+          <button type="button" data-days="60" aria-pressed="false">{{ _('2 meses') }}</button>
+          <button type="button" data-days="90" aria-pressed="false">{{ _('3 meses') }}</button>
+          <button type="button" data-days="365" aria-pressed="false">{{ _('1 año') }}</button>
         </div>
-        <div class="dx-segment" id="dx-group" role="group" aria-label="Agrupar por">
-          <button type="button" data-group="dia" class="is-active" aria-pressed="true">Por día</button>
-          <button type="button" data-group="semana" aria-pressed="false">Por semana</button>
+        <div class="dx-segment" id="dx-group" role="group" aria-label="{{ _('Agrupar por') }}">
+          <button type="button" data-group="dia" class="is-active" aria-pressed="true">{{ _('Por día') }}</button>
+          <button type="button" data-group="semana" aria-pressed="false">{{ _('Por semana') }}</button>
         </div>
         <div class="dx-dates">
-          <input type="date" id="desde" class="form-control form-control-sm" aria-label="Desde">
+          <input type="date" id="desde" class="form-control form-control-sm" aria-label="{{ _('Desde') }}">
           <span>—</span>
-          <input type="date" id="hasta" class="form-control form-control-sm" aria-label="Hasta">
+          <input type="date" id="hasta" class="form-control form-control-sm" aria-label="{{ _('Hasta') }}">
         </div>
       </div>
 
       <div class="dx-focus" id="dx-focus" hidden>
         <span id="dx-focus-name"></span>
-        <button type="button" id="dx-focus-clear" aria-label="Quitar filtro de estudiante">×</button>
+        <button type="button" id="dx-focus-clear" aria-label="{{ _('Quitar filtro de estudiante') }}">×</button>
       </div>
 
       <div class="dx-chart">
-        <canvas id="rendimiento-chart" role="img" aria-label="Gráfico de partidas completadas y niveles superados"></canvas>
+        <canvas id="rendimiento-chart" role="img" aria-label="{{ _('Gráfico de partidas completadas y niveles superados') }}"></canvas>
       </div>
-      <p class="dx-empty" id="dx-chart-empty" hidden>Aún no hay partidas completadas en este periodo.</p>
+      <p class="dx-empty" id="dx-chart-empty" hidden>{{ _('Aún no hay partidas completadas en este periodo.') }}</p>
     </div>
 
     <div class="dx-card dx-rise" style="--d:.3s">
       <div class="dx-card__head">
-        <p class="dx-eyebrow">Ranking</p>
-        <h2 class="dx-card__title">Estudiantes con más actividades realizadas</h2>
-        <p class="dx-card__sub">Toca a un estudiante para ver solo su actividad en el gráfico.</p>
+        <p class="dx-eyebrow">{{ _('Ranking') }}</p>
+        <h2 class="dx-card__title">{{ _('Estudiantes con más actividades realizadas') }}</h2>
+        <p class="dx-card__sub">{{ _('Toca a un estudiante para ver solo su actividad en el gráfico.') }}</p>
       </div>
       <ul class="dx-rank" id="dx-rank"></ul>
       <p class="dx-empty" id="dx-rank-empty" hidden>
-        Aquí verás el avance de cada estudiante cuando completen su primera actividad.
+        {{ _('Aquí verás el avance de cada estudiante cuando completen su primera actividad.') }}
       </p>
     </div>
 
@@ -117,13 +116,13 @@
 
   <div class="dx-col">
     <div class="dx-card dx-rise" style="--d:.3s">
-      <p class="dx-eyebrow">Planes activos</p>
-      <h2 class="dx-card__title">Trastornos en entrenamiento</h2>
+      <p class="dx-eyebrow">{{ _('Planes activos') }}</p>
+      <h2 class="dx-card__title">{{ _('Trastornos en entrenamiento') }}</h2>
       <div class="dx-plans" data-sync="planes-list">
         {% if not planes_activos %}
         <p class="dx-empty">
-          Aparecerán aquí al asignar trastornos en
-          <a href="{{ url_for('dashboard.registro_estudiantes') }}">Registro de estudiantes</a>.
+          {{ _('Aparecerán aquí al asignar trastornos en') }}
+          <a href="{{ url_for('dashboard.registro_estudiantes') }}">{{ _('Registro de estudiantes') }}</a>.
         </p>
         {% else %}
         {% set max_est = (planes_activos | map(attribute='estudiantes') | list | max | default(0)) %}
@@ -132,7 +131,7 @@
         <div class="dx-plan">
           <div class="dx-plan__top">
             <span class="dx-plan__name">{{ item.trastorno.name }}</span>
-            <span class="dx-plan__count">{{ item.estudiantes }} est.</span>
+            <span class="dx-plan__count">{{ item.estudiantes }} {{ _('est.') }}</span>
           </div>
           <div class="dx-plan__bar"><i data-width="{{ pct }}"></i></div>
         </div>
@@ -147,10 +146,34 @@
 </div>
 
 <script type="application/json" id="dx-data">{{ actividad | tojson }}</script>
+<script type="application/json" id="dx-i18n">{{ {
+  'locale': 'en-US' if current_lang == 'en' else 'es-CO',
+  'labels': {
+    'week': _('Sem'),
+    'weekOf': _('Semana del'),
+    'viewing': _('Viendo:'),
+    'viewProfile': _('Ver perfil'),
+    'rangeError': _('Revisa el rango de fechas: la fecha inicial debe ser anterior a la final.'),
+    'emptyPeriod': _('Aún no hay partidas completadas en este periodo.'),
+    'levelOne': _('nivel superado'),
+    'levelMany': _('niveles superados'),
+    'gameOne': _('partida'),
+    'gameMany': _('partidas'),
+    'fromTo': _('Del {from} al {to}'),
+    'updated': _('Actualizado'),
+    'seriesGames': _('Partidas completadas'),
+    'seriesLevels': _('Niveles superados (≥ 60)')
+  }
+}|tojson }}</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
 (function () {
   'use strict';
+
+  // FASE 2: formato de fechas y textos según el idioma activo
+  const DX_I18N = JSON.parse(document.getElementById('dx-i18n').textContent);
+  const LOCALE = DX_I18N.locale;
+  const I18N = DX_I18N.labels;
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let DATA = JSON.parse(document.getElementById('dx-data').textContent);
@@ -174,8 +197,8 @@
   // ---------- Fechas ----------
   const parseISO = (iso) => { const p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); };
   const ddmm = (d) => ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2);
-  const fullDate = (d) => d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
-  const longDate = (d) => d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+  const fullDate = (d) => d.toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric', month: 'short' });
+  const longDate = (d) => d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' });
   const mondayOf = (d) => {
     const m = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
@@ -230,8 +253,8 @@
         map[key].b += passed[i];
       }
       order.forEach((key) => {
-        out.labels.push('Sem ' + ddmm(map[key].monday));
-        out.titles.push('Semana del ' + fullDate(map[key].monday));
+        out.labels.push(I18N.week + ' ' + ddmm(map[key].monday));
+        out.titles.push(I18N.weekOf + ' ' + fullDate(map[key].monday));
         out.done.push(map[key].a);
         out.passed.push(map[key].b);
       });
@@ -277,8 +300,8 @@
       data: {
         labels: [],
         datasets: [
-          dataset('Partidas completadas', '#1A3A6B', '26,58,107'),
-          dataset('Niveles superados (≥ 60)', '#B8860B', '184,134,11'),
+          dataset(I18N.seriesGames, '#1A3A6B', '26,58,107'),
+          dataset(I18N.seriesLevels, '#B8860B', '184,134,11'),
         ],
       },
       options: {
@@ -358,7 +381,7 @@
       const main = el('div');
       const top = el('div', 'dx-rank__top');
       top.appendChild(el('span', 'dx-rank__name', r.s.name));
-      const link = el('a', 'dx-rank__link', 'Ver perfil');
+      const link = el('a', 'dx-rank__link', I18N.viewProfile);
       link.href = r.s.url;
       link.addEventListener('click', (e) => e.stopPropagation());
       top.appendChild(link);
@@ -370,7 +393,7 @@
 
       const count = el('div', 'dx-rank__count');
       count.appendChild(el('strong', '', String(r.done)));
-      count.appendChild(el('span', '', r.done === 1 ? 'partida' : 'partidas'));
+      count.appendChild(el('span', '', r.done === 1 ? I18N.gameOne : I18N.gameMany));
 
       li.appendChild(el('div', 'dx-rank__pos', String(idx + 1)));
       li.appendChild(main);
@@ -396,18 +419,18 @@
     }
     const focused = DATA.students.find((s) => s.id === state.studentId);
     $('dx-focus').hidden = !focused;
-    if (focused) $('dx-focus-name').textContent = 'Viendo: ' + focused.name;
+    if (focused) $('dx-focus-name').textContent = I18N.viewing + ' ' + focused.name;
 
     const range = rangeIndices();
     const note = $('dx-chart-empty');
 
     if (!range) {
       updateChart({ labels: [], titles: [], done: [], passed: [] });
-      note.textContent = 'Revisa el rango de fechas: la fecha inicial debe ser anterior a la final.';
+      note.textContent = I18N.rangeError;
       note.hidden = false;
       $('dx-range-label').textContent = '';
       setNumber($('kpi-partidas'), 0);
-      $('kpi-niveles').textContent = '0 niveles superados';
+      $('kpi-niveles').textContent = '0 ' + I18N.levelMany;
       renderRanking(null);
       return;
     }
@@ -418,13 +441,14 @@
     const total = series.done.reduce((a, b) => a + b, 0);
     const niveles = series.passed.reduce((a, b) => a + b, 0);
     setNumber($('kpi-partidas'), total);
-    $('kpi-niveles').textContent = niveles + (niveles === 1 ? ' nivel superado' : ' niveles superados');
+    $('kpi-niveles').textContent = niveles + ' ' + (niveles === 1 ? I18N.levelOne : I18N.levelMany);
 
-    note.textContent = 'Aún no hay partidas completadas en este periodo.';
+    note.textContent = I18N.emptyPeriod;
     note.hidden = total > 0;
 
-    $('dx-range-label').textContent =
-      'Del ' + longDate(parseISO(DATA.dates[range[0]])) + ' al ' + longDate(parseISO(DATA.dates[range[1]]));
+    $('dx-range-label').textContent = I18N.fromTo
+      .replace('{from}', longDate(parseISO(DATA.dates[range[0]])))
+      .replace('{to}', longDate(parseISO(DATA.dates[range[1]])));
 
     renderRanking(range);
   }
@@ -484,8 +508,8 @@
 
   // ---------- Actualización desde el servidor ----------
   function stampLive() {
-    const hora = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-    $('dx-live-label').querySelector('span').textContent = 'Actualizado ' + hora;
+    const hora = new Date().toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' });
+    $('dx-live-label').querySelector('span').textContent = I18N.updated + ' ' + hora;
   }
 
   function refreshFromServer() {

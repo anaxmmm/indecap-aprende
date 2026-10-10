@@ -1,5 +1,6 @@
 """Lógica de negocio del blueprint admin: CRUD de trastornos, actividades,
 gestión de usuarios y estadísticas."""
+from flask_babel import gettext as _
 from sqlalchemy import or_
 
 from app.extensions import db
@@ -95,7 +96,7 @@ def delete_student_account(user_id: int) -> None:
     """
     user = User.query.get(user_id)
     if user is None or not user.is_student:
-        raise ValueError("Esa cuenta no existe o no es de un estudiante.")
+        raise ValueError(_("Esa cuenta no existe o no es de un estudiante."))
 
     TrastornoAsignado.query.filter_by(student_id=user.id).delete()
     SesionAsignada.query.filter_by(student_id=user.id).delete()

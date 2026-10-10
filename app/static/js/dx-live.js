@@ -14,6 +14,15 @@
   var TEXTO_VACIO = script.dataset.empty || '';
   var INTERVALO = 15000;
 
+  // Textos propios de este script. Un archivo estático no puede usar gettext,
+  // así que se elige por el idioma que la plantilla declara en <html lang>.
+  var IDIOMA = (document.documentElement.lang || 'es').slice(0, 2);
+  var TEXTOS = {
+    es: { marcarLeidas: 'Marcar todas como leídas' },
+    en: { marcarLeidas: 'Mark all as read' }
+  };
+  var T = TEXTOS[IDIOMA] || TEXTOS.es;
+
   var campana = document.querySelector('.teacher-topbar__icon-btn');
   var menu = document.querySelector('.teacher-notifications-menu');
   var feeds = document.querySelectorAll('[data-live-feed]');
@@ -61,7 +70,7 @@
     var form = crear('form', 'p-2 mb-0');
     form.method = 'post';
     form.action = URL_LEIDAS;
-    var boton = crear('button', 'btn btn-sm btn-link p-0', 'Marcar todas como leídas');
+    var boton = crear('button', 'btn btn-sm btn-link p-0', T.marcarLeidas);
     boton.type = 'submit';
     form.appendChild(boton);
     menu.appendChild(form);

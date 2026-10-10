@@ -1,7 +1,7 @@
 {% extends "dashboard/teacher/base_teacher.html" %}
-{% block title %}Mi perfil — indecap-aprende{% endblock %}
+{% block title %}{{ _('Mi perfil') }} — indecap-aprende{% endblock %}
 {% block teacher_content %}
-<h1 class="h4 mb-3">Mi perfil</h1>
+<h1 class="h4 mb-3">{{ _('Mi perfil') }}</h1>
 
 <div class="teacher-card" style="max-width: 520px;">
   <form method="post">
@@ -16,14 +16,14 @@
     </div>
     <div class="mb-3">
       {{ form.area.label(class_="form-label small") }}
-      {{ form.area(class_="form-control", placeholder="ej. Psicología, Matemáticas") }}
+      {{ form.area(class_="form-control", placeholder=_("ej. Psicología, Matemáticas")) }}
     </div>
 
     <hr class="my-4">
 
     <div class="mb-3">
       {{ form.new_password.label(class_="form-label small") }}
-      {{ form.new_password(class_="form-control", placeholder="Mínimo 6 caracteres") }}
+      {{ form.new_password(class_="form-control", placeholder=_("Mínimo 6 caracteres")) }}
     </div>
     <div class="mb-3">
       {{ form.confirm_password.label(class_="form-label small") }}

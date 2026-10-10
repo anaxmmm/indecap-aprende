@@ -1,4 +1,5 @@
 from flask import redirect, url_for, flash, request, render_template, current_app
+from flask_babel import gettext as _
 from flask_login import login_user, logout_user, login_required, current_user
 
 from app.blueprints.auth import bp
@@ -37,21 +38,21 @@ def login():
     if form.validate_on_submit():
         user = authenticate_user(form.email.data, form.password.data)
         if user is None:
-            flash("Correo o contraseña incorrectos.", "danger")
+            flash(_("Correo o contraseña incorrectos."), "danger")
             return redirect(url_for("index", next=next_page, panel="login"))
 
         portal_role = (form.portal_role.data or "").strip()
         if portal_role and portal_role != user.role.value:
-            role_label = "docente" if user.is_teacher else "estudiante"
+            role_label = _("docente") if user.is_teacher else _("estudiante")
             flash(
-                f"Esta cuenta es de {role_label}. Te llevamos a tu panel correspondiente.",
+                _("Esta cuenta es de %(role)s. Te llevamos a tu panel correspondiente.", role=role_label),
                 "info",
             )
 
         login_user(user, remember=form.remember_me.data)
         return redirect(next_page or url_for("dashboard.index"))
 
-    flash("Revisa los datos ingresados e intenta de nuevo.", "danger")
+    flash(_("Revisa los datos ingresados e intenta de nuevo."), "danger")
     return redirect(url_for("index", next=next_page, panel="login"))
 
 
@@ -59,7 +60,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash("Sesión cerrada correctamente.", "info")
+    flash(_("Sesión cerrada correctamente."), "info")
     return redirect(url_for("index"))
 
 
@@ -82,12 +83,12 @@ def register():
             role=form.role.data,
         )
         login_user(user)
-        flash("Cuenta creada correctamente. ¡Bienvenido/a a indecap-aprende!", "success")
+        flash(_("Cuenta creada correctamente. ¡Bienvenido/a a indecap-aprende!"), "success")
         return redirect(next_page or url_for("dashboard.index"))
 
     for field_errors in form.errors.values():
         for error in field_errors:
-            flash(error, "danger")
+            flash(str(error), "danger")
     return redirect(url_for("index", next=next_page, panel="register"))
 
 
@@ -109,19 +110,22 @@ def forgot_password():
             # SES...). Se deja visible en pantalla solo para poder probar el
             # flujo completo mientras no hay servidor de correo configurado.
             current_app.logger.info("Enlace de recuperación para %s: %s", user.email, reset_url)
-            flash(f"Enlace de recuperación (temporal, solo en desarrollo): {reset_url}", "info")
+            flash(
+                _("Enlace de recuperación (temporal, solo en desarrollo): %(url)s", url=reset_url),
+                "info",
+            )
 
         # Mensaje idéntico exista o no la cuenta: evita revelar qué correos
         # están registrados.
         flash(
-            "Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.",
+            _("Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña."),
             "success",
         )
         return redirect(url_for("index", panel="login"))
 
     for field_errors in form.errors.values():
         for error in field_errors:
-            flash(error, "danger")
+            flash(str(error), "danger")
     return redirect(url_for("index", panel="forgot"))
 
 
@@ -132,13 +136,13 @@ def reset_password_view(token):
 
     user = verify_reset_token(token)
     if user is None:
-        flash("El enlace de recuperación no es válido o ha expirado. Solicita uno nuevo.", "danger")
+        flash(_("El enlace de recuperación no es válido o ha expirado. Solicita uno nuevo."), "danger")
         return redirect(url_for("index", panel="forgot"))
 
     form = ResetPasswordForm()
     if form.validate_on_submit():
         reset_password(user, form.password.data)
-        flash("Tu contraseña se actualizó correctamente. Ya puedes iniciar sesión.", "success")
+        flash(_("Tu contraseña se actualizó correctamente. Ya puedes iniciar sesión."), "success")
         return redirect(url_for("index", panel="login"))
 
     return render_template("auth/reset_password.html", form=form, token=token)

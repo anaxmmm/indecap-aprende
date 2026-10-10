@@ -1,13 +1,13 @@
 {% extends "dashboard/teacher/base_teacher.html" %}
-{% block title %}Registro de estudiantes — indecap-aprende{% endblock %}
+{% block title %}{{ _('Registro de estudiantes') }} — indecap-aprende{% endblock %}
 
 {% block teacher_content %}
 
 <div class="teacher-card">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h6 mb-0">Listado de grupos</h2>
+    <h2 class="h6 mb-0">{{ _('Listado de grupos') }}</h2>
     <button type="button" class="btn btn-sm btn-teacher-primary" data-bs-toggle="collapse" data-bs-target="#form-nuevo-grupo">
-      + Añadir grupo
+      + {{ _('Añadir grupo') }}
     </button>
   </div>
 
@@ -16,7 +16,7 @@
     <div class="row g-2 align-items-end">
       <div class="col-md-6">
         {{ group_form.name.label(class_="form-label small") }}
-        {{ group_form.name(class_="form-control", placeholder="Nombre del grupo") }}
+        {{ group_form.name(class_="form-control", placeholder=_("Nombre del grupo")) }}
       </div>
       <div class="col-md-3">
         {{ group_form.submit_group(class_="btn btn-teacher-primary w-100") }}
@@ -25,7 +25,7 @@
   </form>
 
   {% if not groups %}
-    <p class="text-muted">Todavía no tienes grupos. Crea el primero arriba.</p>
+    <p class="text-muted">{{ _('Todavía no tienes grupos. Crea el primero arriba.') }}</p>
   {% endif %}
 
   {% for grupo in groups %}
@@ -36,15 +36,16 @@
       <span class="teacher-group__name">{{ grupo.name }}</span>
       <span class="badge bg-secondary">{{ activos|length }}</span>
       <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" data-bs-toggle="collapse" data-bs-target="#add-child-{{ grupo.id }}">
-        + Añadir niño
+        + {{ _('Añadir niño') }}
       </button>
       <form
         method="post"
         action="{{ url_for('dashboard.eliminar_grupo', group_id=grupo.id) }}"
         class="d-inline"
-        onsubmit="return confirm('¿Eliminar el grupo \'{{ grupo.name }}\'? Esta acción no se puede deshacer.');"
+        data-confirm='{{ _("¿Eliminar el grupo %(name)s? Esta acción no se puede deshacer.", name=grupo.name)|tojson|safe }}'
+        onsubmit="return confirm(JSON.parse(this.dataset.confirm));"
       >
-        <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar grupo</button>
+        <button type="submit" class="btn btn-sm btn-outline-danger">{{ _('Eliminar grupo') }}</button>
       </form>
     </div>
 
@@ -52,7 +53,7 @@
       {{ student_form.hidden_tag() }}
       <input type="hidden" name="group_id" value="{{ grupo.id }}">
 
-      <p class="fw-semibold mb-2">Nuevo niño</p>
+      <p class="fw-semibold mb-2">{{ _('Nuevo niño') }}</p>
       <div class="row g-2 mb-2">
         <div class="col-md-4">
           {{ student_form.first_name.label(class_="form-label small") }}
@@ -71,11 +72,11 @@
       <div class="row g-2 mb-2">
         <div class="col-md-4">
           {{ student_form.email.label(class_="form-label small") }}
-          {{ student_form.email(class_="form-control", placeholder="correo del niño") }}
+          {{ student_form.email(class_="form-control", placeholder=_("correo del niño")) }}
         </div>
         <div class="col-md-4">
           {{ student_form.tutor_email.label(class_="form-label small") }}
-          {{ student_form.tutor_email(class_="form-control", placeholder="correo del tutor") }}
+          {{ student_form.tutor_email(class_="form-control", placeholder=_("correo del tutor")) }}
         </div>
         <div class="col-md-4">
           {{ student_form.password.label(class_="form-label small") }}
@@ -116,12 +117,11 @@
           </div>
           {% endfor %}
           {% if not student_form.trastornos.choices %}
-          <p class="text-muted small mb-0">No hay trastornos cargados en el sistema todavía.</p>
+          <p class="text-muted small mb-0">{{ _('No hay trastornos cargados en el sistema todavía.') }}</p>
           {% endif %}
         </div>
         <p class="text-muted small mt-1 mb-0">
-          Al marcar un trastorno, el estudiante queda inscrito automáticamente en la primera
-          sesión del plan de entrenamiento correspondiente.
+          {{ _('Al marcar un trastorno, el estudiante queda inscrito automáticamente en la primera sesión del plan de entrenamiento correspondiente.') }}
         </p>
       </div>
 
@@ -143,24 +143,24 @@
               <option value="{{ otro.id }}">{{ otro.name }}</option>
               {% endfor %}
             </select>
-            <button type="submit" class="btn btn-sm btn-outline-secondary">Mover</button>
+            <button type="submit" class="btn btn-sm btn-outline-secondary">{{ _('Mover') }}</button>
           </form>
           {% endif %}
           <form method="post" action="{{ url_for('dashboard.desvincular_estudiante', group_id=grupo.id, student_id=estudiante.id) }}" class="d-inline">
-            <button type="submit" class="btn btn-sm btn-outline-danger">Desvincular</button>
+            <button type="submit" class="btn btn-sm btn-outline-danger">{{ _('Desvincular') }}</button>
           </form>
         </div>
       </li>
       {% endfor %}
     </ul>
     {% else %}
-    <p class="text-muted small mb-0">Sin niños asignados todavía.</p>
+    <p class="text-muted small mb-0">{{ _('Sin niños asignados todavía.') }}</p>
     {% endif %}
 
     {% if inactivos %}
     <div class="mt-3">
       <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#inactivos-{{ grupo.id }}">
-        Niños inactivos ({{ inactivos|length }})
+        {{ _('Niños inactivos') }} ({{ inactivos|length }})
       </button>
       <ul id="inactivos-{{ grupo.id }}" class="collapse teacher-group__students mt-2">
         {% for estudiante in inactivos %}
@@ -169,15 +169,16 @@
           <span class="text-muted small">{{ estudiante.email }}</span>
           <div class="teacher-group__student-actions">
             <form method="post" action="{{ url_for('dashboard.reactivar_estudiante', group_id=grupo.id, student_id=estudiante.id) }}" class="d-inline">
-              <button type="submit" class="btn btn-sm btn-outline-success">Reactivar</button>
+              <button type="submit" class="btn btn-sm btn-outline-success">{{ _('Reactivar') }}</button>
             </form>
             <form
               method="post"
               action="{{ url_for('dashboard.eliminar_estudiante', group_id=grupo.id, student_id=estudiante.id) }}"
               class="d-inline"
-              onsubmit="return confirm('¿Eliminar definitivamente a {{ estudiante.full_name }}? Esta acción borra todo su historial y no se puede deshacer.');"
+              data-confirm='{{ _("¿Eliminar definitivamente a %(name)s? Esta acción borra todo su historial y no se puede deshacer.", name=estudiante.full_name)|tojson|safe }}'
+              onsubmit="return confirm(JSON.parse(this.dataset.confirm));"
             >
-              <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar definitivamente</button>
+              <button type="submit" class="btn btn-sm btn-outline-danger">{{ _('Eliminar definitivamente') }}</button>
             </form>
           </div>
         </li>

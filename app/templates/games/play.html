@@ -1,3 +1,4 @@
+
 {% extends "dashboard/student/base_student.html" %}
 {% block title %}{{ game.name }} — indecap-aprende{% endblock %}
 
@@ -19,22 +20,22 @@
   <div class="game-page-viewport">
     {% if preview %}
     <p class="game-preview-flag" role="status">
-      Modo vista previa: puedes jugar para conocer la actividad, pero no se guarda progreso.
+      {{ _('Modo vista previa: puedes jugar para conocer la actividad, pero no se guarda progreso.') }}
     </p>
     {% endif %}
 
     <!-- ══ Barra de accesibilidad: siempre visible, nunca escondida en un menú ══ -->
-    <div class="game-a11y-bar" role="region" aria-label="Ajustes de accesibilidad">
+    <div class="game-a11y-bar" role="region" aria-label="{{ _('Ajustes de accesibilidad') }}">
       <button type="button" class="game-a11y-btn" data-a11y-action="speak"
-              aria-pressed="false">🔊 Leer en voz alta</button>
+              aria-pressed="false">🔊 {{ _('Leer en voz alta') }}</button>
       <button type="button" class="game-a11y-btn" data-a11y-action="contrast"
-              aria-pressed="false">◐ Alto contraste</button>
-      <button type="button" class="game-a11y-btn" data-a11y-action="text-bigger">A+ Texto</button>
-      <button type="button" class="game-a11y-btn" data-a11y-action="text-smaller">A− Texto</button>
+              aria-pressed="false">◐ {{ _('Alto contraste') }}</button>
+      <button type="button" class="game-a11y-btn" data-a11y-action="text-bigger">A+ {{ _('Texto') }}</button>
+      <button type="button" class="game-a11y-btn" data-a11y-action="text-smaller">A− {{ _('Texto') }}</button>
       <button type="button" class="game-a11y-btn" data-a11y-action="motion"
-              aria-pressed="false">✦ Reducir movimiento</button>
+              aria-pressed="false">✦ {{ _('Reducir movimiento') }}</button>
       <button type="button" class="game-a11y-btn game-a11y-btn--hint" data-a11y-action="hint">
-        💡 Necesito una pista
+        💡 {{ _('Necesito una pista') }}
       </button>
     </div>
 
@@ -46,14 +47,14 @@
           <h1 class="game-frame__title">{{ game.name }}</h1>
         </div>
         <a href="{{ exit_url }}"
-           class="game-frame__exit" aria-label="Salir del juego">✕</a>
+           class="game-frame__exit" aria-label="{{ _('Salir del juego') }}">✕</a>
       </header>
 
       <!-- HUD -->
       <div class="game-hud" role="status" aria-live="polite" aria-atomic="true">
-        <span class="game-hud__item">Nivel <strong id="hudLevel">{{ level }}</strong>/{{ game.levels }}</span>
-        <span class="game-hud__item">Reto <strong id="hudRound">1</strong></span>
-        <span class="game-hud__item">Estrellas <strong id="hudStars">0</strong></span>
+        <span class="game-hud__item">{{ _('Nivel') }} <strong id="hudLevel">{{ level }}</strong>/{{ game.levels }}</span>
+        <span class="game-hud__item">{{ _('Reto') }} <strong id="hudRound">1</strong></span>
+        <span class="game-hud__item">{{ _('Estrellas') }} <strong id="hudStars">0</strong></span>
         <span class="game-hud__item" id="hudTimer">⏱ 0:00</span>
       </div>
 
@@ -68,12 +69,12 @@
           <div class="game-guide">
             <div class="game-guide__avatar" aria-hidden="true">🛰️</div>
             <div class="game-guide__bubble">
-              <p class="game-guide__name">NOVA, tu guía</p>
-              <p id="introText">Cargando la misión…</p>
+              <p class="game-guide__name">NOVA, {{ _('tu guía') }}</p>
+              <p id="introText">{{ _('Cargando la misión…') }}</p>
             </div>
           </div>
           <button type="button" class="game-btn game-btn--primary" id="btnStart">
-            Comenzar la misión
+            {{ _('Comenzar la misión') }}
           </button>
         </section>
 
@@ -82,7 +83,7 @@
           <p class="game-prompt" id="prompt"></p>
           <div class="game-visual" id="visual" aria-hidden="true"></div>
           <p class="game-hint" id="hintText" role="status" hidden></p>
-          <div class="game-options" id="options" role="group" aria-label="Opciones de respuesta"></div>
+          <div class="game-options" id="options" role="group" aria-label="{{ _('Opciones de respuesta') }}"></div>
           <p class="game-feedback" id="feedback" role="status" aria-live="assertive"></p>
         </section>
 
@@ -91,15 +92,15 @@
           <div class="game-guide">
             <div class="game-guide__avatar" aria-hidden="true">🌟</div>
             <div class="game-guide__bubble">
-              <p class="game-guide__name">NOVA, tu guía</p>
+              <p class="game-guide__name">NOVA, {{ _('tu guía') }}</p>
               <p id="endText"></p>
             </div>
           </div>
           <p class="game-save-state" id="saveState" role="status"></p>
           <div class="game-end-actions">
-            <button type="button" class="game-btn game-btn--ghost" id="btnRetry">Repetir nivel</button>
-            <button type="button" class="game-btn game-btn--primary" id="btnNext">Siguiente nivel</button>
-            <a href="{{ exit_url }}" class="game-btn game-btn--ghost">Salir</a>
+            <button type="button" class="game-btn game-btn--ghost" id="btnRetry">{{ _('Repetir nivel') }}</button>
+            <button type="button" class="game-btn game-btn--primary" id="btnNext">{{ _('Siguiente nivel') }}</button>
+            <a href="{{ exit_url }}" class="game-btn game-btn--ghost">{{ _('Salir') }}</a>
           </div>
         </section>
       </main>
@@ -112,19 +113,18 @@
   {% if not current_user.is_student %}
   <!-- ══ Ficha pedagógica: solo para docentes y administración ══ -->
   <details class="game-sheet">
-    <summary>Qué trabaja esta actividad</summary>
+    <summary>{{ _('Qué trabaja esta actividad') }}</summary>
     <div class="game-sheet__body">
-      <p><strong>Habilidad núcleo:</strong> {{ game.core_skill }}</p>
-      <p><strong>Regiones cerebrales implicadas:</strong></p>
+      <p><strong>{{ _('Habilidad núcleo:') }}</strong> {{ game.core_skill }}</p>
+      <p><strong>{{ _('Regiones cerebrales implicadas:') }}</strong></p>
       <ul>
         {% for region in game.brain_regions %}<li>{{ region }}</li>{% endfor %}
       </ul>
-      <p><strong>Representación:</strong> {{ game.dua.representacion }}</p>
-      <p><strong>Acción y expresión:</strong> {{ game.dua.accion_expresion }}</p>
-      <p><strong>Implicación:</strong> {{ game.dua.implicacion }}</p>
+      <p><strong>{{ _('Representación:') }}</strong> {{ game.dua.representacion }}</p>
+      <p><strong>{{ _('Acción y expresión:') }}</strong> {{ game.dua.accion_expresion }}</p>
+      <p><strong>{{ _('Implicación:') }}</strong> {{ game.dua.implicacion }}</p>
       <p class="game-sheet__note">
-        El nivel de apoyo (pistas, tiempo y repeticiones) se calibra según el
-        desempeño. Es un ajuste pedagógico, no un instrumento diagnóstico.
+        {{ _('El nivel de apoyo (pistas, tiempo y repeticiones) se calibra según el desempeño. Es un ajuste pedagógico, no un instrumento diagnóstico.') }}
       </p>
     </div>
   </details>

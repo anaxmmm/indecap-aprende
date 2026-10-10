@@ -2,28 +2,33 @@
 {% block title %}{{ actividad.title }} — indecap-aprende{% endblock %}
 
 {% block content %}
+{% set niveles_apoyo = {
+  'bajo': _('bajo'),
+  'medio': _('medio'),
+  'alto': _('alto')
+} %}
 {% if check %}
-<div class="alert alert-info">Nivel de apoyo actual: <strong>{{ check.nivel_apoyo.value }}</strong></div>
+<div class="alert alert-info">{{ _('Nivel de apoyo actual:') }} <strong>{{ niveles_apoyo.get(check.nivel_apoyo.value, check.nivel_apoyo.value) }}</strong></div>
 {% else %}
-<div class="alert alert-info">Todavía no tienes un check previo para este trastorno — próximamente podrás hacerlo antes de empezar.</div>
+<div class="alert alert-info">{{ _('Todavía no tienes un check previo para este trastorno — próximamente podrás hacerlo antes de empezar.') }}</div>
 {% endif %}
 
-<div class="reader-toolbar" role="toolbar" aria-label="Herramientas de accesibilidad de lectura">
-  <button type="button" id="btn-play" class="btn btn-sm btn-primary">🔊 Leer en voz alta</button>
-  <button type="button" id="btn-pause" class="btn btn-sm btn-outline-secondary">⏸ Pausar</button>
-  <button type="button" id="btn-stop" class="btn btn-sm btn-outline-secondary">⏹ Detener</button>
+<div class="reader-toolbar" role="toolbar" aria-label="{{ _('Herramientas de accesibilidad de lectura') }}">
+  <button type="button" id="btn-play" class="btn btn-sm btn-primary">🔊 {{ _('Leer en voz alta') }}</button>
+  <button type="button" id="btn-pause" class="btn btn-sm btn-outline-secondary">⏸ {{ _('Pausar') }}</button>
+  <button type="button" id="btn-stop" class="btn btn-sm btn-outline-secondary">⏹ {{ _('Detener') }}</button>
   <span class="reader-toolbar__divider"></span>
-  <button type="button" id="btn-text-smaller" class="btn btn-sm btn-outline-secondary" aria-label="Reducir tamaño de texto">A-</button>
-  <button type="button" id="btn-text-bigger" class="btn btn-sm btn-outline-secondary" aria-label="Aumentar tamaño de texto">A+</button>
+  <button type="button" id="btn-text-smaller" class="btn btn-sm btn-outline-secondary" aria-label="{{ _('Reducir tamaño de texto') }}">A-</button>
+  <button type="button" id="btn-text-bigger" class="btn btn-sm btn-outline-secondary" aria-label="{{ _('Aumentar tamaño de texto') }}">A+</button>
   <span class="reader-toolbar__divider"></span>
   <label class="reader-toolbar__toggle">
     <input type="checkbox" id="toggle-step-mode">
-    Un paso a la vez
+    {{ _('Un paso a la vez') }}
   </label>
 </div>
 
 <h1 class="h3 mt-3">{{ actividad.title }}</h1>
-<p class="text-muted">{{ actividad.estimated_minutes }} min aprox.</p>
+<p class="text-muted">{{ _('%(minutes)s min aprox.', minutes=actividad.estimated_minutes) }}</p>
 
 {% if actividad.support_image_url %}
   <img src="{{ actividad.support_image_url }}" alt="" class="img-fluid rounded mb-3" style="max-width:320px;">
@@ -34,14 +39,14 @@
 </div>
 
 <div id="step-nav" class="step-nav" hidden>
-  <button type="button" id="btn-step-prev" class="btn btn-sm btn-outline-secondary">← Anterior</button>
+  <button type="button" id="btn-step-prev" class="btn btn-sm btn-outline-secondary">← {{ _('Anterior') }}</button>
   <span id="step-progress-label"></span>
-  <button type="button" id="btn-step-next" class="btn btn-sm btn-outline-secondary">Siguiente →</button>
+  <button type="button" id="btn-step-next" class="btn btn-sm btn-outline-secondary">{{ _('Siguiente') }} →</button>
 </div>
 
 {% if actividad.lsc_video_url %}
   <div class="mt-4">
-    <p class="fw-semibold">Video en Lengua de Señas Colombiana</p>
+    <p class="fw-semibold">{{ _('Video en Lengua de Señas Colombiana') }}</p>
     <video controls style="max-width:400px;" src="{{ actividad.lsc_video_url }}"></video>
   </div>
 {% endif %}
