@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-09 17:16-0500\n"
+"POT-Creation-Date: 2026-10-10 14:40-0500\n"
 "PO-Revision-Date: 2026-10-06 19:05-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -455,6 +455,333 @@ msgstr "That assigned session does not exist or does not belong to you."
 msgid "Esa actividad no existe o no te pertenece."
 msgstr "That activity does not exist or does not belong to you."
 
+#: app/blueprints/games/registry.py:26
+msgid "Mercado Espacial"
+msgstr "Space Market"
+
+#: app/blueprints/games/registry.py:27 app/templates/home.html:85
+msgid "Discalculia"
+msgstr "Dyscalculia"
+
+#: app/blueprints/games/registry.py:28
+msgid "Sentido numérico y correspondencia cantidad-símbolo"
+msgstr "Number sense and quantity-symbol correspondence"
+
+#: app/blueprints/games/registry.py:30
+msgid "Surco intraparietal (representación de magnitud)"
+msgstr "Intraparietal sulcus (magnitude representation)"
+
+#: app/blueprints/games/registry.py:31
+msgid "Corteza parietal posterior (recta numérica mental)"
+msgstr "Posterior parietal cortex (mental number line)"
+
+#: app/blueprints/games/registry.py:32
+msgid "Corteza prefrontal dorsolateral (memoria de trabajo)"
+msgstr "Dorsolateral prefrontal cortex (working memory)"
+
+#: app/blueprints/games/registry.py:35
+msgid ""
+"Cada reto se presenta en tres formatos: objetos concretos, apoyo "
+"pictórico y símbolo numérico, con narración opcional por voz."
+msgstr ""
+"Each challenge is presented in three formats: concrete objects, pictorial"
+" support and numeric symbol, with optional voice narration."
+
+#: app/blueprints/games/registry.py:36
+msgid ""
+"Responde tocando, con teclado (flechas + Enter) o arrastrando; nunca se "
+"exige escritura numérica."
+msgstr ""
+"Respond by tapping, with the keyboard (arrows + Enter) or by dragging; "
+"numeric writing is never required."
+
+#: app/blueprints/games/registry.py:37
+msgid ""
+"Narrativa de mercado espacial, progresión por niveles, reintentos sin "
+"castigo y refuerzo positivo inmediato."
+msgstr ""
+"Space market storyline, level progression, retries without penalty and "
+"immediate positive reinforcement."
+
+#: app/blueprints/games/registry.py:48
+msgid "El Enigma Lingüístico"
+msgstr "The Linguistic Enigma"
+
+#: app/blueprints/games/registry.py:49 app/templates/home.html:110
+msgid "Discapacidad auditiva"
+msgstr "Hearing impairment"
+
+#: app/blueprints/games/registry.py:50
+msgid "Acceso al lenguaje por canal visual y vibrotáctil"
+msgstr "Access to language through the visual and vibrotactile channel"
+
+#: app/blueprints/games/registry.py:52
+msgid "Corteza occipito-temporal (procesamiento visual del lenguaje)"
+msgstr "Occipito-temporal cortex (visual language processing)"
+
+#: app/blueprints/games/registry.py:53
+msgid "Área de Broca (estructura sintáctica)"
+msgstr "Broca's area (syntactic structure)"
+
+#: app/blueprints/games/registry.py:54
+msgid "Corteza auditiva reasignada a procesamiento visual (plasticidad cruzada)"
+msgstr "Auditory cortex reassigned to visual processing (cross-modal plasticity)"
+
+#: app/blueprints/games/registry.py:57
+msgid ""
+"Todo contenido tiene espejo 100% visual: pictogramas, lengua de señas y "
+"subtítulos sincronizados."
+msgstr ""
+"All content has a 100% visual mirror: pictograms, sign language and "
+"synchronized captions."
+
+#: app/blueprints/games/registry.py:58
+msgid ""
+"Arrastre de pictogramas, selección y reproducción de patrones por "
+"vibración o luz."
+msgstr ""
+"Pictogram dragging, selection and playback of patterns by vibration or "
+"light."
+
+#: app/blueprints/games/registry.py:59
+msgid "Historias secuenciadas sin dependencia del audio."
+msgstr "Sequenced stories with no dependence on audio."
+
+#: app/blueprints/games/registry.py:70
+msgid "Clasificador de Rutinas"
+msgstr "Routine Sorter"
+
+#: app/blueprints/games/registry.py:71 app/templates/home.html:115
+msgid "Discapacidad cognitiva"
+msgstr "Cognitive disability"
+
+#: app/blueprints/games/registry.py:72
+msgid "Generalización funcional y secuencias de pasos simples"
+msgstr "Functional generalization and simple step sequences"
+
+#: app/blueprints/games/registry.py:74
+msgid "Corteza prefrontal (planificación de secuencias)"
+msgstr "Prefrontal cortex (sequence planning)"
+
+#: app/blueprints/games/registry.py:75
+msgid "Hipocampo (memoria y consolidación)"
+msgstr "Hippocampus (memory and consolidation)"
+
+#: app/blueprints/games/registry.py:76
+msgid "Ganglios basales (automatización de rutinas)"
+msgstr "Basal ganglia (routine automation)"
+
+#: app/blueprints/games/registry.py:79
+msgid "Un solo criterio por pantalla, sin distractores, con imagen + icono + voz."
+msgstr "A single criterion per screen, no distractors, with image + icon + voice."
+
+#: app/blueprints/games/registry.py:80
+msgid "Arrastre de tarjetas y toque único."
+msgstr "Card dragging and single tap."
+
+#: app/blueprints/games/registry.py:81
+msgid "Situaciones de la vida real y retirada gradual de ayudas (scaffolding)."
+msgstr "Real-life situations and gradual withdrawal of supports (scaffolding)."
+
+#: app/blueprints/games/registry.py:92
+msgid "Eco-Explorador Sonoro"
+msgstr "Sound Eco-Explorer"
+
+#: app/blueprints/games/registry.py:93 app/templates/home.html:105
+msgid "Discapacidad visual"
+msgstr "Visual impairment"
+
+#: app/blueprints/games/registry.py:94
+msgid "Aprendizaje por canal auditivo y háptico"
+msgstr "Learning through the auditory and haptic channel"
+
+#: app/blueprints/games/registry.py:96
+msgid "Corteza auditiva primaria y secundaria"
+msgstr "Primary and secondary auditory cortex"
+
+#: app/blueprints/games/registry.py:97
+msgid "Corteza parietal posterior (orientación espacial)"
+msgstr "Posterior parietal cortex (spatial orientation)"
+
+#: app/blueprints/games/registry.py:98
+msgid "Corteza occipital con plasticidad cruzada (lectura háptica)"
+msgstr "Occipital cortex with cross-modal plasticity (haptic reading)"
+
+#: app/blueprints/games/registry.py:101
+msgid ""
+"Audio descriptivo enriquecido, compatibilidad total con lector de "
+"pantalla y alto contraste para baja visión residual."
+msgstr ""
+"Enriched audio description, full screen reader compatibility and high "
+"contrast for residual low vision."
+
+#: app/blueprints/games/registry.py:102
+msgid ""
+"Botones grandes de alto contraste, navegación por teclado y respuesta por"
+" voz."
+msgstr "Large high-contrast buttons, keyboard navigation and voice response."
+
+#: app/blueprints/games/registry.py:103
+msgid "Aventura narrada con decisiones."
+msgstr "Narrated adventure with decisions."
+
+#: app/blueprints/games/registry.py:114
+msgid "El Detector de Letras Rebeldes"
+msgstr "The Rebel Letter Detector"
+
+#: app/blueprints/games/registry.py:115 app/templates/home.html:80
+msgid "Dislexia"
+msgstr "Dyslexia"
+
+#: app/blueprints/games/registry.py:116
+msgid "Ruta de acceso al léxico (fonológica y visual)"
+msgstr "Lexical access route (phonological and visual)"
+
+#: app/blueprints/games/registry.py:118
+msgid "Giro temporal superior (procesamiento fonológico)"
+msgstr "Superior temporal gyrus (phonological processing)"
+
+#: app/blueprints/games/registry.py:119
+msgid "Área de la forma visual de las palabras, giro fusiforme izquierdo"
+msgstr "Visual word form area, left fusiform gyrus"
+
+#: app/blueprints/games/registry.py:120
+msgid "Giro frontal inferior (articulación y decodificación)"
+msgstr "Inferior frontal gyrus (articulation and decoding)"
+
+#: app/blueprints/games/registry.py:123
+msgid ""
+"Texto con tipografía legible, resaltado sílaba a sílaba y narración "
+"sincronizada."
+msgstr ""
+"Text with legible typography, syllable-by-syllable highlighting and "
+"synchronized narration."
+
+#: app/blueprints/games/registry.py:124
+msgid "Trazado con dedo o lápiz óptico, teclado y selección."
+msgstr "Tracing with finger or stylus, keyboard and selection."
+
+#: app/blueprints/games/registry.py:125
+msgid "Progresión en cuatro modalidades de lectura según desempeño."
+msgstr "Progression through four reading modes according to performance."
+
+#: app/blueprints/games/registry.py:136
+msgid "Misión Ritmo y Enfoque"
+msgstr "Rhythm and Focus Mission"
+
+#: app/blueprints/games/registry.py:137 app/templates/home.html:89
+#: app/templates/home.html:90
+msgid "TDAH"
+msgstr "ADHD"
+
+#: app/blueprints/games/registry.py:138
+msgid "Funciones ejecutivas"
+msgstr "Executive functions"
+
+#: app/blueprints/games/registry.py:140
+msgid "Corteza prefrontal dorsolateral (memoria de trabajo y planificación)"
+msgstr "Dorsolateral prefrontal cortex (working memory and planning)"
+
+#: app/blueprints/games/registry.py:141
+msgid "Cingulado anterior (control atencional)"
+msgstr "Anterior cingulate (attentional control)"
+
+#: app/blueprints/games/registry.py:142
+msgid "Corteza orbitofrontal y estriado (control inhibitorio)"
+msgstr "Orbitofrontal cortex and striatum (inhibitory control)"
+
+#: app/blueprints/games/registry.py:145
+msgid ""
+"Consignas breves, un foco visual por pantalla y recordatorio persistente "
+"de la meta."
+msgstr ""
+"Short instructions, one visual focus per screen and a persistent reminder"
+" of the goal."
+
+#: app/blueprints/games/registry.py:146
+msgid "Toque rápido, arrastre y secuencias tipo go/no-go."
+msgstr "Quick tap, dragging and go/no-go type sequences."
+
+#: app/blueprints/games/registry.py:147
+msgid "Retos cronometrados con descansos activos intercalados."
+msgstr "Timed challenges with active breaks in between."
+
+#: app/blueprints/games/registry.py:158
+msgid "El Arquitecto del Mundo"
+msgstr "The World Architect"
+
+#: app/blueprints/games/registry.py:159 app/templates/home.html:100
+msgid "Trastorno opositor desafiante"
+msgstr "Oppositional defiant disorder"
+
+#: app/blueprints/games/registry.py:160
+msgid "Autorregulación emocional y conductual"
+msgstr "Emotional and behavioral self-regulation"
+
+#: app/blueprints/games/registry.py:162
+msgid "Corteza prefrontal ventromedial (regulación emocional)"
+msgstr "Ventromedial prefrontal cortex (emotional regulation)"
+
+#: app/blueprints/games/registry.py:163
+msgid "Amígdala (reactividad emocional)"
+msgstr "Amygdala (emotional reactivity)"
+
+#: app/blueprints/games/registry.py:164
+msgid "Cingulado anterior (detección de conflicto)"
+msgstr "Anterior cingulate (conflict detection)"
+
+#: app/blueprints/games/registry.py:167
+msgid "Escenas ilustradas con termómetro emocional y semáforo de la calma."
+msgstr "Illustrated scenes with an emotional thermometer and a calm traffic light."
+
+#: app/blueprints/games/registry.py:168
+msgid "Elección de respuesta, autoinstrucciones y espera activa."
+msgstr "Choosing a response, self-instructions and active waiting."
+
+#: app/blueprints/games/registry.py:169
+msgid "Economía de fichas con refuerzo positivo, nunca punitivo."
+msgstr "Token economy with positive, never punitive, reinforcement."
+
+#: app/blueprints/games/registry.py:180
+msgid "La Estación de las Señales"
+msgstr "The Signal Station"
+
+#: app/blueprints/games/registry.py:181
+msgid "Trastorno del espectro autista"
+msgstr "Autism spectrum disorder"
+
+#: app/blueprints/games/registry.py:182
+msgid "Predictibilidad, comunicación social y flexibilidad"
+msgstr "Predictability, social communication and flexibility"
+
+#: app/blueprints/games/registry.py:184
+msgid "Surco temporal superior (percepción social)"
+msgstr "Superior temporal sulcus (social perception)"
+
+#: app/blueprints/games/registry.py:185
+msgid "Giro fusiforme (reconocimiento facial)"
+msgstr "Fusiform gyrus (face recognition)"
+
+#: app/blueprints/games/registry.py:186
+msgid "Corteza prefrontal medial (teoría de la mente)"
+msgstr "Medial prefrontal cortex (theory of mind)"
+
+#: app/blueprints/games/registry.py:189
+msgid ""
+"Agenda visual siempre visible, anticipación de cada cambio y control "
+"sensorial permanente."
+msgstr ""
+"Always-visible visual schedule, anticipation of every change and "
+"permanent sensory control."
+
+#: app/blueprints/games/registry.py:190
+msgid "Arrastre, selección y respuestas cerradas sin presión de tiempo."
+msgstr "Dragging, selection and closed-ended answers with no time pressure."
+
+#: app/blueprints/games/registry.py:191
+msgid "Rutina estable con intereses configurables por el docente."
+msgstr "Stable routine with interests configurable by the teacher."
+
 #: app/blueprints/games/routes.py:93 app/blueprints/games/routes.py:157
 msgid "Este juego todavía está en construcción."
 msgstr "This game is still under construction."
@@ -573,10 +900,6 @@ msgstr ""
 msgid "La constancia es la clave del éxito."
 msgstr "Consistency is the key to success."
 
-#: app/templates/home.html:80
-msgid "Dislexia"
-msgstr "Dyslexia"
-
 #: app/templates/home.html:81
 msgid ""
 "Facilita la lectura mediante apoyo auditivo, resaltado de palabras y "
@@ -585,10 +908,6 @@ msgstr ""
 "Makes reading easier through audio support, word highlighting and "
 "structured content."
 
-#: app/templates/home.html:85
-msgid "Discalculia"
-msgstr "Dyscalculia"
-
 #: app/templates/home.html:86
 msgid ""
 "Convierte los conceptos numéricos en experiencias visuales, concretas y "
@@ -596,10 +915,6 @@ msgid ""
 msgstr ""
 "Turns number concepts into visual, concrete experiences that are easy to "
 "understand."
-
-#: app/templates/home.html:89 app/templates/home.html:90
-msgid "TDAH"
-msgstr "ADHD"
 
 #: app/templates/home.html:91
 msgid ""
@@ -625,10 +940,6 @@ msgstr ""
 msgid "TOD"
 msgstr "ODD"
 
-#: app/templates/home.html:100
-msgid "Trastorno opositor desafiante"
-msgstr "Oppositional defiant disorder"
-
 #: app/templates/home.html:101
 msgid ""
 "Actividades que promueven la autonomía, la toma de decisiones y una "
@@ -636,10 +947,6 @@ msgid ""
 msgstr ""
 "Activities that promote autonomy, decision-making and active "
 "participation in learning."
-
-#: app/templates/home.html:105
-msgid "Discapacidad visual"
-msgstr "Visual impairment"
 
 #: app/templates/home.html:106
 msgid ""
@@ -653,10 +960,6 @@ msgstr ""
 msgid "Aud"
 msgstr "Hear"
 
-#: app/templates/home.html:110
-msgid "Discapacidad auditiva"
-msgstr "Hearing impairment"
-
 #: app/templates/home.html:111
 msgid ""
 "Contenido accesible mediante subtítulos, recursos visuales y materiales "
@@ -664,10 +967,6 @@ msgid ""
 msgstr ""
 "Accessible content through captions, visual resources and adapted "
 "audiovisual materials."
-
-#: app/templates/home.html:115
-msgid "Discapacidad cognitiva"
-msgstr "Cognitive disability"
 
 #: app/templates/home.html:116
 msgid ""
