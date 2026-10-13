@@ -4,6 +4,8 @@
 
 from typing import Optional
 
+from flask_babel import force_locale
+
 from app.extensions import db
 from app.models.accessibility import (
     AccessibilityProfile,
@@ -114,6 +116,11 @@ def _notify_teachers_of_new_level(student: User, game: dict, level: int) -> None
     con score >= 60, el nivel ya fue notificado y no se vuelve a avisar por
     repeticiones del mismo nivel.
 
+    Idioma: el aviso se guarda ya escrito en la base de datos, así que se
+    fija siempre en español. Sin esto, el nombre del juego (que ahora es un
+    texto traducible) saldría en el idioma que tuviera activo el estudiante
+    en ese momento, mezclado con el resto de la frase en español.
+
     No hace commit: el llamador confirma la transacción junto con la partida."""
     ya_superado = (
         GameSession.query
@@ -128,13 +135,16 @@ def _notify_teachers_of_new_level(student: User, game: dict, level: int) -> None
     if ya_superado > 0:
         return
 
+    with force_locale("es"):
+        nombre_juego = str(game["name"])
+
     docente_ids = {grupo.teacher_id for grupo in student.grupos}
     for docente_id in docente_ids:
         db.session.add(
             Notification(
                 recipient_id=docente_id,
                 student_id=student.id,
-                message=f"{student.full_name} superó el nivel {level} de «{game['name']}».",
+                message=f"{student.full_name} superó el nivel {level} de «{nombre_juego}».",
             )
         )
 
