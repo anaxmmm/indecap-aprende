@@ -16,6 +16,23 @@ from app.models.user import User
 from app.models.student_profile import GeneroEnum
 
 
+def _opciones_genero():
+    # Las opciones se generan a partir del Enum real, así nunca
+    # se desincronizan si agregas/quitas géneros en el modelo.
+    # El valor guardado sigue siendo el del Enum (nina/nino/otro) para no
+    # tocar la base de datos; solo cambia la etiqueta que ve el docente.
+    # Cualquier valor nuevo del modelo se sigue mostrando con el formato anterior.
+    etiquetas = {
+        "nina": _("Femenino"),
+        "nino": _("Masculino"),
+        "otro": _("Otro"),
+    }
+    return [("", _("Seleccionar..."))] + [
+        (g.value, etiquetas.get(g.value, g.value.replace("_", " ").capitalize()))
+        for g in GeneroEnum
+    ]
+
+
 class GroupForm(FlaskForm):
     name = StringField(
         _l("Nombre del grupo"), validators=[DataRequired(), Length(min=2, max=100)]
@@ -33,10 +50,6 @@ class AddStudentForm(FlaskForm):
         _l("Contraseña"), validators=[DataRequired(), Length(min=6, max=128)]
     )
     group_id = SelectField(_l("Grupo"), coerce=int, validators=[DataRequired()])
-    alias = StringField(_l("Alias / Apodo"), validators=[Optional(), Length(max=100)])
-    tutor_email = StringField(
-        _l("Correo del acudiente"), validators=[Optional(), Email(), Length(max=150)]
-    )
     gender = SelectField(_l("Género"), choices=[], validators=[Optional()])
     birth_date = DateField(
         _l("Fecha de nacimiento"), validators=[Optional()], format="%Y-%m-%d"
@@ -49,19 +62,29 @@ class AddStudentForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Las opciones se generan a partir del Enum real, así nunca
-        # se desincronizan si agregas/quitas géneros en el modelo.
-        # Los géneros conocidos se traducen; cualquier valor nuevo del
-        # modelo se sigue mostrando con el formato anterior.
-        etiquetas = {
-            "nina": _("Nina"),
-            "nino": _("Nino"),
-            "otro": _("Otro"),
-        }
-        self.gender.choices = [("", _("Seleccionar..."))] + [
-            (g.value, etiquetas.get(g.value, g.value.replace("_", " ").capitalize()))
-            for g in GeneroEnum
-        ]
+        self.gender.choices = _opciones_genero()
+
+
+class EditStudentForm(FlaskForm):
+    full_name = StringField(
+        _l("Nombre completo"), validators=[DataRequired(), Length(max=150)]
+    )
+    email = StringField(
+        _l("Correo electrónico"), validators=[DataRequired(), Email(), Length(max=150)]
+    )
+    gender = SelectField(_l("Género"), choices=[], validators=[Optional()])
+    birth_date = DateField(
+        _l("Fecha de nacimiento"), validators=[Optional()], format="%Y-%m-%d"
+    )
+    has_learning_difficulties = BooleanField(_l("Presenta dificultades de aprendizaje"))
+    trastornos = SelectMultipleField(
+        _l("Trastornos asignados"), coerce=int, validators=[Optional()]
+    )
+    submit_edit = SubmitField(_l("Guardar cambios"))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.gender.choices = _opciones_genero()
 
 
 class AssignTrastornosForm(FlaskForm):

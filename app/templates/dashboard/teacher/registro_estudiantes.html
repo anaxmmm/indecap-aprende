@@ -55,30 +55,22 @@
 
       <p class="fw-semibold mb-2">{{ _('Nuevo niño') }}</p>
       <div class="row g-2 mb-2">
-        <div class="col-md-4">
+        <div class="col-md-6">
           {{ student_form.first_name.label(class_="form-label small") }}
           {{ student_form.first_name(class_="form-control") }}
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
           {{ student_form.last_name.label(class_="form-label small") }}
           {{ student_form.last_name(class_="form-control") }}
-        </div>
-        <div class="col-md-4">
-          {{ student_form.alias.label(class_="form-label small") }}
-          {{ student_form.alias(class_="form-control") }}
         </div>
       </div>
 
       <div class="row g-2 mb-2">
-        <div class="col-md-4">
+        <div class="col-md-6">
           {{ student_form.email.label(class_="form-label small") }}
           {{ student_form.email(class_="form-control", placeholder=_("correo del niño")) }}
         </div>
-        <div class="col-md-4">
-          {{ student_form.tutor_email.label(class_="form-label small") }}
-          {{ student_form.tutor_email(class_="form-control", placeholder=_("correo del tutor")) }}
-        </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
           {{ student_form.password.label(class_="form-label small") }}
           {{ student_form.password(class_="form-control") }}
         </div>
@@ -135,6 +127,9 @@
         <a href="{{ url_for('dashboard.perfil_estudiante', student_id=estudiante.id) }}">{{ estudiante.full_name }}</a>
         <span class="text-muted small">{{ estudiante.email }}</span>
         <div class="teacher-group__student-actions">
+          <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#edit-student-{{ estudiante.id }}">
+            {{ _('Editar') }}
+          </button>
           {% if groups|length > 1 %}
           <form method="post" action="{{ url_for('dashboard.mover_estudiante', group_id=grupo.id) }}" class="d-inline">
             <input type="hidden" name="student_id" value="{{ estudiante.id }}">
@@ -153,6 +148,77 @@
       </li>
       {% endfor %}
     </ul>
+
+    {% for estudiante in activos %}
+    {% set perfil = estudiante.student_profile %}
+    {% set genero_actual = perfil.gender.value if perfil and perfil.gender else "" %}
+    {% set asignados = estudiante.trastornos_asignados | map(attribute="trastorno_id") | list %}
+    <form
+      method="post"
+      action="{{ url_for('dashboard.editar_estudiante', student_id=estudiante.id) }}"
+      id="edit-student-{{ estudiante.id }}"
+      class="collapse teacher-inline-form"
+    >
+      {{ student_form.hidden_tag() }}
+
+      <p class="fw-semibold mb-2">{{ _('Editar estudiante') }}: {{ estudiante.full_name }}</p>
+      <div class="row g-2 mb-2">
+        <div class="col-md-6">
+          <label class="form-label small" for="edit-name-{{ estudiante.id }}">{{ _('Nombre completo') }}</label>
+          <input type="text" class="form-control" name="full_name" id="edit-name-{{ estudiante.id }}" value="{{ estudiante.full_name }}" maxlength="150" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small" for="edit-email-{{ estudiante.id }}">{{ _('Correo electrónico') }}</label>
+          <input type="email" class="form-control" name="email" id="edit-email-{{ estudiante.id }}" value="{{ estudiante.email }}" maxlength="150" required>
+        </div>
+      </div>
+
+      <div class="row g-2 mb-2">
+        <div class="col-md-4">
+          <label class="form-label small" for="edit-gender-{{ estudiante.id }}">{{ _('Género') }}</label>
+          <select class="form-select" name="gender" id="edit-gender-{{ estudiante.id }}">
+            {% for value, label in student_form.gender.choices %}
+            <option value="{{ value }}" {% if value == genero_actual %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small" for="edit-birth-{{ estudiante.id }}">{{ _('Fecha de nacimiento') }}</label>
+          <input type="date" class="form-control" name="birth_date" id="edit-birth-{{ estudiante.id }}" value="{{ perfil.birth_date.isoformat() if perfil and perfil.birth_date else '' }}">
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="has_learning_difficulties" id="edit-difficulties-{{ estudiante.id }}" value="y" {% if perfil and perfil.has_learning_difficulties %}checked{% endif %}>
+            <label class="form-check-label" for="edit-difficulties-{{ estudiante.id }}">{{ _('Presenta dificultades de aprendizaje') }}</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <span class="form-label small d-block">{{ student_form.trastornos.label.text }}</span>
+        <div class="d-flex flex-wrap gap-3">
+          {% for value, label in student_form.trastornos.choices %}
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="trastornos"
+              value="{{ value }}"
+              id="edit-trastorno-{{ estudiante.id }}-{{ value }}"
+              {% if value in asignados %}checked{% endif %}
+            >
+            <label class="form-check-label" for="edit-trastorno-{{ estudiante.id }}-{{ value }}">{{ label }}</label>
+          </div>
+          {% endfor %}
+          {% if not student_form.trastornos.choices %}
+          <p class="text-muted small mb-0">{{ _('No hay trastornos cargados en el sistema todavía.') }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <button type="submit" name="submit_edit" class="btn btn-teacher-primary">{{ _('Guardar cambios') }}</button>
+    </form>
+    {% endfor %}
     {% else %}
     <p class="text-muted small mb-0">{{ _('Sin niños asignados todavía.') }}</p>
     {% endif %}

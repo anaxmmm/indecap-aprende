@@ -100,8 +100,6 @@ def create_student_in_group(
     password: str,
     group_id: int,
     teacher: User,
-    alias: str = "",
-    tutor_email: str = "",
     gender: str = "",
     birth_date=None,
     has_learning_difficulties: bool = False,
@@ -130,8 +128,6 @@ def create_student_in_group(
     db.session.add(
         StudentProfile(
             user_id=student.id,
-            alias=alias.strip() or None,
-            tutor_email=tutor_email.strip().lower() or None,
             gender=GeneroEnum(gender) if gender else None,
             birth_date=birth_date,
             has_learning_difficulties=has_learning_difficulties,
@@ -149,6 +145,50 @@ def create_student_in_group(
         _auto_enroll_first_session(student.id, trastorno_id, teacher.id)
 
     db.session.commit()
+    return student
+
+def update_student(
+    teacher: User,
+    student_id: int,
+    full_name: str,
+    email: str,
+    gender: str = "",
+    birth_date=None,
+    has_learning_difficulties: bool = False,
+    trastorno_ids: Optional[List[int]] = None,
+) -> User:
+    """Edita los datos de un estudiante que pertenece a los grupos del
+    docente. Si el estudiante todavía no tiene StudentProfile (por ejemplo,
+    se creó por otra vía), se crea en este momento. Los trastornos se
+    actualizan con set_assigned_trastornos, que además inscribe en la primera
+    sesión del plan cuando se marca un trastorno nuevo y hace el commit de
+    toda la transacción."""
+    student = get_student_if_owned_by_teacher(teacher, student_id)
+    if student is None:
+        raise ValueError(_("Ese estudiante no existe o no pertenece a tus grupos."))
+
+    email = email.lower().strip()
+    otro = User.query.filter(User.email == email, User.id != student.id).first()
+    if otro is not None:
+        raise ValueError(_("Ya existe una cuenta con ese correo."))
+
+    student.full_name = full_name.strip()
+    student.email = email
+
+    profile = get_student_profile(student)
+    if profile is None:
+        profile = StudentProfile(user_id=student.id)
+        db.session.add(profile)
+    profile.gender = GeneroEnum(gender) if gender else None
+    profile.birth_date = birth_date
+    profile.has_learning_difficulties = has_learning_difficulties
+
+    try:
+        set_assigned_trastornos(teacher, student, trastorno_ids or [])
+    except IntegrityError:
+        db.session.rollback()
+        raise ValueError(_("Ya existe una cuenta con ese correo."))
+
     return student
 
 

@@ -8,6 +8,7 @@ from app.blueprints.dashboard import bp
 from app.blueprints.dashboard.forms import (
     GroupForm,
     AddStudentForm,
+    EditStudentForm,
     AssignTrastornosForm,
     ProfileForm,
     AssignSessionForm,
@@ -17,6 +18,7 @@ from app.blueprints.dashboard.services import (
     create_group,
     delete_group,
     create_student_in_group,
+    update_student,
     move_student_to_group,
     deactivate_student,
     reactivate_student,
@@ -45,6 +47,7 @@ from app.blueprints.dashboard.services import (
     start_session,
     get_student_profile,
 )
+
 from app.blueprints.games.registry import GAMES, get_game, get_game_for_trastorno
 from app.models.content import Trastorno, Actividad
 
@@ -208,8 +211,6 @@ def registro_estudiantes():
                     password=student_form.password.data,
                     group_id=student_form.group_id.data,
                     teacher=current_user,
-                    alias=student_form.alias.data,
-                    tutor_email=student_form.tutor_email.data,
                     gender=student_form.gender.data,
                     birth_date=student_form.birth_date.data,
                     has_learning_difficulties=student_form.has_learning_difficulties.data,
@@ -232,6 +233,38 @@ def registro_estudiantes():
         active_nav="registro_estudiantes",
     )
 
+@bp.route("/registro-estudiantes/estudiante/<int:student_id>/editar", methods=["POST"])
+@login_required
+def editar_estudiante(student_id):
+    if not _is_teacher_or_admin():
+        return redirect(url_for("dashboard.index"))
+
+    form = EditStudentForm()
+    form.trastornos.choices = [
+        (t.id, t.name) for t in Trastorno.query.order_by(Trastorno.name.asc()).all()
+    ]
+
+    if form.validate_on_submit():
+        try:
+            update_student(
+                teacher=current_user,
+                student_id=student_id,
+                full_name=form.full_name.data,
+                email=form.email.data,
+                gender=form.gender.data,
+                birth_date=form.birth_date.data,
+                has_learning_difficulties=form.has_learning_difficulties.data,
+                trastorno_ids=form.trastornos.data or [],
+            )
+            flash(_("Datos del estudiante actualizados."), "success")
+        except ValueError as exc:
+            flash(str(exc), "danger")
+    else:
+        for field_errors in form.errors.values():
+            for error in field_errors:
+                flash(str(error), "danger")
+
+    return redirect(url_for("dashboard.registro_estudiantes"))
 
 @bp.route("/registro-estudiantes/grupo/<int:group_id>/eliminar", methods=["POST"])
 @login_required
