@@ -47,7 +47,7 @@ class AddStudentForm(FlaskForm):
         _l("Correo electrónico"), validators=[DataRequired(), Email(), Length(max=150)]
     )
     password = PasswordField(
-        _l("Contraseña"), validators=[DataRequired(), Length(min=6, max=128)]
+        _l("Contraseña"), validators=[DataRequired(), Length(min=8, max=128, message=_l("Usa al menos 8 caracteres."))]
     )
     group_id = SelectField(_l("Grupo"), coerce=int, validators=[DataRequired()])
     gender = SelectField(_l("Género"), choices=[], validators=[Optional()])
@@ -57,6 +57,10 @@ class AddStudentForm(FlaskForm):
     has_learning_difficulties = BooleanField(_l("Presenta dificultades de aprendizaje"))
     trastornos = SelectMultipleField(
         _l("Trastornos asignados"), coerce=int, validators=[Optional()]
+    )
+    data_consent = BooleanField(
+        _l("El estudiante, o su acudiente si es menor de edad, autorizó el tratamiento de sus datos según la política de tratamiento de datos."),
+        validators=[DataRequired(message=_l("Confirma la autorización de tratamiento de datos para registrar al estudiante."))],
     )
     submit_student = SubmitField(_l("Añadir estudiante"))
 
@@ -80,6 +84,7 @@ class EditStudentForm(FlaskForm):
     trastornos = SelectMultipleField(
         _l("Trastornos asignados"), coerce=int, validators=[Optional()]
     )
+    data_consent = BooleanField(_l("Registrar la autorización de tratamiento de datos"))
     submit_edit = SubmitField(_l("Guardar cambios"))
 
     def __init__(self, *args, **kwargs):
@@ -104,7 +109,7 @@ class ProfileForm(FlaskForm):
     area = StringField(_l("Área / Especialidad"), validators=[Optional(), Length(max=150)])
     new_password = PasswordField(
         _l("Nueva contraseña (opcional)"),
-        validators=[Optional(), Length(min=6, max=128)],
+        validators=[Optional(), Length(min=8, max=128, message=_l("Usa al menos 8 caracteres."))],
     )
     confirm_password = PasswordField(
         _l("Confirmar nueva contraseña"), validators=[Optional()]

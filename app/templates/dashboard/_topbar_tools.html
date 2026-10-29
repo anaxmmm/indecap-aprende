@@ -1,0 +1,39 @@
+{# Idioma y campana de avisos, comunes al panel docente y al del estudiante.
+   Espera la variable notifications_empty con el texto para cuando no hay avisos. #}
+<a class="teacher-lang-pill"
+   href="{{ url_for('set_language', code='en' if current_lang == 'es' else 'es') }}"
+   aria-label="{{ _('Cambiar idioma') }}">{{ current_lang|upper }}</a>
+
+<div class="dropdown">
+  <button type="button" class="teacher-topbar__icon-btn" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+          aria-expanded="false" aria-label="{{ _('Notificaciones') }}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    {% if unread_notifications_count > 0 %}<span class="teacher-topbar__badge"></span>{% endif %}
+  </button>
+  <div class="dropdown-menu dropdown-menu-end teacher-notifications-menu p-0">
+    <div class="teacher-notifications-menu__header">
+      <span>{{ _('Notificaciones') }}</span>
+      <button type="button" class="dx-sound-toggle" data-sound-toggle aria-pressed="true"
+              data-label-on="{{ _('Sonido de avisos activado') }}" data-label-off="{{ _('Sonido de avisos desactivado') }}"
+              aria-label="{{ _('Sonido de avisos activado') }}" title="{{ _('Sonido de avisos activado') }}">
+        <svg class="dx-sound-toggle__on" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        <svg class="dx-sound-toggle__off" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m23 9-6 6"/><path d="m17 9 6 6"/></svg>
+      </button>
+    </div>
+    <div class="teacher-notifications-menu__list" data-notifications-list>
+      {% for n in recent_notifications %}
+      <div class="teacher-notifications-menu__item {{ '' if n.is_read else 'is-unread' }}">
+        <span class="teacher-notifications-menu__msg">{{ n|notif_text }}</span>
+        <span class="teacher-notifications-menu__date">{{ n.created_at|local('%d/%m %H:%M') }}</span>
+      </div>
+      {% else %}
+      <div class="teacher-notifications-menu__empty">{{ notifications_empty }}</div>
+      {% endfor %}
+    </div>
+    <form method="post" action="{{ url_for('dashboard.marcar_notificaciones_leidas') }}"
+          class="teacher-notifications-menu__foot" data-mark-read {% if not unread_notifications_count %}hidden{% endif %}>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="dx-mini">{{ _('Marcar todas como leídas') }}</button>
+    </form>
+  </div>
+</div>

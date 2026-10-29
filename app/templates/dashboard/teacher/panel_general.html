@@ -2,21 +2,108 @@
 {% block title %}{{ _('Panel general') }} — indecap-aprende{% endblock %}
 {% block teacher_content %}
 
-<section class="dx-hero dx-rise">
-  <div>
-    <p class="dx-eyebrow">{{ _('Panel docente') }}</p>
-    <h1 class="dx-hero__title">{{ _('Panel') }} <em>{{ _('general') }}</em></h1>
-    <p class="dx-hero__text">
-      {{ _('Sigue el avance de tus estudiantes en tiempo real. Cambia el periodo, agrupa por semana o toca a un estudiante del ranking para ver solo su actividad.') }}
-    </p>
-  </div>
-  <div class="dx-hero__side">
-    <span class="dx-live" id="dx-live-label"><i></i><span>{{ _('Actualizado en vivo') }}</span></span>
-    <button type="button" class="dx-btn dx-btn--ghost" id="dx-refresh">{{ _('Actualizar') }}</button>
-  </div>
-</section>
+<style>
+  /* ---------- Base (flujo normal: pantallas pequeñas) ---------- */
+  .dxp-fit { display: flex; flex-direction: column; gap: 1rem; }
 
-<div class="dx-kpis">
+  .dxp-kpis .dx-kpi > div:last-child { min-width: 0; }
+  .dxp-kpis .dx-kpi__label,
+  .dxp-kpis .dx-kpi__value,
+  .dxp-kpis .dx-kpi__hint { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dxp-kpis .dx-kpi__value--text { font-size: 1.15rem; }
+  .dxp-kpis .dx-kpi { min-height: 92px; }
+
+  .dxp-custom {
+    border: 1px solid var(--dx-border);
+    background: #fff;
+    color: var(--dx-muted);
+    border-radius: 12px;
+    padding: 0.45rem 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .dxp-custom:hover,
+  .dxp-custom[aria-expanded="true"] { color: var(--dx-navy); border-color: var(--dx-navy); }
+  .dx-dates[hidden] { display: none; }
+
+  /* ---------- Modo "todo en una pantalla" (lo activa el script) ---------- */
+  .dxp-fit.is-fit {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 0.75rem;
+    overflow: hidden;
+  }
+
+  /* Tarjetas superiores */
+  .dxp-fit.is-fit .dx-kpis { margin: 0; gap: 0.75rem; }
+  .dxp-fit.is-fit .dx-kpi { min-height: 0; padding: 0.55rem 0.85rem; gap: 0.7rem; border-radius: 14px; }
+  .dxp-fit.is-fit .dx-kpi__icon { width: 36px; height: 36px; border-radius: 11px; }
+  .dxp-fit.is-fit .dx-kpi__icon svg { width: 17px; height: 17px; }
+  .dxp-fit.is-fit .dx-kpi__label { font-size: 0.72rem; }
+  .dxp-fit.is-fit .dx-kpi__value { font-size: 1.2rem; }
+  .dxp-fit.is-fit .dxp-kpis .dx-kpi__value--text { font-size: 1rem; }
+  .dxp-fit.is-fit .dx-kpi__hint { font-size: 0.68rem; }
+
+  /* Zona central */
+  .dxp-fit.is-fit .dx-grid {
+    min-height: 0;
+    margin: 0;
+    gap: 0.75rem;
+    align-items: stretch;
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+  .dxp-fit.is-fit .dx-col { min-height: 0; gap: 0.75rem; }
+  .dxp-fit.is-fit .dx-col > .dx-card { flex: 1 1 0; }
+
+  .dxp-fit.is-fit .dx-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0.8rem 1rem;
+    border-radius: 16px;
+  }
+  .dxp-fit.is-fit .dx-card__head { margin-bottom: 0.5rem; }
+  .teacher-body .dxp-fit.is-fit .dx-card__title { font-size: 0.95rem; }
+  .dxp-fit.is-fit .dx-card__sub { font-size: 0.74rem; line-height: 1.4; margin: 0.15rem 0 0; }
+  .dxp-fit.is-fit .dxp-head-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+  }
+  .dxp-fit.is-fit .dxp-head-row .dx-card__sub { margin: 0; }
+
+  /* Controles del gráfico */
+  .dxp-fit.is-fit .dx-controls { gap: 0.5rem; margin-bottom: 0.5rem; }
+  .dxp-fit.is-fit .dx-segment { padding: 3px; border-radius: 12px; }
+  .dxp-fit.is-fit .dx-segment button { padding: 0.28rem 0.6rem; font-size: 0.74rem; }
+  .dxp-fit.is-fit .dxp-custom { padding: 0.36rem 0.7rem; font-size: 0.74rem; }
+  .dxp-fit.is-fit .dx-focus { margin-bottom: 0.4rem; }
+
+  /* El gráfico ocupa todo el espacio sobrante */
+  .dxp-fit.is-fit .dx-chart {
+    flex: 1 1 0;
+    height: auto;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .dxp-fit.is-fit .dx-empty { margin: 0.25rem 0 0; font-size: 0.8rem; line-height: 1.5; }
+
+  /* Ranking: ocupa toda la columna, con scroll interno si hay muchos */
+  .dxp-fit.is-fit .dx-rank { flex: 1 1 auto; min-height: 0; overflow-y: auto; gap: 0.35rem; }
+  .dxp-fit.is-fit .dx-rank__row { padding: 0.4rem 0.6rem; gap: 0.6rem; grid-template-columns: 28px minmax(0, 1fr) auto; }
+  .dxp-fit.is-fit .dx-rank__pos { width: 28px; height: 28px; font-size: 0.78rem; }
+  .dxp-fit.is-fit .dx-rank__bar { margin-top: 0.25rem; }
+  .dxp-fit.is-fit .dx-rank__count strong { font-size: 0.95rem; }
+</style>
+
+<div class="dxp-fit" id="dxp-fit">
+
+<div class="dx-kpis dx-kpis--compact dxp-kpis">
   <div class="dx-kpi dx-rise" style="--d:.05s">
     <div class="dx-kpi__icon">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -24,6 +111,7 @@
     <div>
       <p class="dx-kpi__label">{{ _('Estudiantes activos') }}</p>
       <p class="dx-kpi__value" data-sync="estudiantes">{{ total_estudiantes }}</p>
+      <p class="dx-kpi__hint" id="kpi-activos-hint">&nbsp;</p>
     </div>
   </div>
 
@@ -34,6 +122,7 @@
     <div>
       <p class="dx-kpi__label">{{ _('Planes activos') }}</p>
       <p class="dx-kpi__value" data-sync="planes">{{ planes_activos|length }}</p>
+      <p class="dx-kpi__hint">{{ _('trastornos asignados') }}</p>
     </div>
   </div>
 
@@ -43,7 +132,8 @@
     </div>
     <div>
       <p class="dx-kpi__label">{{ _('Trastorno más trabajado') }}</p>
-      <p class="dx-kpi__value dx-kpi__value--text" data-sync="top">{{ trastornos_top[0].trastorno.name if trastornos_top else "—" }}</p>
+      <p class="dx-kpi__value dx-kpi__value--text" data-sync="top" title="{{ trastornos_top[0].trastorno|condicion if trastornos_top else '' }}">{{ trastornos_top[0].trastorno|condicion if trastornos_top else "—" }}</p>
+      <p class="dx-kpi__hint" data-sync="top-hint">{% if trastornos_top %}{{ trastornos_top[0].estudiantes }} {{ _('est.') }}{% else %}&nbsp;{% endif %}</p>
     </div>
   </div>
 
@@ -54,19 +144,18 @@
     <div>
       <p class="dx-kpi__label">{{ _('Partidas en el periodo') }}</p>
       <p class="dx-kpi__value" id="kpi-partidas">0</p>
-      <p class="dx-kpi__hint" id="kpi-niveles">0 {{ _('niveles superados') }}</p>
+      <p class="dx-kpi__hint" id="kpi-niveles">0 {{ _('actividades superadas') }}</p>
     </div>
   </div>
 </div>
 
-<div class="dx-grid">
+<div class="dx-grid dx-grid--panel">
 
   <div class="dx-col">
 
     <div class="dx-card dx-rise" style="--d:.25s">
-      <div class="dx-card__head">
-        <p class="dx-eyebrow">{{ _('Rendimiento general') }}</p>
-        <h2 class="dx-card__title">{{ _('Partidas completadas') }}</h2>
+      <div class="dx-card__head dxp-head-row">
+        <h2 class="dx-card__title">{{ _('Rendimiento de los estudiantes') }}</h2>
         <p class="dx-card__sub" id="dx-range-label"></p>
       </div>
 
@@ -82,7 +171,8 @@
           <button type="button" data-group="dia" class="is-active" aria-pressed="true">{{ _('Por día') }}</button>
           <button type="button" data-group="semana" aria-pressed="false">{{ _('Por semana') }}</button>
         </div>
-        <div class="dx-dates">
+        <button type="button" class="dxp-custom" id="dx-custom" aria-expanded="false" aria-controls="dx-dates">{{ _('Personalizado') }}</button>
+        <div class="dx-dates" id="dx-dates" hidden>
           <input type="date" id="desde" class="form-control form-control-sm" aria-label="{{ _('Desde') }}">
           <span>—</span>
           <input type="date" id="hasta" class="form-control form-control-sm" aria-label="{{ _('Hasta') }}">
@@ -94,15 +184,18 @@
         <button type="button" id="dx-focus-clear" aria-label="{{ _('Quitar filtro de estudiante') }}">×</button>
       </div>
 
-      <div class="dx-chart">
-        <canvas id="rendimiento-chart" role="img" aria-label="{{ _('Gráfico de partidas completadas y niveles superados') }}"></canvas>
+      <div class="dx-chart dx-chart--fit">
+        <canvas id="rendimiento-chart" role="img" aria-label="{{ _('Gráfico de partidas completadas y actividades superadas') }}"></canvas>
       </div>
       <p class="dx-empty" id="dx-chart-empty" hidden>{{ _('Aún no hay partidas completadas en este periodo.') }}</p>
     </div>
 
+  </div>
+
+  <div class="dx-col">
+
     <div class="dx-card dx-rise" style="--d:.3s">
       <div class="dx-card__head">
-        <p class="dx-eyebrow">{{ _('Ranking') }}</p>
         <h2 class="dx-card__title">{{ _('Estudiantes con más actividades realizadas') }}</h2>
         <p class="dx-card__sub">{{ _('Toca a un estudiante para ver solo su actividad en el gráfico.') }}</p>
       </div>
@@ -114,34 +207,7 @@
 
   </div>
 
-  <div class="dx-col">
-    <div class="dx-card dx-rise" style="--d:.3s">
-      <p class="dx-eyebrow">{{ _('Planes activos') }}</p>
-      <h2 class="dx-card__title">{{ _('Trastornos en entrenamiento') }}</h2>
-      <div class="dx-plans" data-sync="planes-list">
-        {% if not planes_activos %}
-        <p class="dx-empty">
-          {{ _('Aparecerán aquí al asignar trastornos en') }}
-          <a href="{{ url_for('dashboard.registro_estudiantes') }}">{{ _('Registro de estudiantes') }}</a>.
-        </p>
-        {% else %}
-        {% set max_est = (planes_activos | map(attribute='estudiantes') | list | max | default(0)) %}
-        {% for item in planes_activos %}
-        {% set pct = 0 if max_est == 0 else ((item.estudiantes / max_est * 100) | round | int) %}
-        <div class="dx-plan">
-          <div class="dx-plan__top">
-            <span class="dx-plan__name">{{ item.trastorno.name }}</span>
-            <span class="dx-plan__count">{{ item.estudiantes }} {{ _('est.') }}</span>
-          </div>
-          <div class="dx-plan__bar"><i data-width="{{ pct }}"></i></div>
-        </div>
-        {% endfor %}
-        {% endif %}
-      </div>
-      
-    </div>
-
-  </div>
+</div>
 
 </div>
 
@@ -155,14 +221,14 @@
     'viewProfile': _('Ver perfil'),
     'rangeError': _('Revisa el rango de fechas: la fecha inicial debe ser anterior a la final.'),
     'emptyPeriod': _('Aún no hay partidas completadas en este periodo.'),
-    'levelOne': _('nivel superado'),
-    'levelMany': _('niveles superados'),
+    'levelOne': _('actividad superada'),
+    'levelMany': _('actividades superadas'),
     'gameOne': _('partida'),
     'gameMany': _('partidas'),
     'fromTo': _('Del {from} al {to}'),
-    'updated': _('Actualizado'),
     'seriesGames': _('Partidas completadas'),
-    'seriesLevels': _('Niveles superados (≥ 60)')
+    'seriesLevels': _('Actividades superadas (≥ 60)'),
+    'withActivity': _('con actividad')
   }
 }|tojson }}</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -170,11 +236,12 @@
 (function () {
   'use strict';
 
-  // FASE 2: formato de fechas y textos según el idioma activo
+  // Formato de fechas y textos según el idioma activo
   const DX_I18N = JSON.parse(document.getElementById('dx-i18n').textContent);
   const LOCALE = DX_I18N.locale;
   const I18N = DX_I18N.labels;
 
+  const RANK_MAX = 10;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let DATA = JSON.parse(document.getElementById('dx-data').textContent);
   const state = { days: 30, from: '', to: '', group: 'dia', studentId: null };
@@ -193,6 +260,29 @@
     Chart.defaults.font.family = "'Montserrat', sans-serif";
     Chart.defaults.color = '#5A6570';
   }
+
+  // ---------- Ajuste al alto visible (todo en una pantalla, sin deslizar) ----------
+  function fitToViewport() {
+    const box = $('dxp-fit');
+    if (!box) return;
+    const fitOn = window.innerWidth > 1000 && window.innerHeight >= 560;
+    box.classList.toggle('is-fit', fitOn);
+
+    if (!fitOn) {
+      box.style.height = '';
+    } else {
+      const top = box.getBoundingClientRect().top + window.scrollY;
+      const pb = parseFloat(getComputedStyle(box.parentElement).paddingBottom) || 0;
+      box.style.height = Math.max(window.innerHeight - top - pb, 480) + 'px';
+    }
+    if (chart) chart.resize();
+  }
+
+  let fitTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(fitToViewport, 80);
+  });
 
   // ---------- Fechas ----------
   const parseISO = (iso) => { const p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); };
@@ -270,38 +360,27 @@
     return out;
   }
 
-  // ---------- Gráfico ----------
-  function gradient(ctx, rgb) {
-    const area = ctx.chart.chartArea;
-    if (!area) return 'rgba(' + rgb + ',0.15)';
-    const g = ctx.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
-    g.addColorStop(0, 'rgba(' + rgb + ',0.28)');
-    g.addColorStop(1, 'rgba(' + rgb + ',0)');
-    return g;
-  }
-
+  // ---------- Gráfico (barras: son conteos por día, no una curva continua) ----------
   function ensureChart() {
     if (chart) return chart;
     if (!window.Chart) return null;
-    const dataset = (label, color, rgb) => ({
+    const dataset = (label, color) => ({
       label: label,
       data: [],
-      borderColor: color,
-      backgroundColor: (c) => gradient(c, rgb),
-      fill: true,
-      tension: 0.35,
-      borderWidth: 2.5,
-      pointRadius: 3,
-      pointHoverRadius: 7,
-      pointBackgroundColor: color,
+      backgroundColor: color,
+      borderRadius: 4,
+      borderSkipped: false,
+      maxBarThickness: 22,
+      categoryPercentage: 0.75,
+      barPercentage: 0.9,
     });
     chart = new Chart($('rendimiento-chart'), {
-      type: 'line',
+      type: 'bar',
       data: {
         labels: [],
         datasets: [
-          dataset(I18N.seriesGames, '#1A3A6B', '26,58,107'),
-          dataset(I18N.seriesLevels, '#B8860B', '184,134,11'),
+          dataset(I18N.seriesGames, '#1A3A6B'),
+          dataset(I18N.seriesLevels, '#B8860B'),
         ],
       },
       options: {
@@ -310,7 +389,10 @@
         interaction: { mode: 'index', intersect: false },
         animation: reduceMotion ? false : { duration: 600 },
         plugins: {
-          legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
+          legend: {
+            position: 'bottom',
+            labels: { usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 8 },
+          },
           tooltip: {
             backgroundColor: '#111627',
             padding: 12,
@@ -366,7 +448,7 @@
         })
         .filter((r) => r.done > 0)
         .sort((a, b) => b.done - a.done || b.passed - a.passed)
-        .slice(0, 8);
+        .slice(0, RANK_MAX);
     }
 
     $('dx-rank-empty').hidden = rows.length > 0;
@@ -431,7 +513,9 @@
       $('dx-range-label').textContent = '';
       setNumber($('kpi-partidas'), 0);
       $('kpi-niveles').textContent = '0 ' + I18N.levelMany;
+      $('kpi-activos-hint').textContent = '0 ' + I18N.withActivity;
       renderRanking(null);
+      fitToViewport();
       return;
     }
 
@@ -443,6 +527,12 @@
     setNumber($('kpi-partidas'), total);
     $('kpi-niveles').textContent = niveles + ' ' + (niveles === 1 ? I18N.levelOne : I18N.levelMany);
 
+    const conActividad = DATA.students.filter((s) => {
+      for (let i = range[0]; i <= range[1]; i++) { if (s.done[i] > 0) return true; }
+      return false;
+    }).length;
+    $('kpi-activos-hint').textContent = conActividad + ' ' + I18N.withActivity;
+
     note.textContent = I18N.emptyPeriod;
     note.hidden = total > 0;
 
@@ -451,6 +541,7 @@
       .replace('{to}', longDate(parseISO(DATA.dates[range[1]])));
 
     renderRanking(range);
+    fitToViewport();
   }
 
   // ---------- Controles ----------
@@ -504,16 +595,27 @@
   $('desde').addEventListener('change', onDates);
   $('hasta').addEventListener('change', onDates);
 
+  // Botón "Personalizado": muestra u oculta las fechas. Al cerrarlo con
+  // fechas escritas, se limpian y se vuelve al periodo de 30 días.
+  $('dx-custom').addEventListener('click', () => {
+    const box = $('dx-dates');
+    const abrir = box.hidden;
+    box.hidden = !abrir;
+    $('dx-custom').setAttribute('aria-expanded', abrir ? 'true' : 'false');
+    if (!abrir && ($('desde').value || $('hasta').value)) {
+      $('desde').value = '';
+      $('hasta').value = '';
+      onDates();
+    } else {
+      fitToViewport();
+    }
+  });
+
   $('dx-focus-clear').addEventListener('click', () => { state.studentId = null; render(); });
 
-  // ---------- Actualización desde el servidor ----------
-  function stampLive() {
-    const hora = new Date().toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' });
-    $('dx-live-label').querySelector('span').textContent = I18N.updated + ' ' + hora;
-  }
-
+  // ---------- Actualización silenciosa desde el servidor ----------
   function refreshFromServer() {
-    return fetch(window.location.href, { credentials: 'same-origin', headers: { 'X-Requested-With': 'fetch' } })
+    return fetch(window.location.href, { credentials: 'same-origin', headers: { 'X-Requested-With': 'fetch', 'X-Background': '1' } })
       .then((r) => (r.ok ? r.text() : null))
       .then((html) => {
         if (!html) return;
@@ -527,18 +629,17 @@
         });
         syncDateLimits();
         render();
-        stampLive();
       })
       .catch(() => {});
   }
 
-  $('dx-refresh').addEventListener('click', refreshFromServer);
   document.addEventListener('indecap:notifications', refreshFromServer);
   setInterval(() => { if (!document.hidden) refreshFromServer(); }, 60000);
 
   syncDateLimits();
   render();
-  stampLive();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitToViewport);
+  window.addEventListener('load', fitToViewport);
 })();
 </script>
 {% endblock %}

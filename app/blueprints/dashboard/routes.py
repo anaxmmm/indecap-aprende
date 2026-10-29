@@ -1,7 +1,7 @@
-from datetime import date, timedelta
+from urllib.parse import urlparse
 
 from flask import render_template, redirect, url_for, flash, request, abort, jsonify
-from flask_babel import gettext as _, lazy_gettext as _l
+from flask_babel import gettext as _
 from flask_login import login_required, current_user
 
 from app.blueprints.dashboard import bp
@@ -22,7 +22,6 @@ from app.blueprints.dashboard.services import (
     move_student_to_group,
     deactivate_student,
     reactivate_student,
-    delete_student_permanently,
     get_student_if_owned_by_teacher,
     get_assigned_trastorno_ids,
     set_assigned_trastornos,
@@ -35,8 +34,6 @@ from app.blueprints.dashboard.services import (
     assign_session,
     get_sesiones_asignadas_for_actividad,
     update_session_notes,
-    get_student_ranking_by_completed_sessions,
-    get_weekly_completion_counts,
     get_activity_matrix,
     get_planes_activos,
     get_trastornos_mas_trabajados,
@@ -46,15 +43,24 @@ from app.blueprints.dashboard.services import (
     get_started_activities,
     start_session,
     get_student_profile,
+    get_teachers,
+    reassign_group,
 )
 
-from app.blueprints.games.registry import GAMES, get_game, get_game_for_trastorno
+from app.blueprints.admin.services import archive_account
+from app.blueprints.games.services import get_student_history
+from app.utils.fechas import format_local, utc_now
+from app.blueprints.games.registry import (
+    GAMES,
+    build_levels,
+    condition_label,
+    get_game,
+    get_game_for_trastorno,
+    split_activity,
+    activity_title,
+    level_name,
+)
 from app.models.content import Trastorno, Actividad
-
-
-# Nombres de etapa, en el mismo orden que usa games/stages.html, para que
-# "Sesiones del sistema" muestre la misma nomenclatura que ve el estudiante.
-STAGE_NAMES = [_l("Base"), _l("Media"), _l("Alta"), _l("Muy Alta"), _l("Súper Difícil")]
 
 
 def _is_teacher_or_admin() -> bool:
@@ -193,7 +199,7 @@ def registro_estudiantes():
     groups = get_groups_for_teacher(current_user)
     student_form.group_id.choices = [(g.id, g.name) for g in groups]
     student_form.trastornos.choices = [
-        (t.id, t.name) for t in Trastorno.query.order_by(Trastorno.name.asc()).all()
+        (t.id, condition_label(t)) for t in Trastorno.query.order_by(Trastorno.name.asc()).all()
     ]
 
     if request.method == "POST":
@@ -215,6 +221,7 @@ def registro_estudiantes():
                     birth_date=student_form.birth_date.data,
                     has_learning_difficulties=student_form.has_learning_difficulties.data,
                     trastorno_ids=student_form.trastornos.data,
+                    data_consent=student_form.data_consent.data,
                 )
                 flash(_("Estudiante añadido al grupo."), "success")
             except ValueError as exc:
@@ -241,7 +248,7 @@ def editar_estudiante(student_id):
 
     form = EditStudentForm()
     form.trastornos.choices = [
-        (t.id, t.name) for t in Trastorno.query.order_by(Trastorno.name.asc()).all()
+        (t.id, condition_label(t)) for t in Trastorno.query.order_by(Trastorno.name.asc()).all()
     ]
 
     if form.validate_on_submit():
@@ -255,6 +262,7 @@ def editar_estudiante(student_id):
                 birth_date=form.birth_date.data,
                 has_learning_difficulties=form.has_learning_difficulties.data,
                 trastorno_ids=form.trastornos.data or [],
+                data_consent=form.data_consent.data,
             )
             flash(_("Datos del estudiante actualizados."), "success")
         except ValueError as exc:
@@ -302,7 +310,7 @@ def desvincular_estudiante(group_id, student_id):
     if not _is_teacher_or_admin():
         return redirect(url_for("dashboard.index"))
     deactivate_student(current_user, group_id, student_id)
-    flash(_("Estudiante desvinculado. Quedó en 'Niños inactivos' de este grupo."), "info")
+    flash(_("Estudiante desvinculado. Quedó en «Estudiantes inactivos» de este grupo."), "info")
     return redirect(url_for("dashboard.registro_estudiantes"))
 
 
@@ -322,8 +330,8 @@ def eliminar_estudiante(group_id, student_id):
     if not _is_teacher_or_admin():
         return redirect(url_for("dashboard.index"))
     try:
-        delete_student_permanently(current_user, group_id, student_id)
-        flash(_("Estudiante eliminado definitivamente."), "info")
+        archive_account(current_user, student_id)
+        flash(_("Cuenta eliminada. Su progreso queda guardado y un administrador puede restaurarla."), "info")
     except ValueError as exc:
         flash(str(exc), "danger")
     return redirect(url_for("dashboard.registro_estudiantes"))
@@ -342,7 +350,7 @@ def perfil_estudiante(student_id):
 
     trastornos_form = AssignTrastornosForm()
     trastornos_form.trastornos.choices = [
-        (t.id, t.name) for t in Trastorno.query.order_by(Trastorno.name.asc()).all()
+        (t.id, condition_label(t)) for t in Trastorno.query.order_by(Trastorno.name.asc()).all()
     ]
 
     if request.method == "POST" and trastornos_form.validate_on_submit():
@@ -357,49 +365,46 @@ def perfil_estudiante(student_id):
         "dashboard/teacher/student_profile.html",
         student=student,
         trastornos_form=trastornos_form,
+        history=get_student_history(student),
         active_nav="registro_estudiantes",
+    )
+
+
+@bp.route("/estudiante/<int:student_id>/informe")
+@login_required
+def informe_estudiante(student_id):
+    """Historial del estudiante en una página lista para imprimir o guardar
+    como PDF desde el navegador."""
+    if not _is_teacher_or_admin():
+        return redirect(url_for("dashboard.index"))
+
+    student = get_student_if_owned_by_teacher(current_user, student_id)
+    if student is None:
+        flash(_("Ese estudiante no existe o no pertenece a tus grupos."), "danger")
+        return redirect(url_for("dashboard.registro_estudiantes"))
+
+    return render_template(
+        "dashboard/teacher/informe_estudiante.html",
+        student=student,
+        profile=student.student_profile,
+        conditions=[a.trastorno for a in student.trastornos_asignados],
+        history=get_student_history(student, recent_limit=20),
+        generated=utc_now(),
     )
 
 
 @bp.route("/sesiones-sistema")
 @login_required
 def sesiones_sistema():
-    """
-    Explorador de los 8 juegos del módulo inclusivo, por Etapas y niveles.
-    Ya no depende del modelo Actividad: cada juego genera sus retos en el
-    navegador (buildRound en su game.js), así que aquí solo se arma el mapa
-    de navegación (juego → etapa → nivel). Cada nivel ofrece dos acciones:
-    jugarlo/proyectarlo en vivo (el docente ya entra en modo vista previa,
-    con todo desbloqueado) o ver una muestra de sus respuestas antes de clase.
+    """Modo maestro: los 8 juegos con sus 5 niveles y 10 actividades.
+
+    Cada actividad ofrece jugarla o proyectarla en vivo (el docente entra en
+    vista previa, sin guardar progreso) o ver sus respuestas antes de clase.
     """
     if not _is_teacher_or_admin():
         return redirect(url_for("dashboard.index"))
 
-    juegos = []
-    for game in GAMES.values():
-        if game.get("has_stage_map"):
-            stage_size = game.get("stage_size", 10)
-            total_stages = game["levels"] // stage_size
-            stages = []
-            for s in range(1, total_stages + 1):
-                start = (s - 1) * stage_size + 1
-                end = s * stage_size
-                stages.append({
-                    "number": s,
-                    "name": str(STAGE_NAMES[s - 1]) if s - 1 < len(STAGE_NAMES) else _("Etapa %(number)s", number=s),
-                    "start": start,
-                    "end": end,
-                    "levels": list(range(start, end + 1)),
-                })
-        else:
-            stages = [{
-                "number": 1,
-                "name": None,
-                "start": 1,
-                "end": game["levels"],
-                "levels": list(range(1, game["levels"] + 1)),
-            }]
-        juegos.append({"game": game, "stages": stages})
+    juegos = [{"game": game, "levels": build_levels(game)} for game in GAMES.values()]
 
     return render_template(
         "dashboard/teacher/sesiones_sistema.html",
@@ -412,7 +417,7 @@ def sesiones_sistema():
 @login_required
 def ver_respuestas(slug, level):
     """
-    Hoja de respuestas de un nivel, generada en el navegador a partir del
+    Hoja de respuestas de una actividad, generada en el navegador a partir del
     propio game.js del juego (mismo motor de contenido que usa el estudiante,
     sin duplicar ningún banco de datos aquí).
     """
@@ -423,10 +428,16 @@ def ver_respuestas(slug, level):
     if game is None or level < 1 or level > game["levels"]:
         abort(404)
 
+    nivel, actividad = split_activity(game, level)
+
     return render_template(
         "dashboard/teacher/ver_respuestas.html",
         game=game,
         level=level,
+        nivel=nivel,
+        nivel_name=level_name(nivel),
+        actividad=actividad,
+        activity_title=activity_title(game, level),
         active_nav="sesiones_sistema",
     )
 
@@ -484,13 +495,44 @@ def actualizar_notas_sesion(asignacion_id):
     return redirect(url_for("dashboard.actividad_detail", actividad_id=actividad_id))
 
 
+@bp.route("/docentes-grupos", methods=["GET", "POST"])
+@login_required
+def docentes_grupos():
+    if not current_user.is_admin:
+        return redirect(url_for("dashboard.index"))
+
+    if request.method == "POST":
+        try:
+            grupo = reassign_group(
+                current_user,
+                request.form.get("group_id", type=int),
+                request.form.get("teacher_id", type=int),
+            )
+            flash(
+                _("El grupo %(grupo)s quedó a cargo de %(docente)s.", grupo=grupo.name, docente=grupo.teacher.full_name),
+                "success",
+            )
+        except ValueError as exc:
+            flash(str(exc), "danger")
+        return redirect(url_for("dashboard.docentes_grupos"))
+
+    return render_template(
+        "dashboard/teacher/docentes_grupos.html",
+        grupos=get_groups_for_teacher(current_user),
+        docentes=get_teachers(),
+        active_nav="docentes_grupos",
+    )
+
+
 @bp.route("/guias-uso")
 @login_required
 def guias_uso():
     if not _is_teacher_or_admin():
         return redirect(url_for("dashboard.index"))
     return render_template(
-        "dashboard/teacher/guias_uso.html", active_nav="guias_uso"
+        "dashboard/teacher/guias_uso.html",
+        games=list(GAMES.values()),
+        active_nav="guias_uso",
     )
 
 
@@ -528,7 +570,12 @@ def perfil():
 @login_required
 def marcar_notificaciones_leidas():
     mark_all_notifications_read(current_user)
-    return redirect(request.referrer or url_for("dashboard.index"))
+    if request.accept_mimetypes.best == "application/json":
+        return jsonify({"unread": 0})
+    target = request.referrer
+    if target and urlparse(target).netloc == request.host:
+        return redirect(target)
+    return redirect(url_for("dashboard.index"))
 
 
 @bp.route("/notificaciones/estado")
@@ -543,9 +590,9 @@ def notificaciones_estado():
         "items": [
             {
                 "id": n.id,
-                "message": n.message,
+                "message": n.text(),
                 "is_read": bool(n.is_read),
-                "created_at": n.created_at.strftime("%d/%m %H:%M") if n.created_at else "",
+                "created_at": format_local(n.created_at, "%d/%m %H:%M"),
             }
             for n in notificaciones
         ],

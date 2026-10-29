@@ -1,36 +1,63 @@
 {% extends "dashboard/teacher/base_teacher.html" %}
 {% block title %}{{ _('Mi perfil') }} — indecap-aprende{% endblock %}
 {% block teacher_content %}
-<h1 class="h4 mb-3">{{ _('Mi perfil') }}</h1>
-
-<div class="teacher-card" style="max-width: 520px;">
-  <form method="post">
-    {{ form.hidden_tag() }}
-    <div class="mb-3">
-      {{ form.full_name.label(class_="form-label small") }}
-      {{ form.full_name(class_="form-control") }}
+{% set name_parts = current_user.full_name.split() %}
+{% set initials = (name_parts[0][0] ~ (name_parts[-1][0] if name_parts|length > 1 else '')) | upper %}
+<div class="dx-page-head">
+  <div class="dx-profile-id">
+    <span class="dx-profile-id__avatar" aria-hidden="true">{{ initials }}</span>
+    <div>
+      <h1 class="dx-page-title">{{ _('Mi perfil') }}</h1>
+      <p class="dx-card__sub">
+        {% if current_user.is_admin %}{{ _('Administrador') }}{% if current_user.is_principal %} · {{ _('Principal') }}{% endif %}{% else %}{{ _('Docente') }}{% endif %}
+        · {{ current_user.email }}
+      </p>
     </div>
-    <div class="mb-3">
-      {{ form.email.label(class_="form-label small") }}
-      {{ form.email(class_="form-control") }}
-    </div>
-    <div class="mb-3">
-      {{ form.area.label(class_="form-label small") }}
-      {{ form.area(class_="form-control", placeholder=_("ej. Psicología, Matemáticas")) }}
-    </div>
-
-    <hr class="my-4">
-
-    <div class="mb-3">
-      {{ form.new_password.label(class_="form-label small") }}
-      {{ form.new_password(class_="form-control", placeholder=_("Mínimo 6 caracteres")) }}
-    </div>
-    <div class="mb-3">
-      {{ form.confirm_password.label(class_="form-label small") }}
-      {{ form.confirm_password(class_="form-control") }}
-    </div>
-
-    {{ form.submit(class_="btn btn-teacher-primary") }}
-  </form>
+  </div>
 </div>
+
+<form method="post" class="dx-profile" novalidate>
+  {{ form.hidden_tag() }}
+  <section class="dx-card">
+    <div class="dx-card__head">
+      <h2 class="dx-card__title">{{ _('Datos personales') }}</h2>
+      <p class="dx-card__sub">{{ _('Así te ven tus estudiantes y el equipo del instituto.') }}</p>
+    </div>
+    <div class="dx-form__grid dx-form__grid--3">
+      <div class="dx-field">
+        {{ form.full_name.label(class_="dx-field__label") }}
+        {{ form.full_name(class_="form-control") }}
+      </div>
+      <div class="dx-field">
+        {{ form.email.label(class_="dx-field__label") }}
+        {{ form.email(class_="form-control") }}
+      </div>
+      <div class="dx-field">
+        {{ form.area.label(class_="dx-field__label") }}
+        {{ form.area(class_="form-control", placeholder=_("ej. Psicología, Matemáticas")) }}
+      </div>
+    </div>
+  </section>
+
+  <section class="dx-card">
+    <div class="dx-card__head">
+      <h2 class="dx-card__title">{{ _('Contraseña') }}</h2>
+      <p class="dx-card__sub">{{ _('Déjala en blanco si no quieres cambiarla.') }}</p>
+    </div>
+    <div class="dx-form__grid dx-form__grid--3">
+      <div class="dx-field">
+        {{ form.new_password.label(class_="dx-field__label") }}
+        {{ form.new_password(class_="form-control", placeholder=_("Mínimo 8 caracteres"), autocomplete="new-password") }}
+      </div>
+      <div class="dx-field">
+        {{ form.confirm_password.label(class_="dx-field__label") }}
+        {{ form.confirm_password(class_="form-control", autocomplete="new-password") }}
+      </div>
+    </div>
+  </section>
+
+  <div class="dx-profile__foot">
+    {{ form.submit(class_="dx-action") }}
+  </div>
+</form>
 {% endblock %}

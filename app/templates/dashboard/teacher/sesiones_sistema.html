@@ -1,202 +1,115 @@
 ﻿{% extends "dashboard/teacher/base_teacher.html" %}
-{% block title %}Sesiones del sistema — indecap-aprende{% endblock %}
+{% block title %}{{ _('Modo maestro') }} — indecap-aprende{% endblock %}
 {% block teacher_content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
 
-<style>
+<div class="mm">
+  <h1 class="visually-hidden">{{ _('Modo maestro') }}</h1>
 
-  /* Cuadrícula de tarjetas */
-  .gx-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.25rem;
-  }
-  .gx-card {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin: 0;
-    transition: box-shadow .2s ease, translate .2s ease;
-  }
-  .gx-card:hover {
-    box-shadow: 0 10px 22px rgba(26, 58, 107, 0.12);
-    translate: 0 -2px;
-  }
-  .gx-card__name {
-    font-family: inherit;
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--teacher-navy);
-    margin: 0;
-  }
-  .gx-card__condition {
-    color: var(--teacher-text-muted);
-    margin: 0;
-  }
-  .gx-card__meta {
-    font-size: 0.8rem;
-    color: var(--teacher-text-muted);
-    margin: 0 0 10px;
-  }
-  .gx-card__btn { margin-top: auto; align-self: flex-start; }
+  {% if not juegos %}
+  <div class="teacher-card">
+    <p class="text-muted mb-0">{{ _('Todavía no hay juegos configurados en el sistema.') }}</p>
+  </div>
+  {% endif %}
 
-  /* Ventana de etapas y niveles */
-  .gx-dialog {
-    border: none;
-    border-radius: 18px;
-    padding: 0;
-    width: min(760px, 94vw);
-    max-height: 86vh;
-    box-shadow: 0 24px 60px rgba(17, 22, 39, 0.3);
-  }
-  .gx-dialog::backdrop { background: rgba(17, 22, 39, 0.55); }
-  .gx-dialog__inner { padding: 1.5rem; }
-  .gx-dialog__head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-  }
-  .gx-dialog__title {
-    font-family: inherit;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--teacher-navy);
-    margin: 0;
-  }
-  .gx-dialog__sub { font-size: 0.85rem; color: var(--teacher-text-muted); margin: 2px 0 0; }
-  .gx-dialog__close {
-    border: none;
-    background: var(--teacher-bg);
-    border-radius: 50%;
-    width: 34px; height: 34px;
-    font-size: 1.2rem;
-    line-height: 1;
-    color: var(--teacher-navy);
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .gx-dialog__close:hover { background: var(--teacher-border); }
+  <div class="mm-grid">
+  {% for item in juegos %}
+  {% set g = item.game %}
+  <section class="mm-card" id="juego-{{ g.slug }}">
+    <p class="mm-card__condition">{{ g.condition }}</p>
+    <h2 class="mm-card__name">{{ g.name }}</h2>
+    <p class="mm-card__meta">{{ _('%(levels)s niveles · %(activities)s actividades', levels=item.levels|length, activities=g.levels) }}</p>
+    <button type="button" class="btn btn-teacher-primary mm-card__btn" data-open>{{ _('Ver actividades') }}</button>
 
-  .gx-stages { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
-  .gx-stage-chip {
-    border: 1px solid var(--teacher-border);
-    background: var(--teacher-bg);
-    border-radius: 999px;
-    padding: 7px 16px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--teacher-navy);
-    cursor: pointer;
-    transition: background .2s ease, color .2s ease, border-color .2s ease;
-  }
-  .gx-stage-chip small { display: block; font-size: 0.68rem; font-weight: 500; color: var(--teacher-text-muted); }
-  .gx-stage-chip:hover { border-color: var(--teacher-navy); }
-  .gx-stage-chip.is-active { background: var(--teacher-navy); border-color: var(--teacher-navy); color: #fff; }
-  .gx-stage-chip.is-active small { color: var(--teacher-gold-soft); }
-
-  .gx-levels { display: none; }
-  .gx-levels.is-active { display: grid; }
-  .gx-levels { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-  .gx-level {
-    border: 1px solid var(--teacher-border);
-    border-radius: 12px;
-    padding: 10px 12px;
-    background: #fff;
-    transition: border-color .2s ease, box-shadow .2s ease, translate .2s ease;
-  }
-  .gx-level:hover {
-    border-color: var(--teacher-navy);
-    box-shadow: 0 8px 18px rgba(26, 58, 107, 0.1);
-    translate: 0 -2px;
-  }
-  .gx-level__num { font-weight: 700; font-size: 0.95rem; color: var(--teacher-navy); margin-bottom: 8px; }
-  .gx-level__actions { display: flex; gap: 6px; }
-  .gx-level__actions .btn { border-radius: 8px; font-size: 0.78rem; padding: 0.25rem 0.6rem; }
-</style>
-
-{% if not juegos %}
-<div class="teacher-card">
-  <p class="text-muted mb-0">Todavía no hay juegos configurados en el sistema.</p>
-</div>
-{% endif %}
-
-<div class="gx-grid">
-{% for item in juegos %}
-<section class="teacher-card gx-card" data-search="{{ (item.game.name ~ ' ' ~ item.game.condition)|lower }}">
-  <h2 class="gx-card__name">{{ item.game.name }}</h2>
-  <p class="gx-card__condition">{{ item.game.condition }}</p>
-  <p class="gx-card__meta">
-    {{ item.game.levels }} niveles{% if item.stages|length > 1 %} · {{ item.stages|length }} etapas{% endif %}
-  </p>
-  <button type="button" class="btn btn-teacher-primary gx-card__btn" data-open>Ver niveles</button>
-
-  <dialog class="gx-dialog" aria-label="Niveles de {{ item.game.name }}">
-    <div class="gx-dialog__inner">
-      <div class="gx-dialog__head">
+    <dialog class="mm-dialog" aria-labelledby="mm-title-{{ g.slug }}">
+      <header class="mm-dialog__head">
         <div>
-          <h3 class="gx-dialog__title">{{ item.game.name }}</h3>
-          <p class="gx-dialog__sub">{{ item.game.condition }} · {{ item.game.levels }} niveles</p>
+          <h3 class="mm-dialog__title" id="mm-title-{{ g.slug }}">{{ g.name }}</h3>
+          <p class="mm-dialog__sub">{{ g.condition }} · {{ _('%(levels)s niveles · %(activities)s actividades', levels=item.levels|length, activities=g.levels) }}</p>
         </div>
-        <button type="button" class="gx-dialog__close" data-close aria-label="Cerrar">×</button>
-      </div>
-
-      <div class="gx-stages" role="tablist" aria-label="Etapas de {{ item.game.name }}">
-        {% for stage in item.stages %}
-        <button type="button" class="gx-stage-chip {{ 'is-active' if loop.first else '' }}"
-                data-stage="{{ stage.number }}" role="tab"
-                aria-selected="{{ 'true' if loop.first else 'false' }}">
-          {% if stage.name %}{{ stage.name }}{% else %}Niveles{% endif %}
-          <small>{{ stage.start }}–{{ stage.end }}</small>
+        <button type="button" class="mm-dialog__close" data-close aria-label="{{ _('Cerrar') }}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
         </button>
-        {% endfor %}
-      </div>
+      </header>
 
-      {% for stage in item.stages %}
-      <div class="gx-levels {{ 'is-active' if loop.first else '' }}"
-           data-panel="{{ stage.number }}" role="tabpanel">
-        {% for lvl in stage.levels %}
-        <div class="gx-level">
-          <div class="gx-level__num">Nivel {{ lvl }}</div>
-          <div class="gx-level__actions">
-            <a href="{{ url_for('games.play', slug=item.game.slug, level=lvl) }}"
-               class="btn btn-teacher-primary" target="_blank" rel="noopener">Jugar</a>
-            <a href="{{ url_for('dashboard.ver_respuestas', slug=item.game.slug, level=lvl) }}"
-               class="btn btn-outline-secondary" target="_blank" rel="noopener">Respuestas</a>
-          </div>
+      <div class="mm-dialog__body">
+        <div class="mm-tabs" role="tablist" aria-label="{{ _('Niveles de %(game)s', game=g.name) }}">
+          {% for lvl in item.levels %}
+          <button type="button" class="mm-tab" role="tab"
+                  id="mm-tab-{{ g.slug }}-{{ lvl.number }}"
+                  aria-controls="mm-panel-{{ g.slug }}-{{ lvl.number }}"
+                  aria-selected="{{ 'true' if loop.first else 'false' }}"
+                  tabindex="{{ '0' if loop.first else '-1' }}">
+            <strong>{{ _('Nivel %(n)s', n=lvl.number) }} · {{ lvl.name }}</strong>
+            <small>{{ lvl.theme or _('%(n)s actividades', n=lvl.activities|length) }}</small>
+          </button>
+          {% endfor %}
+        </div>
+
+        {% for lvl in item.levels %}
+        <div class="mm-panel" role="tabpanel"
+             id="mm-panel-{{ g.slug }}-{{ lvl.number }}"
+             aria-labelledby="mm-tab-{{ g.slug }}-{{ lvl.number }}"
+             {{ '' if loop.first else 'hidden' }}>
+          <ol class="mm-activities">
+            {% for act in lvl.activities %}
+            <li class="mm-activity">
+              <div class="mm-activity__head">
+                <span class="mm-activity__pos">{{ act.position }}</span>
+                <span class="mm-activity__title">{{ act.title }}</span>
+              </div>
+              <div class="mm-activity__actions">
+                <a href="{{ url_for('games.play', slug=g.slug, level=act.index) }}" class="btn btn-teacher-primary">{{ _('Jugar') }}</a>
+                <a href="{{ url_for('dashboard.ver_respuestas', slug=g.slug, level=act.index) }}" class="btn btn-outline-secondary">{{ _('Respuestas') }}</a>
+              </div>
+            </li>
+            {% endfor %}
+          </ol>
         </div>
         {% endfor %}
       </div>
-      {% endfor %}
-    </div>
-  </dialog>
-</section>
-{% endfor %}
+    </dialog>
+  </section>
+  {% endfor %}
+  </div>
 </div>
 
 <script>
-  document.querySelectorAll(".gx-card").forEach((card) => {
-    const dialog = card.querySelector("dialog");
+  document.querySelectorAll(".mm-card").forEach(function (card) {
+    var dialog = card.querySelector("dialog");
+    card.querySelector("[data-open]").addEventListener("click", function () { dialog.showModal(); });
+    dialog.querySelector("[data-close]").addEventListener("click", function () { dialog.close(); });
+    dialog.addEventListener("click", function (e) { if (e.target === dialog) dialog.close(); });
 
-    card.querySelector("[data-open]").addEventListener("click", () => dialog.showModal());
-    dialog.querySelector("[data-close]").addEventListener("click", () => dialog.close());
-    // Cerrar al hacer clic fuera del contenido
-    dialog.addEventListener("click", (e) => { if (e.target === dialog) dialog.close(); });
-
-    const chips = dialog.querySelectorAll(".gx-stage-chip");
-    const panels = dialog.querySelectorAll(".gx-levels");
-    chips.forEach((chip) => {
-      chip.addEventListener("click", () => {
-        chips.forEach((c) => {
-          c.classList.remove("is-active");
-          c.setAttribute("aria-selected", "false");
-        });
-        chip.classList.add("is-active");
-        chip.setAttribute("aria-selected", "true");
-        panels.forEach((p) => p.classList.toggle("is-active", p.dataset.panel === chip.dataset.stage));
+    var tabs = Array.prototype.slice.call(dialog.querySelectorAll(".mm-tab"));
+    function select(tab) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+      });
+      tab.focus();
+    }
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener("click", function () { select(tab); });
+      tab.addEventListener("keydown", function (e) {
+        if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+        e.preventDefault();
+        var step = e.key === "ArrowRight" ? 1 : -1;
+        select(tabs[(i + step + tabs.length) % tabs.length]);
       });
     });
   });
+
+  // Al volver de una actividad (#juego-slug.nivel) se abre ese juego en su nivel.
+  (function () {
+    var parts = window.location.hash.slice(1).split(".");
+    var card = parts[0] && document.getElementById(parts[0]);
+    if (!card || !card.classList.contains("mm-card")) return;
+    card.querySelector("[data-open]").click();
+    var tab = card.querySelectorAll(".mm-tab")[(parseInt(parts[1], 10) || 1) - 1];
+    if (tab) tab.click();
+  })();
 </script>
 {% endblock %}
-

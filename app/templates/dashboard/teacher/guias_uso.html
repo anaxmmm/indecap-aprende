@@ -1,34 +1,210 @@
 {% extends "dashboard/teacher/base_teacher.html" %}
-{% block title %}Guías de uso — indecap-aprende{% endblock %}
+{% block title %}{{ _('Guías de uso') }} — indecap-aprende{% endblock %}
+
+{% macro steps(items) %}
+<ol class="gu-steps">
+  {% for item in items %}<li>{{ item }}</li>{% endfor %}
+</ol>
+{% endmacro %}
+
 {% block teacher_content %}
-<h1 class="h4 mb-3">Guías de uso</h1>
-<div class="accordion" id="guias-accordion">
-  <div class="accordion-item">
-    <h2 class="accordion-header">
-      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#guia-1">
-        Primeros pasos en indecap-aprende
-      </button>
-    </h2>
-    <div id="guia-1" class="accordion-collapse collapse show" data-bs-parent="#guias-accordion">
-      <div class="accordion-body">
-        Crea tu primer grupo desde Panel general, añade a tus estudiantes y
-        revisa las Sesiones del sistema para conocer las actividades
-        disponibles por trastorno.
+<h1 class="visually-hidden">{{ _('Guías de uso') }}</h1>
+
+<div class="gu">
+  <nav class="gu-index" aria-label="{{ _('Temas de la guía') }}">
+    <p class="gu-index__title">{{ _('Temas') }}</p>
+    <ol>
+      <li><a href="#inicio">{{ _('Primeros pasos') }}</a></li>
+      <li><a href="#panel">{{ _('Panel general') }}</a></li>
+      <li><a href="#registro">{{ _('Registro de estudiantes') }}</a></li>
+      <li><a href="#historial">{{ _('Historial del estudiante') }}</a></li>
+      <li><a href="#maestro">{{ _('Modo maestro') }}</a></li>
+      <li><a href="#juegos">{{ _('Cómo funcionan los juegos') }}</a></li>
+      <li><a href="#catalogo">{{ _('Los ocho juegos') }}</a></li>
+      <li><a href="#accesibilidad">{{ _('Accesibilidad') }}</a></li>
+      {% if current_user.is_admin %}<li><a href="#usuarios">{{ _('Usuarios') }}</a></li>{% endif %}
+      <li><a href="#cuenta">{{ _('Tu cuenta') }}</a></li>
+      <li><a href="#preguntas">{{ _('Preguntas frecuentes') }}</a></li>
+    </ol>
+  </nav>
+
+  <div class="gu-body">
+    <section class="dx-card gu-section" id="inicio" aria-labelledby="t-inicio">
+      <h2 class="gu-title" id="t-inicio">{{ _('Primeros pasos') }}</h2>
+      <p>{{ _('indecap-aprende tiene tres tipos de cuenta: administradores, docentes y estudiantes. Nadie se registra solo: las cuentas las crea el equipo del instituto.') }}</p>
+      <ul class="gu-roles">
+        <li><strong>{{ _('Administrador principal') }}</strong> {{ _('crea administradores, docentes y estudiantes.') }}</li>
+        <li><strong>{{ _('Administradores') }}</strong> {{ _('crean docentes y estudiantes.') }}</li>
+        <li><strong>{{ _('Docentes') }}</strong> {{ _('crean estudiantes, los organizan en grupos y siguen su avance.') }}</li>
+        <li><strong>{{ _('Estudiantes') }}</strong> {{ _('juegan las actividades que su docente les asignó.') }}</li>
+      </ul>
+      <p>{{ _('Para ingresar, elige el tipo de acceso antes de escribir el correo: «Docente» para docentes y administradores, «Estudiante» para estudiantes. Si eliges el acceso equivocado, la plataforma te indica cuál usar.') }}</p>
+      <h3 class="gu-subtitle">{{ _('Para empezar a trabajar con un grupo') }}</h3>
+      {{ steps([
+        _('En Registro de estudiantes, crea un grupo con «+ Añadir grupo».'),
+        _('En ese grupo, usa «+ Añadir estudiante» y marca los trastornos que trabajará.'),
+        _('Entrega al estudiante su correo y su contraseña.'),
+        _('Revisa las actividades en Modo maestro antes de la clase.'),
+        _('Sigue su avance en Panel general y en su historial.'),
+      ]) }}
+    </section>
+
+    <section class="dx-card gu-section" id="panel" aria-labelledby="t-panel">
+      <h2 class="gu-title" id="t-panel">{{ _('Panel general') }}</h2>
+      <p>{{ _('Es la primera página al ingresar. Resume la actividad de tus estudiantes.') }}</p>
+      <ul>
+        <li>{{ _('Las cuatro tarjetas superiores muestran los estudiantes activos, los planes asignados, el trastorno más trabajado y las partidas del periodo elegido.') }}</li>
+        <li>{{ _('El gráfico compara partidas completadas y actividades superadas. Puedes cambiar el periodo (7 días a 1 año), verlo por día o por semana, o elegir fechas exactas con «Personalizado».') }}</li>
+        <li>{{ _('En la lista de la derecha, toca a un estudiante para ver solo su actividad en el gráfico; vuelve a tocarlo para ver a todos. «Ver perfil» abre su historial.') }}</li>
+      </ul>
+      <h3 class="gu-subtitle">{{ _('Avisos') }}</h3>
+      <p>{{ _('La campana avisa cuando un estudiante supera una actividad. El punto rojo indica que hay avisos sin leer. Dentro del menú puedes marcarlos todos como leídos y activar o apagar el sonido. El sonido se guarda solo en este navegador.') }}</p>
+      <p>{{ _('El botón ES / EN cambia el idioma de toda la plataforma, incluidas las instrucciones de los juegos.') }}</p>
+    </section>
+
+    <section class="dx-card gu-section" id="registro" aria-labelledby="t-registro">
+      <h2 class="gu-title" id="t-registro">{{ _('Registro de estudiantes') }}</h2>
+      <p>{{ _('Aquí organizas a tus estudiantes por grupos. Cada estudiante pertenece a un solo grupo a la vez.') }}</p>
+      <dl class="gu-defs">
+        <dt>{{ _('Añadir estudiante') }}</dt>
+        <dd>{{ _('Crea la cuenta del estudiante dentro del grupo. Los trastornos que marques definen qué juegos verá en su panel. La contraseña debe tener al menos 8 caracteres.') }}</dd>
+        <dt>{{ _('Historial') }}</dt>
+        <dd>{{ _('Abre el seguimiento del estudiante. También puedes tocar su nombre.') }}</dd>
+        <dt>{{ _('Editar') }}</dt>
+        <dd>{{ _('Cambia sus datos y los trastornos asignados.') }}</dd>
+        <dt>{{ _('Mover') }}</dt>
+        <dd>{{ _('Lo pasa a otro de tus grupos. Aparece cuando tienes más de un grupo.') }}</dd>
+        <dt>{{ _('Desvincular') }}</dt>
+        <dd>{{ _('Lo deja inactivo en el grupo sin borrar nada. Aparece en «Estudiantes inactivos», desde donde puedes reactivarlo.') }}</dd>
+        <dt>{{ _('Eliminar cuenta') }}</dt>
+        <dd>{{ _('Solo está disponible para estudiantes inactivos. La persona ya no puede ingresar, pero sus partidas, avisos e historial quedan guardados. Un administrador puede restaurar la cuenta.') }}</dd>
+        <dt>{{ _('Eliminar grupo') }}</dt>
+        <dd>{{ _('Solo se puede cuando el grupo ya no tiene estudiantes. Muévelos a otro grupo antes.') }}</dd>
+      </dl>
+    </section>
+
+    <section class="dx-card gu-section" id="historial" aria-labelledby="t-historial">
+      <h2 class="gu-title" id="t-historial">{{ _('Historial del estudiante') }}</h2>
+      <p>{{ _('Reúne todo lo que el estudiante ha jugado. Úsalo para planear qué reforzar en clase.') }}</p>
+      <ul>
+        <li><strong>{{ _('Avance por juego') }}:</strong> {{ _('actividades superadas de las 50 de cada juego, partidas y promedio reciente.') }}</li>
+        <li><strong>{{ _('Para reforzar') }}:</strong> {{ _('las habilidades en las que más se equivocó en sus últimas 30 partidas. Los repasos no cuentan.') }}</li>
+        <li><strong>{{ _('Evolución') }}:</strong> {{ _('el puntaje promedio de cada una de las últimas 8 semanas.') }}</li>
+        <li><strong>{{ _('Últimas partidas') }}:</strong> {{ _('fecha, actividad, puntaje, estrellas, tiempo y cómo se sintió.') }}</li>
+      </ul>
+      <p>{{ _('«¿Cómo se sintió?» es la autoevaluación que el estudiante responde al terminar cada actividad (Bien, Regular o Me costó). Es opcional y sirve para conversar con él sobre su experiencia, no para calificar.') }}</p>
+    </section>
+
+    <section class="dx-card gu-section" id="maestro" aria-labelledby="t-maestro">
+      <h2 class="gu-title" id="t-maestro">{{ _('Modo maestro') }}</h2>
+      <p>{{ _('Muestra los ocho juegos tal como los ve el estudiante, con todas las actividades abiertas. Lo que juegues aquí no se guarda como progreso de nadie.') }}</p>
+      {{ steps([
+        _('Toca «Ver actividades» en el juego que quieres revisar.'),
+        _('Elige el nivel en las pestañas: Base, Media, Alta, Muy Alta o Súper Difícil.'),
+        _('Usa «Jugar» para proyectar la actividad en clase o «Respuestas» para ver una hoja con los retos resueltos.'),
+      ]) }}
+      <p>{{ _('La hoja de respuestas se genera con el mismo motor del juego: cada vez que la abres cambian los valores. Puedes imprimirla con «Imprimir».') }}</p>
+    </section>
+
+    <section class="dx-card gu-section" id="juegos" aria-labelledby="t-juegos">
+      <h2 class="gu-title" id="t-juegos">{{ _('Cómo funcionan los juegos') }}</h2>
+      <p>{{ _('Cada juego tiene 5 niveles de 10 actividades. Cada actividad tiene 5 retos que suben de dificultad. El estudiante abre la siguiente actividad cuando supera la anterior.') }}</p>
+      <div class="dx-table-wrap">
+        <table class="dx-table gu-table">
+          <thead><tr><th scope="col">{{ _('Resultado') }}</th><th scope="col">{{ _('Puntaje') }}</th><th scope="col">{{ _('Estrellas') }}</th></tr></thead>
+          <tbody>
+            <tr><td>{{ _('Todos los retos bien al primer intento') }}</td><td>100</td><td>★★★</td></tr>
+            <tr><td>{{ _('Pocos errores') }}</td><td>75 – 99</td><td>★★</td></tr>
+            <tr><td>{{ _('Actividad superada') }}</td><td>60 – 74</td><td>★</td></tr>
+            <tr><td>{{ _('Todavía no la supera') }}</td><td>0 – 59</td><td>—</td></tr>
+          </tbody>
+        </table>
       </div>
-    </div>
-  </div>
-  <div class="accordion-item">
-    <h2 class="accordion-header">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guia-2">
-        Gestión de grupos y estudiantes
-      </button>
-    </h2>
-    <div id="guia-2" class="accordion-collapse collapse" data-bs-parent="#guias-accordion">
-      <div class="accordion-body">
-        Cada estudiante pertenece a un solo grupo a la vez. Usa "Mover" para
-        cambiarlo de grupo o "Desvincular" para quitarlo sin borrar su cuenta.
+      <ul>
+        <li>{{ _('Cada reto vale más si se resuelve al primer intento. Al tercer error el juego muestra la respuesta y explica por qué.') }}</li>
+        <li>{{ _('«Necesito una pista» da una ayuda sin restar puntos.') }}</li>
+        <li>{{ _('Antes de terminar, el juego repite retos parecidos a los que costaron. Ese repaso no cambia el puntaje.') }}</li>
+        <li>{{ _('Al final el estudiante ve lo que dominó y lo que debe reforzar, con una pista concreta.') }}</li>
+        <li>{{ _('Si se pierde la conexión, la partida se guarda en el dispositivo y se envía al volver a conectarse.') }}</li>
+      </ul>
+    </section>
+
+    <section class="dx-card gu-section" id="catalogo" aria-labelledby="t-catalogo">
+      <h2 class="gu-title" id="t-catalogo">{{ _('Los ocho juegos') }}</h2>
+      <div class="gu-games">
+        {% for game in games %}
+        <article class="gu-game">
+          <p class="gx-card__eyebrow">{{ game.condition }}</p>
+          <h3 class="gu-game__name">{{ game.name }}</h3>
+          <p class="gu-game__core">{{ game.core_skill }}</p>
+          <ul>{% for skill in game.skills %}<li>{{ skill }}</li>{% endfor %}</ul>
+          {% if game.plan %}
+          <p class="gu-game__levels">{{ game.plan | map(attribute='theme') | join(' · ') }}</p>
+          {% endif %}
+        </article>
+        {% endfor %}
       </div>
-    </div>
+    </section>
+
+    <section class="dx-card gu-section" id="accesibilidad" aria-labelledby="t-accesibilidad">
+      <h2 class="gu-title" id="t-accesibilidad">{{ _('Accesibilidad') }}</h2>
+      <p>{{ _('Los juegos siguen el Diseño Universal para el Aprendizaje (DUA): cada actividad presenta la información de varias formas, permite responder de varias maneras y da retroalimentación sin castigar el error.') }}</p>
+      <p>{{ _('La barra superior de cada juego tiene:') }}</p>
+      <dl class="gu-defs">
+        <dt>{{ _('Leer en voz alta') }}</dt><dd>{{ _('Lee la consigna con la voz del dispositivo.') }}</dd>
+        <dt>{{ _('Sonidos') }}</dt><dd>{{ _('Activa o apaga los sonidos de acierto y error.') }}</dd>
+        <dt>{{ _('Alto contraste') }}</dt><dd>{{ _('Colores más marcados para baja visión.') }}</dd>
+        <dt>A− / A+</dt><dd>{{ _('Cambia el tamaño del texto.') }}</dd>
+        <dt>{{ _('Reducir movimiento') }}</dt><dd>{{ _('Quita animaciones.') }}</dd>
+        <dt>{{ _('Necesito una pista') }}</dt><dd>{{ _('Muestra una ayuda para el reto actual.') }}</dd>
+      </dl>
+      <p>{{ _('Todo se puede usar con teclado y con lector de pantalla.') }}</p>
+    </section>
+
+    {% if current_user.is_admin %}
+    <section class="dx-card gu-section" id="usuarios" aria-labelledby="t-usuarios">
+      <h2 class="gu-title" id="t-usuarios">{{ _('Usuarios') }}</h2>
+      <p>{{ _('Solo para administradores. «Usuarios» y «Docentes y grupos» se abren desde el menú de tu cuenta, en la esquina superior derecha.') }}</p>
+      <ul>
+        <li>{{ _('«+ Nueva cuenta» crea administradores (solo el administrador principal), docentes y estudiantes. Al crear un estudiante eliges su grupo.') }}</li>
+        <li>{{ _('Filtra por rol y cambia entre cuentas activas y archivadas.') }}</li>
+        <li>{{ _('«Eliminar» archiva la cuenta: la persona ya no ingresa, pero todo su registro se conserva con la fecha y quién la archivó. En «Archivadas» puedes restaurarla.') }}</li>
+        <li>{{ _('La cuenta del administrador principal no se puede archivar.') }}</li>
+        <li>{{ _('Como administrador ves los grupos y estudiantes de todos los docentes, y el «Panel del instituto» suma la actividad de todos.') }}</li>
+        <li>{{ _('En «Docentes y grupos» pasas un grupo completo a otro docente, por ejemplo cuando alguien se retira. Los estudiantes conservan su progreso.') }}</li>
+      </ul>
+    </section>
+    {% endif %}
+
+    <section class="dx-card gu-section" id="cuenta" aria-labelledby="t-cuenta">
+      <h2 class="gu-title" id="t-cuenta">{{ _('Tu cuenta') }}</h2>
+      <p>{{ _('En el menú de tu cuenta, «Perfil» te permite cambiar tu nombre, correo, área y contraseña. «Cerrar sesión» sale de la plataforma.') }}</p>
+      <p>{{ _('Si olvidas tu contraseña, usa «¿Olvidaste tu contraseña?» en la página de ingreso.') }}</p>
+    </section>
+
+    <section class="dx-card gu-section" id="preguntas" aria-labelledby="t-preguntas">
+      <h2 class="gu-title" id="t-preguntas">{{ _('Preguntas frecuentes') }}</h2>
+      <details class="gu-faq">
+        <summary>{{ _('Un estudiante no puede ingresar.') }}</summary>
+        <p>{{ _('Revisa que entre por «Estudiante», que su cuenta no esté inactiva en el grupo y que no haya sido archivada.') }}</p>
+      </details>
+      <details class="gu-faq">
+        <summary>{{ _('Un estudiante no ve un juego.') }}</summary>
+        <p>{{ _('El estudiante solo ve los juegos de los trastornos que tiene asignados. Revísalos con «Editar» en Registro de estudiantes.') }}</p>
+      </details>
+      <details class="gu-faq">
+        <summary>{{ _('Jugué en Modo maestro y no aparece en el panel.') }}</summary>
+        <p>{{ _('Es lo esperado: las partidas de docentes y administradores son vista previa y no se guardan.') }}</p>
+      </details>
+      <details class="gu-faq">
+        <summary>{{ _('Eliminé una cuenta por error.') }}</summary>
+        <p>{{ _('Pídele a un administrador que la restaure desde Usuarios → Archivadas. Su progreso sigue completo.') }}</p>
+      </details>
+      <details class="gu-faq">
+        <summary>{{ _('¿Por qué no hay videos en Lengua de Señas Colombiana?') }}</summary>
+        <p>{{ _('Los videos de LSC solo se publican cuando un intérprete los valida. Mientras tanto, El Enigma Lingüístico usa apoyos visuales y texto.') }}</p>
+      </details>
+    </section>
   </div>
 </div>
 {% endblock %}

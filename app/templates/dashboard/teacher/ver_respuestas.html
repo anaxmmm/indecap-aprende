@@ -1,11 +1,6 @@
 {% extends "dashboard/teacher/base_teacher.html" %}
-{% block title %}Respuestas · {{ game.name }} — Nivel {{ level }} — indecap-aprende{% endblock %}
+{% block title %}{{ _('Respuestas') }} · {{ activity_title }} · {{ game.name }} — indecap-aprende{% endblock %}
 {% block teacher_content %}
-
-{% set stage_size = game.stage_size or 10 %}
-{% set stage_num = ((level - 1) // stage_size) + 1 %}
-{% set stage_names = ["Base", "Media", "Alta", "Muy Alta", "Súper Difícil"] %}
-{% set stage_name = stage_names[stage_num - 1] if stage_num <= stage_names|length else "Etapa " ~ stage_num %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
 
@@ -100,13 +95,13 @@
 </style>
 
 <div class="vra-actions">
-  <a href="{{ url_for('dashboard.sesiones_sistema') }}" class="btn btn-outline-secondary btn-sm">← Sesiones sistema</a>
+  <a href="{{ url_for('dashboard.sesiones_sistema') }}#juego-{{ game.slug }}.{{ nivel }}" class="btn btn-outline-secondary btn-sm">← {{ _('Modo maestro') }}</a>
   <span class="ms-auto d-flex gap-2">
     {% if level > 1 %}
-    <a href="{{ url_for('dashboard.ver_respuestas', slug=game.slug, level=level - 1) }}" class="btn btn-outline-secondary btn-sm">← Nivel {{ level - 1 }}</a>
+    <a href="{{ url_for('dashboard.ver_respuestas', slug=game.slug, level=level - 1) }}" class="btn btn-outline-secondary btn-sm">← {{ _('Actividad anterior') }}</a>
     {% endif %}
     {% if level < game.levels %}
-    <a href="{{ url_for('dashboard.ver_respuestas', slug=game.slug, level=level + 1) }}" class="btn btn-outline-secondary btn-sm">Nivel {{ level + 1 }} →</a>
+    <a href="{{ url_for('dashboard.ver_respuestas', slug=game.slug, level=level + 1) }}" class="btn btn-outline-secondary btn-sm">{{ _('Actividad siguiente') }} →</a>
     {% endif %}
   </span>
 </div>
@@ -114,216 +109,158 @@
 <header class="teacher-card vra-head">
   <span class="vra-badge">{{ game.condition }}</span>
   <div class="vra-head__info">
-    <h1 class="vra-title">{{ game.name }}</h1>
+    <h1 class="vra-title">{{ activity_title }}</h1>
     <p class="vra-meta">
-      Nivel {{ level }} de {{ game.levels }}
-      {% if game.has_stage_map %}
-        · Etapa {{ stage_num }} · {{ stage_name }} (niveles {{ (stage_num - 1) * stage_size + 1 }}–{{ stage_num * stage_size }})
-      {% endif %}
+      {{ game.name }} · {{ _('Nivel %(n)s', n=nivel) }} · {{ nivel_name }} · {{ _('Actividad %(a)s de %(total)s', a=actividad, total=game.stage_size) }}
     </p>
   </div>
   <div class="vra-head__actions">
-    <a href="{{ url_for('games.play', slug=game.slug, level=level) }}" class="btn btn-teacher-primary btn-sm" target="_blank" rel="noopener">Jugar / proyectar</a>
-    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">Imprimir</button>
+    <a href="{{ url_for('games.play', slug=game.slug, level=level) }}" class="btn btn-teacher-primary btn-sm">{{ _('Jugar / proyectar') }}</a>
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">{{ _('Imprimir') }}</button>
   </div>
 </header>
 
 <p class="vra-note" role="note">
-  <strong>Muestra generada con el mismo motor que juega el estudiante.</strong>
-  Los retos se crean en el navegador con valores aleatorios: cada vez que abras esta hoja verás
-  una variación distinta del nivel. Para verlo en vivo con tus estudiantes usa «Jugar / proyectar».
+  <strong>{{ _('Muestra generada con el mismo motor que juega el estudiante.') }}</strong>
+  {{ _('Los retos se crean con valores aleatorios: cada vez que abras esta hoja verás una variación distinta de la actividad. Para verla en vivo con tus estudiantes usa «Jugar / proyectar».') }}
 </p>
 
 <div id="vra-intro" class="teacher-card vra-intro" hidden>
-  <p class="vra-intro__label">Lo que el estudiante ve al iniciar el nivel</p>
+  <p class="vra-intro__label">{{ _('Lo que el estudiante ve al iniciar') }}</p>
   <p class="vra-intro__text" id="vra-intro-text"></p>
 </div>
 
 <div id="vra-sheet" class="vra-sheet" aria-live="polite">
   <div class="teacher-card">
-    <p class="text-muted mb-0">Generando la hoja de respuestas…</p>
+    <p class="text-muted mb-0">{{ _('Generando la hoja de respuestas…') }}</p>
   </div>
 </div>
 
 <details class="teacher-card mt-3">
-  <summary class="vra-summary">Qué trabaja esta actividad</summary>
+  <summary class="vra-summary">{{ _('Qué trabaja esta actividad') }}</summary>
   <div class="vra-pedagogy__body">
-    <p><strong>Habilidad núcleo:</strong> {{ game.core_skill }}</p>
-    <p><strong>Regiones cerebrales implicadas:</strong></p>
+    <p><strong>{{ _('Habilidad central:') }}</strong> {{ game.core_skill }}</p>
+    <p><strong>{{ _('Habilidades que se practican:') }}</strong></p>
     <ul>
-      {% for region in game.brain_regions %}<li>{{ region }}</li>{% endfor %}
+      {% for skill in game.skills %}<li>{{ skill }}</li>{% endfor %}
     </ul>
-    <p><strong>Representación:</strong> {{ game.dua.representacion }}</p>
-    <p><strong>Acción y expresión:</strong> {{ game.dua.accion_expresion }}</p>
-    <p><strong>Implicación:</strong> {{ game.dua.implicacion }}</p>
+    <p><strong>{{ _('Representación:') }}</strong> {{ game.dua.representacion }}</p>
+    <p><strong>{{ _('Acción y expresión:') }}</strong> {{ game.dua.accion_expresion }}</p>
+    <p><strong>{{ _('Implicación:') }}</strong> {{ game.dua.implicacion }}</p>
     <p class="vra-round__note">
-      El nivel de apoyo (pistas, tiempo y repeticiones) se calibra según el
-      desempeño. Es un ajuste pedagógico, no un instrumento diagnóstico.
+      {{ _('El nivel de apoyo (pistas, tiempo y repeticiones) se calibra según el desempeño. Es un ajuste pedagógico, no un instrumento diagnóstico.') }}
     </p>
   </div>
 </details>
 
+{% set sheet_strings = {
+  'loadError': _('No se pudo cargar el contenido de este juego. Recarga la página o verifica que el juego esté disponible.'),
+  'empty': _('Esta actividad no tiene retos configurados.'),
+  'round': _('Reto'),
+  'noPrompt': _('(sin consigna)'),
+  'failed': _('Este reto no se pudo generar.'),
+  'correct': _('Respuesta correcta'),
+  'interactive': _('Este reto usa una mecánica interactiva que no se puede mostrar en una hoja. Usa «Jugar / proyectar» para verlo en vivo.'),
+  'explain': _('Explicación: '),
+  'hint': _('Pista que vería el estudiante: '),
+  'review': _('Repaso')
+} %}
+<script type="application/json" id="sheetStrings">{{ sheet_strings | tojson }}</script>
+<script type="application/json" id="gameDict">{{ game_dictionary(game) | tojson }}</script>
 <script src="{{ url_for('static', filename='js/games/core/engine.js') }}"></script>
-<script>
-  // Esta página no tiene .game-shell, así que el motor queda inerte (el
-  // constructor del Engine sale silenciosamente). Interceptamos register()
-  // únicamente para quedarnos con la definición del juego (getLevel y
-  // buildRound), que es exactamente el contenido que ve el estudiante.
-  window.__vraDefinition = null;
-  (function () {
-    var originalRegister = window.IndecapGame.register;
-    window.IndecapGame.register = function (definition) {
-      window.__vraDefinition = definition;
-      try {
-        originalRegister.call(window.IndecapGame, definition);
-      } catch (err) {
-        /* Sin .game-shell el motor no arranca; la definición ya quedó guardada. */
-      }
-    };
-  })();
-</script>
 <script src="{{ url_for('static', filename=game.asset_path) }}"></script>
 <script>
 (function () {
   "use strict";
 
-  var definition = window.__vraDefinition;
+  var T = JSON.parse(document.getElementById("sheetStrings").textContent);
+  var engine = window.IndecapGame;
+  var definition = engine && engine.definition;
   var level = Number("{{ level }}");
   var sheet = document.getElementById("vra-sheet");
 
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
   function showError(message) {
     sheet.innerHTML = "";
-    var card = document.createElement("div");
-    card.className = "teacher-card";
-    var p = document.createElement("p");
-    p.className = "text-muted mb-0";
-    p.textContent = message;
-    card.appendChild(p);
+    var card = el("div", "teacher-card");
+    card.appendChild(el("p", "text-muted mb-0", message));
     sheet.appendChild(card);
   }
 
-  if (!definition || typeof definition.getLevel !== "function" || typeof definition.buildRound !== "function") {
-    showError("No se pudo cargar el contenido de este juego. Recarga la página o verifica que el juego esté disponible.");
-    return;
-  }
-
-  var cfg;
-  try { cfg = definition.getLevel(level); } catch (err) { cfg = null; }
-  if (!cfg || !cfg.rounds) {
-    showError("Este nivel no tiene retos configurados.");
-    return;
-  }
+  if (!definition) { showError(T.loadError); return; }
 
   // Mismo contexto que entrega el motor cuando el apoyo es independiente.
-  var ctx = { support: 3 };
+  var activity;
+  try { activity = engine.resolveActivity(definition, level, { support: 3 }); } catch (err) { activity = null; }
+  if (!activity || !activity.rounds) { showError(T.empty); return; }
 
-  if (cfg.intro) {
-    document.getElementById("vra-intro-text").textContent = cfg.intro;
+  if (activity.intro) {
+    document.getElementById("vra-intro-text").textContent = activity.intro;
     document.getElementById("vra-intro").hidden = false;
   }
+  var labels = activity.skillLabels || {};
 
   function buildRoundCard(num, round) {
-    var card = document.createElement("article");
-    card.className = "teacher-card vra-round";
-
-    var head = document.createElement("div");
-    head.className = "vra-round__head";
-    var title = document.createElement("h2");
-    title.className = "vra-round__title";
-    title.textContent = "Reto " + num;
-    head.appendChild(title);
-    if (round && round.skill) {
-      var skill = document.createElement("span");
-      skill.className = "vra-round__skill";
-      skill.textContent = round.skill;
-      head.appendChild(skill);
-    }
+    var card = el("article", "teacher-card vra-round");
+    var head = el("div", "vra-round__head");
+    head.appendChild(el("h2", "vra-round__title", T.round + " " + num));
+    if (round && round.skill) head.appendChild(el("span", "vra-round__skill", labels[round.skill] || round.skill));
     card.appendChild(head);
 
-    if (!round) {
-      var err = document.createElement("p");
-      err.className = "text-muted mb-0";
-      err.textContent = "Este reto no se pudo generar.";
-      card.appendChild(err);
-      return card;
-    }
+    if (!round) { card.appendChild(el("p", "text-muted mb-0", T.failed)); return card; }
 
-    var prompt = document.createElement("p");
-    prompt.className = "vra-round__prompt";
-    prompt.textContent = round.prompt || "(sin consigna)";
-    card.appendChild(prompt);
+    card.appendChild(el("p", "vra-round__prompt", round.prompt || T.noPrompt));
 
     if (round.visual) {
-      var visual = document.createElement("div");
-      visual.className = "vra-visual";
+      var visual = el("div", "vra-visual");
       // Mismo origen y confianza que play.html: el HTML lo genera el game.js.
       visual.innerHTML = round.visual;
       card.appendChild(visual);
     }
 
     if (round.options && round.options.length) {
-      var list = document.createElement("ul");
-      list.className = "vra-options";
+      var list = el("ul", "vra-options");
       round.options.forEach(function (option) {
         var correct = String(option.value) === String(round.answer);
-        var item = document.createElement("li");
-        item.className = "vra-options__item" + (correct ? " is-correct" : "");
-
-        var label = document.createElement("span");
-        label.className = "vra-options__label";
+        var item = el("li", "vra-options__item" + (correct ? " is-correct" : ""));
+        var label = el("span", "vra-options__label");
         label.innerHTML = option.label;
+        if (option.caption) label.appendChild(el("span", "vra-options__caption", option.caption));
         item.appendChild(label);
-
-        if (option.caption) {
-          var caption = document.createElement("span");
-          caption.className = "vra-options__caption";
-          caption.textContent = option.caption;
-          label.appendChild(caption);
-        }
-
-        if (correct) {
-          var tag = document.createElement("span");
-          tag.className = "vra-options__tag";
-          tag.textContent = "✓ Respuesta correcta";
-          item.appendChild(tag);
-        }
+        if (correct) item.appendChild(el("span", "vra-options__tag", "✓ " + T.correct));
         list.appendChild(item);
       });
       card.appendChild(list);
     } else if (typeof round.mount === "function") {
-      var note = document.createElement("p");
-      note.className = "vra-round__note";
-      note.textContent = "Este reto usa una mecánica interactiva que no se puede mostrar en una hoja estática. Usa «Jugar / proyectar» para verlo en vivo.";
-      card.appendChild(note);
+      card.appendChild(el("p", "vra-round__note", T.interactive));
+    } else {
+      var ans = el("p", "vra-options__item is-correct");
+      ans.textContent = "✓ " + T.correct + ": " + engine.describeAnswer(round);
+      card.appendChild(ans);
     }
 
     if (round.explain) {
-      var expl = document.createElement("p");
-      expl.className = "vra-round__explain";
-      var strong = document.createElement("strong");
-      strong.textContent = "Explicación: ";
-      expl.appendChild(strong);
+      var expl = el("p", "vra-round__explain");
+      expl.appendChild(el("strong", null, T.explain));
       expl.appendChild(document.createTextNode(round.explain));
       card.appendChild(expl);
     }
-
-    if (round.hint) {
-      var hint = document.createElement("p");
-      hint.className = "vra-round__hint";
-      hint.textContent = "💡 Pista que vería el estudiante: " + round.hint;
-      card.appendChild(hint);
-    }
-
+    if (round.hint) card.appendChild(el("p", "vra-round__hint", T.hint + round.hint));
     return card;
   }
 
   var frag = document.createDocumentFragment();
-  for (var i = 0; i < cfg.rounds; i++) {
+  for (var i = 0; i < activity.rounds; i++) {
     var round = null;
-    try { round = definition.buildRound(cfg, i, ctx); } catch (err) { round = null; }
+    try { round = activity.build(i); } catch (err) { round = null; }
     frag.appendChild(buildRoundCard(i + 1, round));
   }
-
   sheet.innerHTML = "";
   sheet.appendChild(frag);
 })();

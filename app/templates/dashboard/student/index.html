@@ -64,7 +64,7 @@
     <div class="dx-resume">
       <div>
         <p class="mb-0 small fw-semibold">{{ sesion.actividad.title }}</p>
-        <p class="mb-0 text-muted" style="font-size: 0.75rem;">{{ sesion.actividad.trastorno.name }}</p>
+        <p class="mb-0 text-muted" style="font-size: 0.75rem;">{{ sesion.actividad.trastorno|condicion }}</p>
       </div>
       <a href="{{ url_for('dashboard.student_juego_detail', trastorno_id=sesion.actividad.trastorno_id) }}"
          class="dx-btn dx-btn--gold" style="padding: .35rem 1rem; font-size: .8rem;">
@@ -97,7 +97,7 @@
         <span class="dx-ring__label">{{ pct }}%</span>
       </div>
       <div>
-        <p class="dx-subject__name">{{ item.trastorno.name }}</p>
+        <p class="dx-subject__name">{{ item.trastorno|condicion }}</p>
         <p class="dx-subject__meta">
           {{ _('%(done)s de %(total)s actividades completadas', done=item.completadas, total=item.total) }} ({{ item.porcentaje }}%)
         </p>
@@ -119,8 +119,8 @@
     {% else %}
     {% for n in recent_notifications %}
     <div class="dx-feed__item{{ '' if n.is_read else ' is-unread' }}">
-      <p class="dx-feed__msg">{{ n.message }}</p>
-      <span class="dx-feed__date">{{ n.created_at.strftime('%d/%m %H:%M') }}</span>
+      <p class="dx-feed__msg">{{ n|notif_text }}</p>
+      <span class="dx-feed__date">{{ n.created_at|local('%d/%m %H:%M') }}</span>
     </div>
     {% endfor %}
     {% endif %}

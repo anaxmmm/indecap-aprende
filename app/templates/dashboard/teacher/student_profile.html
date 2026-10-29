@@ -1,39 +1,190 @@
 {% extends "dashboard/teacher/base_teacher.html" %}
-{% block title %}{{ _('Perfil de %(name)s', name=student.full_name) }} — indecap-aprende{% endblock %}
+{% block title %}{{ _('Historial de %(name)s', name=student.full_name) }} — indecap-aprende{% endblock %}
 {% block teacher_content %}
-<h1 class="h4 mb-1">{{ student.full_name }}</h1>
-<p class="text-muted mb-3">{{ student.email }}</p>
+{% from "games/_personaje.html" import cara %}
+{% macro assign_form() %}
+<form method="post" class="hx-assign">
+  {{ trastornos_form.hidden_tag() }}
+  <div class="dx-checks">
+    {% for value, label in trastornos_form.trastornos.choices %}
+    <label class="dx-check" for="trastorno-{{ value }}">
+      <input type="checkbox" name="{{ trastornos_form.trastornos.name }}" value="{{ value }}" id="trastorno-{{ value }}"
+             {% if value in trastornos_form.trastornos.data %}checked{% endif %}>
+      <span>{{ label }}</span>
+    </label>
+    {% endfor %}
+  </div>
+  {{ trastornos_form.submit(class_="dx-action") }}
+</form>
+{% endmacro %}
+{% set feeling_labels = {'bien': _('Bien'), 'regular': _('Regular'), 'dificil': _('Me costó')} %}
+<div class="dx-page-head">
+  <div>
+    <a href="{{ url_for('dashboard.registro_estudiantes') }}" class="dx-back">← {{ _('Registro de estudiantes') }}</a>
+    <h1 class="dx-page-title">{{ student.full_name }}</h1>
+    <p class="dx-card__sub mb-0">{{ student.email }}</p>
+  </div>
+  <a href="{{ url_for('dashboard.informe_estudiante', student_id=student.id) }}" class="dx-action" target="_blank" rel="noopener">{{ _('Informe para imprimir o PDF') }}</a>
+</div>
 
-<div class="teacher-card mb-3">
-  <h2 class="h6 mb-3">{{ _('Trastornos asignados') }}</h2>
-  <p class="text-muted small">
-    {{ _('Marca los trastornos que este estudiante debe trabajar. Esto define qué actividades verá en su dashboard.') }}
-  </p>
-  <form method="post">
-    {{ trastornos_form.hidden_tag() }}
-    <div class="d-flex flex-wrap gap-3 mb-3">
-      {% for value, label in trastornos_form.trastornos.choices %}
-      <div class="form-check">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          name="{{ trastornos_form.trastornos.name }}"
-          value="{{ value }}"
-          id="trastorno-{{ value }}"
-          {% if value in trastornos_form.trastornos.data %}checked{% endif %}
-        >
-        <label class="form-check-label" for="trastorno-{{ value }}">{{ label }}</label>
-      </div>
-      {% endfor %}
+<div class="dx-kpis dx-kpis--compact hx-kpis">
+  <div class="dx-kpi">
+    <div>
+      <p class="dx-kpi__label">{{ _('Partidas jugadas') }}</p>
+      <p class="dx-kpi__value">{{ history.total_plays }}</p>
+      <p class="dx-kpi__hint">{% if history.last %}{{ _('Última: %(fecha)s', fecha=history.last|local('%d/%m/%Y')) }}{% else %}&nbsp;{% endif %}</p>
     </div>
-    {{ trastornos_form.submit_trastornos(class_="btn btn-teacher-primary") }}
-  </form>
+  </div>
+  <div class="dx-kpi">
+    <div>
+      <p class="dx-kpi__label">{{ _('Actividades superadas') }}</p>
+      <p class="dx-kpi__value">{{ history.passed }}</p>
+      <p class="dx-kpi__hint">{{ _('con 60 puntos o más') }}</p>
+    </div>
+  </div>
+  <div class="dx-kpi">
+    <div>
+      <p class="dx-kpi__label">{{ _('Puntaje promedio') }}</p>
+      <p class="dx-kpi__value">{{ history.average if history.average is not none else '—' }}</p>
+      <p class="dx-kpi__hint">{{ _('últimas 20 partidas') }}</p>
+    </div>
+  </div>
+  <div class="dx-kpi">
+    <div>
+      <p class="dx-kpi__label">{{ _('¿Cómo se sintió?') }}</p>
+      <p class="dx-kpi__value dx-kpi__value--text hx-feelings">
+        <span title="{{ _('Bien') }}">{{ cara('bien', 20) }} {{ history.feelings.bien }}</span>
+        <span title="{{ _('Regular') }}">{{ cara('regular', 20) }} {{ history.feelings.regular }}</span>
+        <span title="{{ _('Me costó') }}">{{ cara('dificil', 20) }} {{ history.feelings.dificil }}</span>
+      </p>
+      <p class="dx-kpi__hint">{{ _('autoevaluación al terminar') }}</p>
+    </div>
+  </div>
 </div>
 
-<div class="teacher-card">
-  <h2 class="h6 mb-2">{{ _('Progreso') }}</h2>
-  <p class="text-muted small mb-0">
-    {{ _('El histórico de sesiones y evolución se conecta en la siguiente iteración, junto con el reproductor de actividades.') }}
-  </p>
+{% if not history.total_plays %}
+<div class="dx-card">
+  <h2 class="dx-card__title">{{ _('Todavía no hay partidas') }}</h2>
+  <p class="dx-empty">{{ _('Cuando el estudiante juegue las actividades asignadas, aquí verás sus puntajes, lo que debe reforzar y su evolución.') }}</p>
 </div>
+{% else %}
+<div class="dx-grid hx-grid">
+  <div class="dx-col">
+    <section class="dx-card" aria-labelledby="hx-juegos">
+      <div class="dx-card__head">
+        <h2 class="dx-card__title" id="hx-juegos">{{ _('Avance por juego') }}</h2>
+        <p class="dx-card__sub">{{ _('Actividades superadas de las 50 de cada juego.') }}</p>
+      </div>
+      <ul class="hx-games">
+        {% for j in history.games %}
+        <li class="hx-game">
+          <div class="hx-game__top">
+            <span class="hx-game__name">{{ j.game.name }}</span>
+            <span class="hx-game__count"><strong>{{ j.passed }}</strong> / {{ j.total }}</span>
+          </div>
+          <div class="hx-bar" role="img" aria-label="{{ _('%(n)s de %(total)s actividades superadas', n=j.passed, total=j.total) }}"><span style="width: {{ j.percent }}%"></span></div>
+          <p class="hx-game__meta">
+            {{ ngettext('%(num)s partida', '%(num)s partidas', j.plays) }} · {{ _('promedio reciente %(p)s', p=j.average) }} · ★ {{ j.stars }}
+          </p>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="dx-card" aria-labelledby="hx-evolucion">
+      <div class="dx-card__head">
+        <h2 class="dx-card__title" id="hx-evolucion">{{ _('Evolución') }}</h2>
+        <p class="dx-card__sub">{{ _('Puntaje promedio por semana, últimas 8 semanas.') }}</p>
+      </div>
+      <ol class="hx-weeks">
+        {% for w in history.weeks %}
+        <li class="hx-week{% if w.average is none %} is-empty{% endif %}"
+            aria-label="{{ _('Semana del %(fecha)s', fecha=w.start.strftime('%d/%m')) }}: {% if w.average is none %}{{ _('sin partidas') }}{% else %}{{ ngettext('promedio %(p)s, %(num)s partida', 'promedio %(p)s, %(num)s partidas', w.plays, p=w.average) }}{% endif %}">
+          <span class="hx-week__value" aria-hidden="true">{{ w.average if w.average is not none else '' }}</span>
+          <span class="hx-week__bar" style="height: {{ w.average or 0 }}%" aria-hidden="true"></span>
+          <span class="hx-week__label" aria-hidden="true">{{ w.start.strftime('%d/%m') }}</span>
+        </li>
+        {% endfor %}
+      </ol>
+    </section>
+  </div>
+
+  <div class="dx-col">
+    <section class="dx-card" aria-labelledby="hx-reforzar">
+      <div class="dx-card__head">
+        <h2 class="dx-card__title" id="hx-reforzar">{{ _('Para reforzar') }}</h2>
+        <p class="dx-card__sub">{{ _('Habilidades con más errores en las últimas 30 partidas.') }}</p>
+      </div>
+      {% if history.reinforce %}
+      <ul class="hx-skills">
+        {% for r in history.reinforce %}
+        <li class="hx-skill">
+          <div>
+            <p class="hx-skill__name">{{ r.skill }}</p>
+            {% if r.game %}<p class="hx-skill__game">{{ r.game }}</p>{% endif %}
+          </div>
+          <span class="dx-tag dx-tag--gold">{{ ngettext('%(num)s partida', '%(num)s partidas', r.count) }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="dx-empty">{{ _('Sin errores repetidos en las partidas recientes.') }}</p>
+      {% endif %}
+    </section>
+
+    <section class="dx-card" aria-labelledby="hx-trastornos">
+      <div class="dx-card__head">
+        <h2 class="dx-card__title" id="hx-trastornos">{{ _('Trastornos asignados') }}</h2>
+        <p class="dx-card__sub">{{ _('Definen qué juegos ve el estudiante en su panel.') }}</p>
+      </div>
+      {{ assign_form() }}
+    </section>
+  </div>
+</div>
+
+<section class="dx-card hx-recent" aria-labelledby="hx-recientes">
+  <div class="dx-card__head">
+    <h2 class="dx-card__title" id="hx-recientes">{{ _('Últimas partidas') }}</h2>
+  </div>
+  <div class="dx-table-wrap">
+    <table class="dx-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ _('Fecha') }}</th>
+          <th scope="col">{{ _('Juego') }}</th>
+          <th scope="col">{{ _('Actividad') }}</th>
+          <th scope="col">{{ _('Puntaje') }}</th>
+          <th scope="col">{{ _('Tiempo') }}</th>
+          <th scope="col">{{ _('Se sintió') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in history.recent %}
+        <tr>
+          <td>{{ r.date|local }}</td>
+          <td class="dx-table__name">{{ r.game.name }}</td>
+          <td>{{ r.title }}<br><span class="hx-muted">{{ r.label }}</span></td>
+          <td>
+            <span class="dx-tag {{ 'dx-tag--ok' if r.passed else '' }}">{{ r.score }}</span>
+            <span class="hx-stars" aria-label="{{ _('%(n)s de 3 estrellas', n=r.stars) }}">{% for i in range(3) %}<span class="{{ 'is-on' if i < r.stars else '' }}" aria-hidden="true">★</span>{% endfor %}</span>
+          </td>
+          <td>{{ '%d:%02d' % (r.time // 60, r.time % 60) }}</td>
+          <td>{{ feeling_labels[r.feeling] if r.feeling else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if not history.total_plays %}
+<section class="dx-card" aria-labelledby="hx-trastornos-vacio">
+  <div class="dx-card__head">
+    <h2 class="dx-card__title" id="hx-trastornos-vacio">{{ _('Trastornos asignados') }}</h2>
+    <p class="dx-card__sub">{{ _('Definen qué juegos ve el estudiante en su panel.') }}</p>
+  </div>
+  {{ assign_form() }}
+</section>
+{% endif %}
 {% endblock %}

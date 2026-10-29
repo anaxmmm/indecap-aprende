@@ -1,0 +1,53 @@
+{% extends "dashboard/teacher/base_teacher.html" %}
+{% block title %}{{ _('Docentes y grupos') }} — indecap-aprende{% endblock %}
+{% block teacher_content %}
+<h1 class="visually-hidden">{{ _('Docentes y grupos') }}</h1>
+
+<div class="dx-card">
+  <h2 class="dx-card__title">{{ _('Docentes y grupos') }}</h2>
+  <p class="dx-card__sub">{{ _('Quién tiene cada grupo a cargo. Si un docente se retira, pasa sus grupos a otra persona: los estudiantes, su progreso y sus asignaciones se conservan.') }}</p>
+
+  {% if grupos %}
+  <div class="dx-table-wrap">
+    <table class="dx-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ _('Grupo') }}</th>
+          <th scope="col">{{ _('A cargo de') }}</th>
+          <th scope="col">{{ _('Estudiantes activos') }}</th>
+          <th scope="col">{{ _('Reasignar a') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for grupo in grupos %}
+        {% set activos = grupo.estudiantes|selectattr('is_active_account')|rejectattr('is_archived')|list %}
+        <tr>
+          <td class="dx-table__name">{{ grupo.name }}</td>
+          <td>
+            {{ grupo.teacher.full_name }}
+            {% if grupo.teacher.is_archived or not grupo.teacher.is_active_account %}<span class="dx-tag">{{ _('Cuenta inactiva') }}</span>{% endif %}
+          </td>
+          <td>{{ activos|length }}</td>
+          <td class="dx-table__actions">
+            <form method="post" class="dx-inline-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="group_id" value="{{ grupo.id }}">
+              <label class="visually-hidden" for="docente-{{ grupo.id }}">{{ _('Nuevo docente para %(grupo)s', grupo=grupo.name) }}</label>
+              <select name="teacher_id" id="docente-{{ grupo.id }}" class="form-select form-select-sm" style="min-width: 12rem" required>
+                {% for docente in docentes %}
+                <option value="{{ docente.id }}" {{ 'selected' if docente.id == grupo.teacher_id else '' }}>{{ docente.full_name }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="dx-mini">{{ _('Reasignar') }}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="dx-card__sub mb-0">{{ _('Todavía no hay grupos. Los docentes los crean en «Registro de estudiantes».') }}</p>
+  {% endif %}
+</div>
+{% endblock %}

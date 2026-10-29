@@ -1,11 +1,10 @@
 """Lógica de negocio del blueprint dashboard, separada de las rutas
 para mantenerlas delgadas y facilitar pruebas unitarias.
 """
-from datetime import date, datetime, timedelta
+from datetime import timedelta
 from typing import List, Optional
 
 from flask_babel import gettext as _
-from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
@@ -18,14 +17,50 @@ from app.models.teacher_profile import TeacherProfile
 from app.models.notification import Notification
 from app.models.assigned_session import SesionAsignada, EstadoSesion
 from app.models.game_session import GameSession
+from app.utils.fechas import local_day_start_utc, local_today, to_local, utc_now
+
+
+def gestiona_grupo(user: User, grupo: Optional[Grupo]) -> bool:
+    """El administrador gestiona todos los grupos; el docente, solo los suyos."""
+    return grupo is not None and (user.is_admin or grupo.teacher_id == user.id)
+
+
+def _grupo_gestionable(user: User, group_id) -> Optional[Grupo]:
+    grupo = db.session.get(Grupo, group_id) if group_id else None
+    return grupo if gestiona_grupo(user, grupo) else None
 
 
 def get_groups_for_teacher(teacher: User) -> List[Grupo]:
+    query = Grupo.query if teacher.is_admin else Grupo.query.filter_by(teacher_id=teacher.id)
+    return query.order_by(Grupo.created_at.asc()).all()
+
+
+def get_teachers() -> List[User]:
+    """Docentes y administradores activos que pueden tener grupos a cargo."""
     return (
-        Grupo.query.filter_by(teacher_id=teacher.id)
-        .order_by(Grupo.created_at.asc())
+        User.query.filter(
+            User.role.in_([RoleEnum.TEACHER, RoleEnum.ADMIN]),
+            User.archived_at.is_(None),
+            User.is_active_account.is_(True),
+        )
+        .order_by(User.full_name.asc())
         .all()
     )
+
+
+def reassign_group(actor: User, group_id: int, teacher_id: int) -> Grupo:
+    """Pasa un grupo completo a otro docente. Solo lo hace un administrador."""
+    if not actor.is_admin:
+        raise ValueError(_("Solo un administrador puede reasignar grupos."))
+    grupo = db.session.get(Grupo, group_id)
+    if grupo is None:
+        raise ValueError(_("El grupo no existe."))
+    docente = db.session.get(User, teacher_id)
+    if docente is None or docente not in get_teachers():
+        raise ValueError(_("Elige un docente activo."))
+    grupo.teacher_id = docente.id
+    db.session.commit()
+    return grupo
 
 
 def create_group(teacher: User, name: str) -> Grupo:
@@ -37,26 +72,26 @@ def create_group(teacher: User, name: str) -> Grupo:
 
 def delete_group(teacher: User, group_id: int) -> None:
     """Elimina un grupo completo. Solo se permite si ya no tiene ningún
-    niño dentro (ni activo ni inactivo) — de lo contrario esos niños
-    quedarían sin grupo y sin forma de gestionarlos desde la UI."""
-    grupo = Grupo.query.filter_by(id=group_id, teacher_id=teacher.id).first()
+    estudiante dentro (ni activo ni inactivo); los archivados no cuentan
+    porque ya no se gestionan desde el grupo."""
+    grupo = _grupo_gestionable(teacher, group_id)
     if grupo is None:
         raise ValueError(_("El grupo no existe o no pertenece a este docente."))
 
-    if grupo.estudiantes:
+    if any(not s.is_archived for s in grupo.estudiantes):
         raise ValueError(
-            _("Este grupo todavía tiene niños asignados (activos o inactivos). Muévelos a otro grupo o elimínalos antes de eliminar el grupo.")
+            _("Este grupo todavía tiene estudiantes (activos o inactivos). Muévelos a otro grupo o elimínalos antes de eliminar el grupo.")
         )
 
     db.session.delete(grupo)
     db.session.commit()
 
 
-def _notify_student(student_id: int, message: str) -> None:
+def _notify_activity(student_id: int, title: str) -> None:
     """Crea una notificación dirigida al estudiante. No hace commit — el
     llamador se encarga de confirmar la transacción junto con el resto de
     los cambios."""
-    db.session.add(Notification(recipient_id=student_id, message=message))
+    db.session.add(Notification.build("activity_assigned", recipient_id=student_id, title=title))
 
 
 def _auto_enroll_first_session(student_id: int, trastorno_id: int, assigned_by_id: int) -> None:
@@ -77,7 +112,7 @@ def _auto_enroll_first_session(student_id: int, trastorno_id: int, assigned_by_i
     if ya_existe:
         return
 
-    hoy = date.today()
+    hoy = local_today()
     db.session.add(
         SesionAsignada(
             student_id=student_id,
@@ -87,10 +122,7 @@ def _auto_enroll_first_session(student_id: int, trastorno_id: int, assigned_by_i
             end_date=hoy + timedelta(days=30),
         )
     )
-    _notify_student(
-        student_id,
-        f"Tu docente te asignó una nueva actividad: {primera_actividad.title}.",
-    )
+    _notify_activity(student_id, primera_actividad.title)
 
 
 def create_student_in_group(
@@ -104,8 +136,11 @@ def create_student_in_group(
     birth_date=None,
     has_learning_difficulties: bool = False,
     trastorno_ids: Optional[List[int]] = None,
+    data_consent: bool = False,
 ) -> User:
-    grupo = Grupo.query.filter_by(id=group_id, teacher_id=teacher.id).first()
+    if not data_consent:
+        raise ValueError(_("Confirma la autorización de tratamiento de datos para registrar al estudiante."))
+    grupo = _grupo_gestionable(teacher, group_id)
     if grupo is None:
         raise ValueError(_("El grupo no existe o no pertenece a este docente."))
 
@@ -114,7 +149,14 @@ def create_student_in_group(
         raise ValueError(_("Ya existe una cuenta con ese correo."))
 
     full_name = f"{first_name.strip()} {last_name.strip()}".strip()
-    student = User(full_name=full_name, email=email, role=RoleEnum.STUDENT)
+    student = User(
+        full_name=full_name,
+        email=email,
+        role=RoleEnum.STUDENT,
+        created_by_id=teacher.id,
+        data_consent_at=utc_now(),
+        data_consent_by_id=teacher.id,
+    )
     student.set_password(password)
     grupo.estudiantes.append(student)
     db.session.add(student)
@@ -156,6 +198,7 @@ def update_student(
     birth_date=None,
     has_learning_difficulties: bool = False,
     trastorno_ids: Optional[List[int]] = None,
+    data_consent: bool = False,
 ) -> User:
     """Edita los datos de un estudiante que pertenece a los grupos del
     docente. Si el estudiante todavía no tiene StudentProfile (por ejemplo,
@@ -174,6 +217,9 @@ def update_student(
 
     student.full_name = full_name.strip()
     student.email = email
+    if data_consent and student.data_consent_at is None:
+        student.data_consent_at = utc_now()
+        student.data_consent_by_id = teacher.id
 
     profile = get_student_profile(student)
     if profile is None:
@@ -193,16 +239,16 @@ def update_student(
 
 
 def move_student_to_group(teacher: User, student_id: int, target_group_id: int) -> None:
-    target = Grupo.query.filter_by(id=target_group_id, teacher_id=teacher.id).first()
+    target = _grupo_gestionable(teacher, target_group_id)
     if target is None:
         raise ValueError(_("El grupo destino no existe o no pertenece a este docente."))
 
-    student = User.query.get(student_id)
+    student = db.session.get(User, student_id)
     if student is None:
         raise ValueError(_("El estudiante no existe."))
 
     for grupo in list(student.grupos):
-        if grupo.teacher_id == teacher.id:
+        if gestiona_grupo(teacher, grupo):
             grupo.estudiantes.remove(student)
 
     target.estudiantes.append(student)
@@ -210,81 +256,27 @@ def move_student_to_group(teacher: User, student_id: int, target_group_id: int) 
 
 
 def deactivate_student(teacher: User, group_id: int, student_id: int) -> None:
-    grupo = Grupo.query.filter_by(id=group_id, teacher_id=teacher.id).first()
-    student = User.query.get(student_id)
+    grupo = _grupo_gestionable(teacher, group_id)
+    student = db.session.get(User, student_id)
     if grupo and student and student in grupo.estudiantes:
         student.is_active_account = False
         db.session.commit()
 
 
 def reactivate_student(teacher: User, group_id: int, student_id: int) -> None:
-    grupo = Grupo.query.filter_by(id=group_id, teacher_id=teacher.id).first()
-    student = User.query.get(student_id)
+    grupo = _grupo_gestionable(teacher, group_id)
+    student = db.session.get(User, student_id)
     if grupo and student and student in grupo.estudiantes:
         student.is_active_account = True
         db.session.commit()
 
 
-def delete_student_permanently(teacher: User, group_id: int, student_id: int) -> None:
-    """Elimina definitivamente a un estudiante y todo su rastro en el
-    sistema: trastornos asignados, sesiones asignadas y notificaciones que
-    lo mencionan. StudentProfile, AccessibilityProfile y Progress ya
-    cascadean automáticamente al borrar el User (están configurados así en
-    sus modelos), pero TrastornoAsignado, SesionAsignada y Notification no
-    tienen cascada definida, así que se borran aquí explícitamente antes
-    del User para no dejar filas huérfanas ni romper la integridad de la
-    base de datos. A diferencia de deactivate_student, esto es
-    irreversible.
-    """
-    grupo = Grupo.query.filter_by(id=group_id, teacher_id=teacher.id).first()
-    student = User.query.get(student_id)
-    if grupo is None or student is None or student not in grupo.estudiantes:
-        raise ValueError(_("El estudiante no existe o no pertenece a este grupo."))
-
-    TrastornoAsignado.query.filter_by(student_id=student.id).delete()
-    SesionAsignada.query.filter_by(student_id=student.id).delete()
-    Notification.query.filter(
-        or_(Notification.recipient_id == student.id, Notification.student_id == student.id)
-    ).delete(synchronize_session=False)
-
-    db.session.delete(student)
-    db.session.commit()
-
-
-def get_sesiones_sistema() -> List[Trastorno]:
-    return Trastorno.query.order_by(Trastorno.name.asc()).all()
-
-
-def get_trastornos_overview() -> List[dict]:
-    trastornos = Trastorno.query.order_by(Trastorno.name.asc()).all()
-    overview = []
-    for trastorno in trastornos:
-        actividades = (
-            Actividad.query.filter_by(trastorno_id=trastorno.id)
-            .order_by(Actividad.order_index.asc())
-            .all()
-        )
-        overview.append({"trastorno": trastorno, "actividades": actividades})
-    return overview
-
-
-def get_planes_overview(teacher: User) -> List[dict]:
-    """Igual que get_trastornos_overview, pero con el conteo de estudiantes
-    de este docente inscritos en cada plan (trastorno)."""
-    overview = get_trastornos_overview()
-    counts = {
-        item["trastorno"].id: item["estudiantes"]
-        for item in get_trastornos_mas_trabajados(teacher, limit=1000)
-    }
-    for plan in overview:
-        plan["estudiantes_inscritos"] = counts.get(plan["trastorno"].id, 0)
-    return overview
-
-
 def get_student_if_owned_by_teacher(teacher: User, student_id: int) -> Optional[User]:
-    student = User.query.get(student_id)
+    student = db.session.get(User, student_id)
     if student is None or not student.is_student:
         return None
+    if teacher.is_admin:
+        return student
     for grupo in student.grupos:
         if grupo.teacher_id == teacher.id:
             return student
@@ -372,8 +364,8 @@ def get_students_for_teacher(teacher: User) -> List[User]:
 def assign_session(
     teacher: User, student_id: int, actividad_id: int, start_date, end_date
 ) -> SesionAsignada:
-    student = User.query.get(student_id)
-    if student is None or not any(g.teacher_id == teacher.id for g in student.grupos):
+    student = db.session.get(User, student_id)
+    if student is None or not any(gestiona_grupo(teacher, g) for g in student.grupos):
         raise ValueError(_("Ese estudiante no pertenece a tus grupos."))
 
     if end_date < start_date:
@@ -388,12 +380,9 @@ def assign_session(
     )
     db.session.add(sesion)
 
-    actividad = Actividad.query.get(actividad_id)
+    actividad = db.session.get(Actividad, actividad_id)
     if actividad is not None:
-        _notify_student(
-            student_id,
-            f"Tu docente te asignó una nueva actividad: {actividad.title}.",
-        )
+        _notify_activity(student_id, actividad.title)
 
     db.session.commit()
     return sesion
@@ -408,61 +397,15 @@ def get_sesiones_asignadas_for_actividad(actividad_id: int, teacher: User) -> Li
 
 
 def update_session_notes(teacher: User, sesion_id: int, notes: str) -> int:
-    sesion = SesionAsignada.query.filter_by(id=sesion_id, assigned_by_id=teacher.id).first()
+    query = SesionAsignada.query.filter_by(id=sesion_id)
+    if not teacher.is_admin:
+        query = query.filter_by(assigned_by_id=teacher.id)
+    sesion = query.first()
     if sesion is None:
         raise ValueError(_("Esa sesión asignada no existe o no te pertenece."))
     sesion.clinical_notes = notes.strip() or None
     db.session.commit()
     return sesion.actividad_id
-
-
-def get_student_ranking_by_completed_sessions(teacher: User, since_date=None) -> List[dict]:
-    """Ranking de estudiantes por partidas de juego completadas dentro de un
-    ciclo. Antes contaba SesionAsignada (asignaciones del panel docente),
-    pero jugar un juego nunca crea ni actualiza una SesionAsignada — los
-    juegos tienen su propio registro en GameSession (ver
-    games/services.py). Los ciclos duran 6-7 meses; el filtro
-    'ciclo_actual' usa 6 meses como referencia por defecto cuando no se pasa
-    since_date."""
-    if since_date is None:
-        since_date = date.today() - timedelta(days=180)
-
-    ranking = []
-    for student in get_students_for_teacher(teacher):
-        query = GameSession.query.filter(
-            GameSession.user_id == student.id,
-            GameSession.completed.is_(True),
-            GameSession.created_at >= since_date,
-        )
-        ranking.append({"student": student, "completadas": query.count()})
-    ranking.sort(key=lambda fila: fila["completadas"], reverse=True)
-    return ranking
-
-
-def get_weekly_completion_counts(teacher: User, weeks: int = 8) -> dict:
-    """Serie semanal de partidas de juego completadas, para el gráfico de
-    rendimiento general del panel general. Igual que en
-    get_student_ranking_by_completed_sessions, la fuente correcta es
-    GameSession, no SesionAsignada. Referencia temporal: los ciclos duran
-    6-7 meses, así que 8 semanas (≈2 meses) es una vista relevante del ciclo
-    activo."""
-    student_ids = [s.id for s in get_students_for_teacher(teacher)]
-    today = date.today()
-    labels, values = [], []
-    for i in range(weeks - 1, -1, -1):
-        week_start = today - timedelta(days=today.weekday() + i * 7)
-        week_end_exclusive = week_start + timedelta(days=7)
-        count = 0
-        if student_ids:
-            count = GameSession.query.filter(
-                GameSession.user_id.in_(student_ids),
-                GameSession.completed.is_(True),
-                GameSession.created_at >= week_start,
-                GameSession.created_at < week_end_exclusive,
-            ).count()
-        labels.append(week_start.strftime("%d/%m"))
-        values.append(count)
-    return {"labels": labels, "values": values}
 
 
 def get_trastornos_mas_trabajados(teacher: User, limit: int = 5) -> List[dict]:
@@ -581,40 +524,17 @@ def get_student_actividades_por_trastorno(student: User) -> List[dict]:
     return list(grupos.values())
 
 
-def get_student_racha(student: User) -> int:
-    """Días consecutivos con al menos una sesión completada (racha de constancia).
-    Cuenta hacia atrás desde hoy hasta romper la racha."""
-    today = date.today()
-    racha = 0
-    dia = today
-    for _ in range(365):
-        tuvo_actividad = SesionAsignada.query.filter(
-            SesionAsignada.student_id == student.id,
-            SesionAsignada.status == EstadoSesion.COMPLETADA,
-            SesionAsignada.assigned_at >= dia,
-            SesionAsignada.assigned_at < dia + timedelta(days=1),
-        ).first()
-        if tuvo_actividad:
-            racha += 1
-            dia -= timedelta(days=1)
-        else:
-            break
-    return racha
-
-
 def get_student_racha_mensual(student: User) -> int:
     """Racha mensual: cantidad de días distintos (no necesariamente
     consecutivos) con al menos una partida de juego completada en los
-    últimos 30 días. Antes contaba SesionAsignada, que nunca se toca al
-    jugar; ahora cuenta GameSession, que es donde realmente se guarda cada
-    partida."""
-    since = date.today() - timedelta(days=30)
+    últimos 30 días. Se cuenta en GameSession, donde se guarda cada partida."""
+    since = local_today() - timedelta(days=30)
     sesiones = GameSession.query.filter(
         GameSession.user_id == student.id,
         GameSession.completed.is_(True),
-        GameSession.created_at >= since,
+        GameSession.created_at >= local_day_start_utc(since),
     ).all()
-    dias = {sesion.created_at.date() for sesion in sesiones}
+    dias = {to_local(sesion.created_at).date() for sesion in sesiones}
     return len(dias)
 
 
@@ -639,7 +559,7 @@ def start_session(student: User, sesion_id: int) -> SesionAsignada:
     if sesion is None:
         raise ValueError(_("Esa actividad no existe o no te pertenece."))
     if sesion.started_at is None:
-        sesion.started_at = datetime.utcnow()
+        sesion.started_at = utc_now()
         db.session.commit()
     return sesion
 
@@ -652,7 +572,7 @@ def get_activity_matrix(teacher: User, days: int = 365) -> dict:
     """Partidas completadas y niveles superados (score >= 60) por
     estudiante y por dia, para el grafico del panel general."""
     students = get_students_for_teacher(teacher)
-    today = date.today()
+    today = local_today()
     start = today - timedelta(days=days - 1)
     dates = [start + timedelta(days=i) for i in range(days)]
     index = {d: i for i, d in enumerate(dates)}
@@ -668,8 +588,6 @@ def get_activity_matrix(teacher: User, days: int = 365) -> dict:
     }
 
     if rows:
-        # created_at se guarda en UTC; Colombia es UTC-5.
-        offset = timedelta(hours=5)
         query = db.session.query(
             GameSession.user_id,
             GameSession.created_at,
@@ -677,12 +595,12 @@ def get_activity_matrix(teacher: User, days: int = 365) -> dict:
         ).filter(
             GameSession.user_id.in_(list(rows.keys())),
             GameSession.completed.is_(True),
-            GameSession.created_at >= datetime.combine(start, datetime.min.time()),
+            GameSession.created_at >= local_day_start_utc(start),
         )
         for user_id, created_at, score in query:
             if created_at is None:
                 continue
-            i = index.get((created_at - offset).date())
+            i = index.get(to_local(created_at).date())
             if i is None:
                 continue
             rows[user_id]["done"][i] += 1

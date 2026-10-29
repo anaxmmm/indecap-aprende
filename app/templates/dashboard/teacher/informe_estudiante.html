@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ _('Informe de %(name)s', name=student.full_name) }} — indecap-aprende</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --navy: #1A3A6B; --gold: #B8860B; --ink: #171C1E; --muted: #5A6570; --line: #DCE4EA; --soft: #F5FAFC; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #E9EEF3; color: var(--ink); font-family: 'Montserrat', Arial, sans-serif; font-size: 13px; line-height: 1.45; }
+    .ri-bar { position: sticky; top: 0; display: flex; justify-content: center; gap: 0.75rem; padding: 0.75rem; background: var(--navy); }
+    .ri-bar button, .ri-bar a { padding: 0.55rem 1rem; border: 0; border-radius: 10px; background: #F5C77A; color: #111627; font: 600 0.9rem 'Montserrat', sans-serif; text-decoration: none; cursor: pointer; }
+    .ri-bar a { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.4); }
+    .ri-page { max-width: 820px; margin: 1.5rem auto; padding: 2rem 2.25rem; background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(17,22,39,.08); }
+    .ri-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding-bottom: 1rem; border-bottom: 3px solid var(--gold); }
+    .ri-head img { height: 52px; width: auto; }
+    .ri-head__meta { text-align: right; color: var(--muted); font-size: 11px; }
+    h1 { margin: 1.25rem 0 0.25rem; font-size: 20px; color: var(--navy); }
+    h2 { margin: 1.5rem 0 0.5rem; font-size: 14px; color: var(--navy); text-transform: uppercase; letter-spacing: 0.04em; }
+    .ri-sub { margin: 0; color: var(--muted); }
+    .ri-data { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.25rem 1.5rem; margin: 1rem 0 0; }
+    .ri-data dt { font-weight: 600; color: var(--muted); font-size: 11px; }
+    .ri-data dd { margin: 0 0 0.4rem; }
+    .ri-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+    .ri-kpi { padding: 0.6rem 0.75rem; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); }
+    .ri-kpi p { margin: 0; }
+    .ri-kpi__label { font-size: 10.5px; color: var(--muted); }
+    .ri-kpi__value { font-size: 18px; font-weight: 700; color: var(--navy); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+    td.num, th.num { text-align: right; white-space: nowrap; }
+    .ri-empty { color: var(--muted); font-style: italic; }
+    .ri-note { margin-top: 1.5rem; padding: 0.75rem 1rem; border-left: 3px solid var(--gold); background: var(--soft); font-size: 11.5px; color: var(--muted); }
+    .ri-sign { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; margin-top: 2.5rem; }
+    .ri-sign div { padding-top: 0.4rem; border-top: 1px solid var(--ink); font-size: 11px; color: var(--muted); }
+    @media print {
+      @page { size: A4; margin: 14mm; }
+      body { background: #fff; }
+      .ri-bar { display: none; }
+      .ri-page { margin: 0; padding: 0; box-shadow: none; border-radius: 0; max-width: none; }
+      section, tr { break-inside: avoid; }
+    }
+    @media (max-width: 640px) {
+      .ri-page { padding: 1.25rem; }
+      .ri-kpis { grid-template-columns: repeat(2, 1fr); }
+      .ri-data { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ri-bar">
+    <button type="button" onclick="window.print()">{{ _('Imprimir o guardar como PDF') }}</button>
+    <a href="{{ url_for('dashboard.perfil_estudiante', student_id=student.id) }}">{{ _('Volver al historial') }}</a>
+  </div>
+
+  {% set feeling_labels = {'bien': _('Bien'), 'regular': _('Regular'), 'dificil': _('Me costó')} %}
+  <main class="ri-page">
+    <header class="ri-head">
+      <img src="{{ url_for('static', filename='images/logo-indecap-aprende.png') }}" alt="INDECAP — indecap-aprende">
+      <div class="ri-head__meta">
+        <strong>{{ _('Informe de seguimiento') }}</strong><br>
+        {{ _('Generado el %(date)s', date=generated|local('%d/%m/%Y %H:%M')) }}<br>
+        {{ _('por %(name)s', name=current_user.full_name) }}
+      </div>
+    </header>
+
+    <h1>{{ student.full_name }}</h1>
+    <p class="ri-sub">{{ student.email }}</p>
+
+    <dl class="ri-data">
+      <div>
+        <dt>{{ _('Grupo') }}</dt>
+        <dd>{% for g in student.grupos %}{{ g.name }}{% if not loop.last %}, {% endif %}{% else %}—{% endfor %}</dd>
+      </div>
+      <div>
+        <dt>{{ _('Fecha de nacimiento') }}</dt>
+        <dd>{{ profile.birth_date.strftime('%d/%m/%Y') if profile and profile.birth_date else '—' }}</dd>
+      </div>
+      <div>
+        <dt>{{ _('Condiciones asignadas') }}</dt>
+        <dd>{% for c in conditions %}{{ c|condicion }}{% if not loop.last %}, {% endif %}{% else %}—{% endfor %}</dd>
+      </div>
+      <div>
+        <dt>{{ _('Última partida') }}</dt>
+        <dd>{{ history.last|local('%d/%m/%Y') if history.last else '—' }}</dd>
+      </div>
+    </dl>
+
+    <section>
+      <h2>{{ _('Resumen') }}</h2>
+      <div class="ri-kpis">
+        <div class="ri-kpi"><p class="ri-kpi__label">{{ _('Partidas jugadas') }}</p><p class="ri-kpi__value">{{ history.total_plays }}</p></div>
+        <div class="ri-kpi"><p class="ri-kpi__label">{{ _('Actividades superadas') }}</p><p class="ri-kpi__value">{{ history.passed }}</p></div>
+        <div class="ri-kpi"><p class="ri-kpi__label">{{ _('Puntaje promedio') }}</p><p class="ri-kpi__value">{{ history.average if history.average is not none else '—' }}</p></div>
+        <div class="ri-kpi"><p class="ri-kpi__label">{{ _('¿Cómo se sintió?') }}</p>
+          <p class="ri-kpi__value" style="font-size:12px;font-weight:600">
+            {{ _('Bien') }}: {{ history.feelings.bien }} · {{ _('Regular') }}: {{ history.feelings.regular }} · {{ _('Me costó') }}: {{ history.feelings.dificil }}
+          </p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>{{ _('Avance por juego') }}</h2>
+      {% if history.games %}
+      <table>
+        <thead><tr>
+          <th>{{ _('Juego') }}</th>
+          <th class="num">{{ _('Superadas') }}</th>
+          <th class="num">{{ _('Partidas') }}</th>
+          <th class="num">{{ _('Promedio reciente') }}</th>
+          <th class="num">{{ _('Estrellas') }}</th>
+        </tr></thead>
+        <tbody>
+          {% for j in history.games %}
+          <tr>
+            <td>{{ j.game.name }}</td>
+            <td class="num">{{ j.passed }} / {{ j.total }}</td>
+            <td class="num">{{ j.plays }}</td>
+            <td class="num">{{ j.average }}</td>
+            <td class="num">{{ j.stars }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="ri-empty">{{ _('Todavía no hay partidas.') }}</p>
+      {% endif %}
+    </section>
+
+    <section>
+      <h2>{{ _('Para reforzar') }}</h2>
+      {% if history.reinforce %}
+      <table>
+        <thead><tr><th>{{ _('Habilidad') }}</th><th>{{ _('Juego') }}</th><th class="num">{{ _('Partidas con errores') }}</th></tr></thead>
+        <tbody>
+          {% for r in history.reinforce %}
+          <tr><td>{{ r.skill }}</td><td>{{ r.game }}</td><td class="num">{{ r.count }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="ri-empty">{{ _('Sin errores repetidos en las partidas recientes.') }}</p>
+      {% endif %}
+    </section>
+
+    <section>
+      <h2>{{ _('Evolución semanal') }}</h2>
+      <table>
+        <thead><tr><th>{{ _('Semana del') }}</th><th class="num">{{ _('Partidas') }}</th><th class="num">{{ _('Puntaje promedio') }}</th></tr></thead>
+        <tbody>
+          {% for w in history.weeks %}
+          <tr><td>{{ w.start.strftime('%d/%m/%Y') }}</td><td class="num">{{ w.plays }}</td><td class="num">{{ w.average if w.average is not none else '—' }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>{{ _('Últimas partidas') }}</h2>
+      {% if history.recent %}
+      <table>
+        <thead><tr>
+          <th>{{ _('Fecha') }}</th><th>{{ _('Juego') }}</th><th>{{ _('Actividad') }}</th>
+          <th class="num">{{ _('Puntaje') }}</th><th class="num">{{ _('Tiempo') }}</th><th>{{ _('Se sintió') }}</th>
+        </tr></thead>
+        <tbody>
+          {% for r in history.recent %}
+          <tr>
+            <td>{{ r.date|local('%d/%m/%Y') }}</td>
+            <td>{{ r.game.name }}</td>
+            <td>{{ r.title }} <span style="color:var(--muted)">· {{ r.label }}</span></td>
+            <td class="num">{{ r.score }}</td>
+            <td class="num">{{ '%d:%02d' % (r.time // 60, r.time % 60) }}</td>
+            <td>{{ feeling_labels[r.feeling] if r.feeling else '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="ri-empty">{{ _('Todavía no hay partidas.') }}</p>
+      {% endif %}
+    </section>
+
+    <p class="ri-note">{{ _('Este informe resume la actividad del estudiante en la plataforma y es un apoyo pedagógico: no es un diagnóstico ni reemplaza el acompañamiento del área de psicología. Contiene datos personales sensibles; compártelo solo con el estudiante, su acudiente y el personal autorizado del instituto.') }}</p>
+
+    <div class="ri-sign">
+      <div>{{ _('Docente') }}</div>
+      <div>{{ _('Acudiente') }}</div>
+    </div>
+  </main>
+</body>
+</html>

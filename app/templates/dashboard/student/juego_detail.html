@@ -1,32 +1,29 @@
 {% extends "dashboard/student/base_student.html" %}
-{% block title %}{{ trastorno.name }} — indecap-aprende{% endblock %}
-
+{% block title %}{{ trastorno|condicion }} — indecap-aprende{% endblock %}
+{% macro play_url(acceso, trastorno) -%}
+{%- if acceso.game.has_stage_map -%}{{ url_for('games.stages', slug=acceso.game.slug, trastorno_id=trastorno.id) }}
+{%- else -%}{{ url_for('games.play', slug=acceso.game.slug, level=acceso.start_level, trastorno_id=trastorno.id) }}{%- endif -%}
+{%- endmacro %}
 {% block student_content %}
 {% set acceso = game_access(trastorno) %}
 {% set juego = acceso.game %}
-<div class="teacher-card p-4">
-  <p class="text-muted small mb-1">{{ trastorno.name }}</p>
-
+<a href="{{ url_for('dashboard.student_juegos') }}" class="dx-back">← {{ _('Juegos') }}</a>
+<section class="dx-card gx-detail">
+  <p class="gx-card__eyebrow">{{ trastorno|condicion }}</p>
   {% if juego and acceso.allowed %}
-    <h1 class="h4 mb-3">{{ juego.name }}</h1>
-    <p class="text-muted mb-4">
-      {{ _('Actividad asignada por tu docente el %(fecha)s.', fecha=acceso.assignment.assigned_at.strftime('%d/%m/%Y')) }}
-    </p>
-    {% if juego.has_stage_map %}
-      <a href="{{ url_for('games.stages', slug=juego.slug, trastorno_id=trastorno.id) }}"
-         class="btn btn-teacher-primary">{{ _('Jugar') }}</a>
-    {% else %}
-      <a href="{{ url_for('games.play', slug=juego.slug, level=acceso.start_level, trastorno_id=trastorno.id) }}"
-         class="btn btn-teacher-primary">{{ _('Jugar') }}</a>
-    {% endif %}
+    <h1 class="dx-page-title">{{ juego.name }}</h1>
+    <p class="dx-card__sub">{{ _('Actividad asignada por tu docente el %(fecha)s.', fecha=acceso.assignment.assigned_at|local('%d/%m/%Y')) }}</p>
+    <div class="gx-detail__progress">
+      <span class="hx-bar" aria-hidden="true"><span style="width: {{ (acceso.passed * 100 / juego.levels) | round | int }}%"></span></span>
+      <span class="gx-card__count">{{ _('%(n)s de %(total)s actividades', n=acceso.passed, total=juego.levels) }}</span>
+    </div>
+    <a href="{{ play_url(acceso, trastorno) }}" class="dx-action">{{ _('Continuar') if acceso.passed else _('Empezar') }}</a>
   {% elif juego and juego.available %}
-    <h1 class="h4 mb-3">{{ juego.name }}</h1>
-    <p class="text-muted mb-4">{{ _('Tu docente aún no te asignó esta actividad.') }}</p>
-    <a href="{{ url_for('dashboard.student_juegos') }}" class="btn btn-teacher-primary">{{ _('Volver a Juegos') }}</a>
+    <h1 class="dx-page-title">{{ juego.name }}</h1>
+    <p class="dx-card__sub">{{ _('Tu docente aún no te asignó esta actividad.') }}</p>
   {% else %}
-    <h1 class="h4 mb-3">{{ _('Actividad en preparación') }}</h1>
-    <p class="text-muted mb-4">{{ _('Estamos preparando la actividad interactiva para esta área.') }}</p>
-    <a href="{{ url_for('dashboard.student_juegos') }}" class="btn btn-teacher-primary">{{ _('Volver a Juegos') }}</a>
+    <h1 class="dx-page-title">{{ _('Actividad en preparación') }}</h1>
+    <p class="dx-card__sub">{{ _('Estamos preparando la actividad interactiva para esta área.') }}</p>
   {% endif %}
-</div>
+</section>
 {% endblock %}

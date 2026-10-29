@@ -6,7 +6,7 @@
   {% for trastorno in trastornos %}
   <div class="col-md-4">
     <div class="border rounded p-3">
-      <p class="fw-semibold mb-1">{{ trastorno.name }}</p>
+      <p class="fw-semibold mb-1">{{ trastorno|condicion }}</p>
       <p class="text-muted small mb-2">{{ trastorno.description or "" }}</p>
       <a href="{{ url_for('admin.actividades_list', trastorno_id=trastorno.id) if current_user.is_admin else '#' }}" class="small">
         {{ ngettext('%(num)d actividad', '%(num)d actividades', trastorno.actividades|length) }}
