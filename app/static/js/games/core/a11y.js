@@ -6,6 +6,8 @@
 (function (global) {
   "use strict";
 
+  var SOUND_KEY = "indecap.games.sound";
+
   function A11y(shell, profile) {
     this.shell = shell;
     this.profile = profile || {};
@@ -14,6 +16,8 @@
     this.hintsUsed = 0;
     this.speechSupported = "speechSynthesis" in global;
     this.onHint = null;
+    this.onSound = null;
+    this.soundOn = true;
 
     this.applyProfile();
     this.bindControls();
@@ -83,6 +87,11 @@
       } else if (action === "text-smaller") {
         self.scale = Math.max(0.85, self.scale - 0.15);
         self.shell.style.setProperty("--g-scale", self.scale.toFixed(2));
+      } else if (action === "sound") {
+        self.soundOn = !self.soundOn;
+        self.setPressed("sound", self.soundOn);
+        try { global.localStorage.setItem(SOUND_KEY, self.soundOn ? "1" : "0"); } catch (e) {}
+        if (typeof self.onSound === "function") self.onSound(self.soundOn);
       } else if (action === "hint") {
         self.hintsUsed += 1;
         if (typeof self.onHint === "function") self.onHint();
@@ -90,15 +99,33 @@
     });
   };
 
-  /** Lee un texto en voz alta si el estudiante tiene el audio activo. */
-  A11y.prototype.say = function (text, force) {
+  /**
+   * Efectos de sonido: lo que el estudiante eligió en este dispositivo o,
+   * si nunca eligió, el valor por defecto del juego.
+   */
+  A11y.prototype.soundPreference = function (fallback) {
+    var stored = null;
+    try { stored = global.localStorage.getItem(SOUND_KEY); } catch (e) { stored = null; }
+    this.soundOn = stored === null ? !!fallback : stored === "1";
+    this.setPressed("sound", this.soundOn);
+    return this.soundOn;
+  };
+
+  /** Lee un texto en voz alta si el estudiante tiene el audio activo.
+      opts.lang: "es" para lo que se practica en español (dictados, lecturas);
+      sin indicarlo se usa el idioma de la página.
+      opts.queue: no interrumpe lo que se está leyendo. */
+  A11y.prototype.say = function (text, force, opts) {
     if (!this.speechSupported) return;
     if (!this.speechOn && !force) return;
     if (!text) return;
+    opts = opts || {};
+    var pageLang = (document.documentElement.lang || "es").slice(0, 2);
+    var lang = opts.lang || pageLang;
     try {
-      global.speechSynthesis.cancel();
+      if (!opts.queue) global.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(String(text));
-      u.lang = "es-CO";
+      u.lang = lang === "en" ? "en-US" : "es-CO";
       u.rate = 0.92;             // ritmo pausado, no infantilizado
       global.speechSynthesis.speak(u);
     } catch (e) {
@@ -120,6 +147,7 @@
       reduce_motion: this.shell.classList.contains("is-reduced-motion"),
       legible_font: this.shell.classList.contains("is-legible-font"),
       text_scale: Number(this.scale.toFixed(2)),
+      sound: !!this.soundOn,
       hints_used: this.hintsUsed
     };
   };

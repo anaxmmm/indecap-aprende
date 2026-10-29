@@ -2,11 +2,20 @@
 # Funciones usadas por games/routes.py (motor de juegos)
 # ---------------------------------------------------------------------------
 
+from collections import Counter
+from datetime import timedelta
 from typing import Optional
 
-from flask_babel import force_locale
-
+from app.blueprints.games.registry import (
+    GAMES,
+    PASS_SCORE,
+    activity_label,
+    activity_title,
+    stars_for,
+    translate_game_text,
+)
 from app.extensions import db
+from app.utils.fechas import local_today, to_local
 from app.models.accessibility import (
     AccessibilityProfile,
     AutonomyLevel,
@@ -49,23 +58,13 @@ def get_accessibility_context(user: User) -> dict:
 
 
 def get_active_assignment(student: User, game: dict) -> Optional[TrastornoAsignado]:
-    """Candado real de acceso a un juego (ver games/routes.py::play).
+    """Asignación que le da al estudiante acceso a este juego (ver
+    games/routes.py::play).
 
-    El acceso a los juegos del registry se basa directamente en
-    TrastornoAsignado — lo que el docente asigna en perfil_estudiante — y
-    ya NO en SesionAsignada/Actividad. Antes se exigía una SesionAsignada
-    vigente ligada a una Actividad del trastorno, pero
-    _auto_enroll_first_session nunca crea esa SesionAsignada para
-    trastornos con juego propio en el registry, porque ya no existen filas
-    Actividad para ellos (el proyecto abandonó ese sistema en favor de los
-    juegos). Eso dejaba el botón "Jugar" siempre bloqueado aunque el
-    docente sí hubiera asignado el trastorno.
-
-    Ahora se busca, entre los trastornos que el docente le asignó a este
-    estudiante, cuál corresponde a este juego según el registry, y se
-    devuelve esa asignación (TrastornoAsignado) directamente — sin fechas
-    de vigencia, porque TrastornoAsignado no las tiene: la asignación del
-    trastorno es, por sí sola, el permiso de juego."""
+    El permiso sale de TrastornoAsignado, lo que el docente marca en el
+    perfil del estudiante: se busca, entre sus trastornos asignados, el que
+    corresponde a este juego según el registro. No tiene fechas de vigencia:
+    la asignación del trastorno es, por sí sola, el permiso de juego."""
     from app.blueprints.games.registry import get_game_for_trastorno
 
     for asignacion in student.trastornos_asignados:
@@ -106,8 +105,8 @@ def get_level_scores(student: User, slug: str) -> dict:
 
 
 def _notify_teachers_of_new_level(student: User, game: dict, level: int) -> None:
-    """Avisa a los docentes del estudiante la primera vez que supera un
-    nivel (score >= 60). Esto es lo que sincroniza la campana y el feed de
+    """Avisa a los docentes del estudiante la primera vez que supera una
+    actividad (score >= 60). Esto es lo que sincroniza la campana y el feed de
     'Últimos avances' del panel general con el progreso real del juego.
 
     Anti-spam: la comprobación de "primera vez" se hace ANTES de agregar la
@@ -116,10 +115,8 @@ def _notify_teachers_of_new_level(student: User, game: dict, level: int) -> None
     con score >= 60, el nivel ya fue notificado y no se vuelve a avisar por
     repeticiones del mismo nivel.
 
-    Idioma: el aviso se guarda ya escrito en la base de datos, así que se
-    fija siempre en español. Sin esto, el nombre del juego (que ahora es un
-    texto traducible) saldría en el idioma que tuviera activo el estudiante
-    en ese momento, mezclado con el resto de la frase en español.
+    Idioma: el aviso guarda su tipo y sus datos, y la frase se arma en el
+    idioma de quien la lee (ver Notification.text).
 
     No hace commit: el llamador confirma la transacción junto con la partida."""
     ya_superado = (
@@ -135,18 +132,30 @@ def _notify_teachers_of_new_level(student: User, game: dict, level: int) -> None
     if ya_superado > 0:
         return
 
-    with force_locale("es"):
-        nombre_juego = str(game["name"])
+    from app.blueprints.games.registry import split_activity
 
+    nivel, actividad = split_activity(game, level)
     docente_ids = {grupo.teacher_id for grupo in student.grupos}
     for docente_id in docente_ids:
         db.session.add(
-            Notification(
+            Notification.build(
+                "level_passed",
                 recipient_id=docente_id,
                 student_id=student.id,
-                message=f"{student.full_name} superó el nivel {level} de «{nombre_juego}».",
+                student=student.full_name,
+                activity=actividad,
+                level=nivel,
+                game_slug=game["slug"],
             )
         )
+
+
+def _as_int(value, default: int, low: int, high: int) -> int:
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        return default
+    return max(low, min(high, number))
 
 
 def save_game_session(student: User, payload: dict, game: dict) -> GameSession:
@@ -154,8 +163,10 @@ def save_game_session(student: User, payload: dict, game: dict) -> GameSession:
     payload deben coincidir exactamente con las que arma ese archivo
     (game_id, trastorno_id, level, score, time_spent, support_level,
     completed, errors, accessibility_settings_used)."""
-    score = payload.get("score", 0)
-    level = payload.get("level", 1)
+    # El navegador no es fuente confiable: se acotan los valores antes de
+    # guardarlos para que un envío manipulado no desbloquee de más.
+    score = _as_int(payload.get("score"), 0, 0, 100)
+    level = _as_int(payload.get("level"), 1, 1, game["levels"])
     completed = bool(payload.get("completed", True))
 
     # Notificar ANTES de agregar la partida: si se agregara primero, el
@@ -170,13 +181,145 @@ def save_game_session(student: User, payload: dict, game: dict) -> GameSession:
         game_slug=game["slug"],
         level=level,
         score=score,
-        time_spent=payload.get("time_spent", 0),
-        support_level=payload.get("support_level", 1),
+        time_spent=_as_int(payload.get("time_spent"), 0, 0, 24 * 3600),
+        support_level=_as_int(payload.get("support_level"), 1, 1, 3),
         completed=completed,
     )
-    sesion.errors = payload.get("errors") or []
+    errores = payload.get("errors")
+    sesion.errors = [e for e in errores if isinstance(e, dict)][:100] if isinstance(errores, list) else []
     sesion.accessibility_settings_used = payload.get("accessibility_settings_used") or {}
 
     db.session.add(sesion)
     db.session.commit()
     return sesion
+
+
+# ---------------------------------------------------------------------------
+# Historial del estudiante (vista del docente)
+# ---------------------------------------------------------------------------
+
+def _skill_text(error: dict) -> str:
+    """Nombre legible de la habilidad de un error. Las partidas nuevas lo
+    traen guardado; las antiguas solo tienen el identificador."""
+    label = error.get("label")
+    if isinstance(label, str) and label.strip():
+        return label.strip()[:120]
+    skill = str(error.get("skill") or "").replace("_", " ").replace("-", " ").strip()
+    return skill[:1].upper() + skill[1:] if skill else ""
+
+
+def get_student_history(student: User, recent_limit: int = 15, weeks: int = 8) -> dict:
+    """Resumen del avance de un estudiante en los juegos: por juego, lo que
+    debe reforzar, la evolución semanal y sus últimas partidas."""
+    sesiones = (
+        GameSession.query.filter_by(user_id=student.id)
+        .order_by(GameSession.created_at.desc())
+        .all()
+    )
+
+    por_juego: dict = {}
+    for s in sesiones:
+        game = GAMES.get(s.game_slug)
+        if game is None:
+            continue
+        item = por_juego.setdefault(s.game_slug, {
+            "game": game, "best": {}, "plays": 0, "last": s.created_at, "recent_scores": [],
+        })
+        item["plays"] += 1
+        if s.score > item["best"].get(s.level, -1):
+            item["best"][s.level] = s.score
+        if len(item["recent_scores"]) < 5:
+            item["recent_scores"].append(s.score)
+
+    juegos = []
+    for item in por_juego.values():
+        game, best = item["game"], item["best"]
+        superadas = sum(1 for v in best.values() if v >= PASS_SCORE)
+        juegos.append({
+            "game": game,
+            "plays": item["plays"],
+            "passed": superadas,
+            "total": game["levels"],
+            "percent": round(superadas * 100 / game["levels"]) if game["levels"] else 0,
+            "stars": sum(stars_for(v) for v in best.values()),
+            "average": round(sum(item["recent_scores"]) / len(item["recent_scores"])),
+            "last": item["last"],
+        })
+    juegos.sort(key=lambda j: j["last"], reverse=True)
+
+    # Habilidades con más errores en las últimas 30 partidas.
+    conteo: Counter = Counter()
+    juego_de: dict = {}
+    for s in sesiones[:30]:
+        game = GAMES.get(s.game_slug)
+        vistos = set()
+        for e in s.errors:
+            if not isinstance(e, dict) or e.get("phase") == "repaso":
+                continue
+            # Se cuenta con el nombre en español, aunque la partida se haya
+            # jugado en inglés, y se muestra en el idioma de quien consulta.
+            texto = translate_game_text(s.game_slug, _skill_text(e), "es")
+            if not texto or texto in vistos:
+                continue
+            vistos.add(texto)
+            conteo[texto] += 1
+            if game is not None:
+                juego_de.setdefault(texto, s.game_slug)
+    reforzar = [
+        {
+            "skill": translate_game_text(juego_de.get(texto, ""), texto),
+            "count": n,
+            "game": GAMES[juego_de[texto]]["name"] if texto in juego_de else "",
+        }
+        for texto, n in conteo.most_common(6)
+    ]
+
+    # Promedio semanal (lunes a domingo) de las últimas semanas.
+    hoy = local_today()
+    inicio = hoy - timedelta(days=hoy.weekday()) - timedelta(weeks=weeks - 1)
+    semanas = [{"start": inicio + timedelta(weeks=i), "scores": []} for i in range(weeks)]
+    for s in sesiones:
+        dia = to_local(s.created_at).date()
+        if dia < inicio:
+            break
+        semanas[min(weeks - 1, (dia - inicio).days // 7)]["scores"].append(s.score)
+    evolucion = [
+        {
+            "start": w["start"],
+            "plays": len(w["scores"]),
+            "average": round(sum(w["scores"]) / len(w["scores"])) if w["scores"] else None,
+        }
+        for w in semanas
+    ]
+
+    sentimientos = Counter(s.feeling for s in sesiones if s.feeling)
+
+    recientes = []
+    for s in sesiones[:recent_limit]:
+        game = GAMES.get(s.game_slug)
+        if game is None:
+            continue
+        recientes.append({
+            "game": game,
+            "label": activity_label(game, s.level),
+            "title": activity_title(game, s.level),
+            "score": s.score,
+            "stars": stars_for(s.score),
+            "passed": s.score >= PASS_SCORE,
+            "time": s.time_spent or 0,
+            "feeling": s.feeling,
+            "date": s.created_at,
+        })
+
+    total = len(sesiones)
+    return {
+        "total_plays": total,
+        "passed": sum(j["passed"] for j in juegos),
+        "average": round(sum(s.score for s in sesiones[:20]) / min(total, 20)) if total else None,
+        "last": sesiones[0].created_at if sesiones else None,
+        "games": juegos,
+        "reinforce": reforzar,
+        "weeks": evolucion,
+        "feelings": {k: sentimientos.get(k, 0) for k in ("bien", "regular", "dificil")},
+        "recent": recientes,
+    }

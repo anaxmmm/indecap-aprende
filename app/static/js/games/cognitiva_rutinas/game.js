@@ -1,859 +1,663 @@
 /**
  * CLASIFICADOR DE RUTINAS — Discapacidad cognitiva
  *
- * Habilidad núcleo: generalización funcional y secuencias de pasos simples.
- *  - Clasificación por un solo criterio ...... corteza prefrontal
- *  - Memoria visual simple ................... hipocampo
- *  - Rutinas y tareas en secuencia ........... prefrontal + ganglios basales
- *  - Semáforo de decisiones (nueva) ........... juicio situacional cotidiano
+ * Habilidad central: organizar la vida diaria con autonomía: clasificar,
+ * seguir pasos, prever consecuencias y tomar decisiones seguras.
  *
- * MAPA DE ETAPAS (5 Stages de 10 niveles, 50 en total, numeración continua):
- *   Stage 1 · Base            → niveles 1-10  (sin cambio de contenido)
- *   Stage 2 · Media           → niveles 11-20 (rutinas de vida independiente)
- *   Stage 3 · Alta            → niveles 21-30 (dinero y trámites)
- *   Stage 4 · Muy Alta        → niveles 31-40 (trabajo y salud)
- *   Stage 5 · Súper Difícil   → niveles 41-50 (integración total)
+ * 5 niveles × 10 actividades, 5 retos por actividad que suben de dificultad
+ * (más elementos, más opciones, menos apoyo visual).
  *
- * El desbloqueo de nivel a nivel (score >= 60) lo maneja
- * games/services.py::get_unlocked_level, agnóstico al número de niveles.
+ *   Nivel 1 · Base           Objetos y categorías de la casa
+ *   Nivel 2 · Media          Rutinas de la casa y autocuidado
+ *   Nivel 3 · Alta           Dinero y trámites
+ *   Nivel 4 · Muy Alta       Trabajo y salud
+ *   Nivel 5 · Súper Difícil  Vida independiente
  *
- * Principios de diseño (se conservan sin cambios en todos los niveles):
- *  - Un solo criterio por pantalla y sin distractores complejos.
- *  - Sin límite de tiempo en ningún reto.
- *  - Apoyo escalonado: en modo guiado el paso siguiente se resalta solo; en
- *    parcial se resalta tras el primer error; en independiente no se resalta.
- *  - Nivel 9: retirada gradual de ayudas dentro del mismo nivel (scaffolding).
- *  - Nivel 10: evaluación embebida, mezcla las mecánicas anteriores.
- *
- * Contenido de las etapas 2 a 5: pensado para jóvenes de 15 a 26 años,
- * orientado a autonomía en la vida adulta (dinero, transporte, trabajo,
- * trámites, salud), en vez de contextos infantiles.
- *
- * Estilos: se inyectan desde aquí para no tocar games.css.
+ * Principios: un solo criterio por pantalla, lenguaje concreto, imagen +
+ * texto + voz, sin límite de tiempo y situaciones de la vida real para
+ * jóvenes de 15 a 26 años (nada infantil).
  */
 (function (global) {
   "use strict";
+  var _t = global.IndecapGame.tr;
+
+  var U = global.IndecapGame.util;
+  /** «15 de marzo»; en inglés el diccionario lo deja como «March 15». */
+  function fecha(dia, mes) { return _t("{d} de {m}").replace("{d}", dia).replace("{m}", mes); }
+  /** Días de la semana dentro de una frase: en español van en minúscula. */
+  function diaEnFrase(d) {
+    var html = global.document && global.document.documentElement;
+    return html && /^en/.test(html.lang || "") ? d : d.toLowerCase();
+  }
+  var rnd = U.rnd, pick = U.pick, shuffle = U.shuffle, grow = U.grow, cop = U.cop;
+  var RETOS = 5;
+
+  (function injectStyles() {
+    if (document.getElementById("cog-styles")) return;
+    var css = [
+      ".cog-ico{font-size:1.5em;line-height:1;margin-right:.35em;vertical-align:-.15em}",
+      ".cog-hero{display:inline-flex;flex-direction:column;align-items:center;gap:8px;padding:20px 28px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--canvas)}",
+      ".cog-hero__ico{font-size:64px;line-height:1}",
+      ".cog-hero__name{font-weight:600;font-size:16px;color:var(--ink-900)}",
+      ".cog-scene{max-width:560px;margin:0 auto;padding:16px 20px;display:flex;gap:16px;align-items:center;text-align:left;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--canvas);font-size:17px;line-height:1.5}",
+      ".cog-scene__ico{font-size:44px;line-height:1;flex-shrink:0}",
+      ".cog-steps{list-style:none;margin:0 auto;padding:0;max-width:520px;display:grid;gap:8px;text-align:left}",
+      ".cog-steps li{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);font-size:15px}",
+      ".cog-steps li b{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:var(--navy-800);color:#fff;font-size:12px;flex-shrink:0}",
+      ".cog-steps li.is-gap{border-style:dashed;color:var(--ink-400);background:var(--canvas)}",
+      ".cog-doc{min-width:280px;max-width:420px;padding:16px 20px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--sh-xs);text-align:left;font-size:15px}",
+      ".cog-doc h4{margin:0 0 10px;font-size:15px;font-weight:700}",
+      ".cog-doc p{display:flex;justify-content:space-between;gap:24px;margin:0;padding:6px 0;border-bottom:1px dashed var(--line)}",
+      ".cog-doc p:last-child{border-bottom:0}",
+      ".cog-grid{width:100%;max-width:440px;margin:0 auto;display:grid;grid-template-columns:repeat(var(--cols,3),minmax(84px,1fr));gap:10px}",
+      ".game-option.cog-card{font-size:40px;min-height:88px;padding:8px}",
+      ".cog-status{margin:0 0 10px;font-weight:600;color:var(--ink-600)}"
+    ].join("");
+    var tag = document.createElement("style");
+    tag.id = "cog-styles";
+    tag.textContent = css;
+    document.head.appendChild(tag);
+  })();
 
   // ─── Utilidades ───────────────────────────────────────────────────────────
-
-  function rnd(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+  function ico(i, t) { return '<span class="cog-ico" aria-hidden="true">' + i + "</span>" + t; }
+  function hero(i, t) { return '<div class="cog-hero"><span class="cog-hero__ico" aria-hidden="true">' + i + '</span><span class="cog-hero__name">' + t + "</span></div>"; }
+  function scene(i, t) { return '<div class="cog-scene"><span class="cog-scene__ico" aria-hidden="true">' + i + "</span><span>" + t + "</span></div>"; }
+  function textOpts(ok, bads, n) {
+    var uniq = [];
+    shuffle(bads).forEach(function (t) { if (t !== ok && uniq.indexOf(t) === -1) uniq.push(t); });
+    return shuffle([ok].concat(uniq.slice(0, n - 1))).map(function (t) { return { label: t, value: t, aria: t }; });
   }
-
-  function shuffle(arr) {
-    var a = arr.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a;
+  function stepsList(steps, gapIndex) {
+    return '<ol class="cog-steps">' + steps.map(function (st, k) {
+      return k === gapIndex ? '<li class="is-gap"><b>' + (k + 1) + _t("</b>¿…?</li>") :
+        "<li><b>" + (k + 1) + '</b><span class="cog-ico" aria-hidden="true">' + st.i + "</span>" + st.t + "</li>";
+    }).join("") + "</ol>";
   }
+  /** Con poco apoyo (retos altos) se quitan los íconos y queda solo el texto. */
+  function label(item, s, cut) { return s >= (cut || 4) ? item[1] : ico(item[0], item[1]); }
 
-  function el(tag, className) {
-    var node = document.createElement(tag);
-    if (className) node.className = className;
-    return node;
-  }
-
-  function liveRegion() {
-    var node = el("p", "visually-hidden");
-    node.setAttribute("role", "status");
-    node.setAttribute("aria-live", "polite");
-    return node;
-  }
-
-  function scheduler() {
-    var alive = true, timers = [];
-    return {
-      later: function (fn, ms) {
-        timers.push(setTimeout(function () { if (alive) fn(); }, ms));
-      },
-      stop: function () {
-        alive = false;
-        timers.forEach(clearTimeout);
-      }
-    };
-  }
-
-  /** Opciones de texto: la respuesta correcta más n-1 distractores, mezcladas. */
-  function textOptions(ok, bads, n) {
-    var list = [ok].concat(shuffle(bads).slice(0, n - 1));
-    return shuffle(list).map(function (t) {
-      return { label: t, value: t, aria: t };
-    });
-  }
-
-  var STYLE_ID = "cognitiva-rutinas-styles";
-  function injectStyles() {
-    if (document.getElementById(STYLE_ID)) return;
-    var css = [
-      ".game-shell .game-options .game-option{font-size:1.15rem}",
-      ".cog-big{font-size:5rem;line-height:1}",
-      ".cog-emoji{font-size:2.6rem;line-height:1}",
-      ".cog-status{flex-basis:100%;font-weight:600;color:var(--g-muted);margin-bottom:8px}",
-      ".cog-list{flex-basis:100%;list-style:none;margin:0 auto 12px;padding:0;max-width:480px;text-align:left}",
-      ".cog-list li{background:var(--g-ok-soft);border:2px solid var(--g-ok);color:var(--g-ok);border-radius:12px;padding:10px 14px;margin-bottom:8px;font-weight:600}",
-      ".cog-steps{flex-basis:100%;display:flex;flex-wrap:wrap;gap:12px;justify-content:center}",
-      ".game-option.cog-step{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:1rem;min-width:150px;max-width:220px}",
-      ".cog-step-icon{font-size:2.2rem;line-height:1}",
-      ".game-option.cog-next{outline:4px solid var(--g-accent);outline-offset:3px}",
-      ".cog-grid{flex-basis:100%;width:100%;max-width:420px;margin:0 auto;display:grid;grid-template-columns:repeat(var(--cols,3),minmax(84px,1fr));gap:12px}",
-      ".game-option.cog-card{font-size:2.6rem;min-height:84px;padding:8px}"
-    ].join("\n");
-    var style = document.createElement("style");
-    style.id = STYLE_ID;
-    style.textContent = css;
-    document.head.appendChild(style);
-  }
-  injectStyles();
-
-  // ─── Datos: base (Stage 1, sin cambios) ────────────────────────────────────
-
+  // ─── Contenido ───────────────────────────────────────────────────────────
   var CATS = {
-    animal: { label: "Animal", items: [["🐶", "perro"], ["🐱", "gato"], ["🐮", "vaca"], ["🐔", "gallina"], ["🐟", "pez"]] },
-    comida: { label: "Comida", items: [["🍎", "manzana"], ["🍌", "banano"], ["🍞", "pan"], ["🥛", "leche"], ["🍕", "pizza"]] },
-    ropa: { label: "Ropa", items: [["👕", "camiseta"], ["🧦", "medias"], ["👟", "zapato"], ["🧢", "gorra"]] },
-    transporte: { label: "Transporte", items: [["🚗", "carro"], ["🚌", "bus"], ["🚲", "bicicleta"], ["✈️", "avión"]] }
+    comida: { label: _t("Comida"), items: [["🍎", _t("manzana")], ["🍞", _t("pan")], ["🥚", _t("huevos")], ["🍚", _t("arroz")], ["🧀", _t("queso")], ["🥑", _t("aguacate")]] },
+    ropa: { label: _t("Ropa"), items: [["👕", _t("camiseta")], ["👖", _t("pantalón")], ["🧦", _t("medias")], ["🧥", _t("chaqueta")], ["👟", _t("tenis")], ["🧢", _t("gorra")]] },
+    aseo: { label: _t("Aseo personal"), items: [["🧼", _t("jabón")], ["🪥", _t("cepillo de dientes")], ["🧴", _t("champú")], ["🧻", _t("papel higiénico")], ["🪒", _t("máquina de afeitar")]] },
+    cocina: { label: _t("Cocina"), items: [["🍳", _t("sartén")], ["🥄", _t("cuchara")], ["🔪", _t("cuchillo")], ["🍽️", _t("plato")], ["🫖", _t("olla")]] },
+    tecnologia: { label: _t("Tecnología"), items: [["📱", _t("celular")], ["💻", _t("computador")], ["🎧", _t("audífonos")], ["🔌", _t("cargador")], ["🖨️", _t("impresora")]] },
+    transporte: { label: _t("Transporte"), items: [["🚌", _t("bus")], ["🚲", _t("bicicleta")], ["🛵", _t("moto")], ["🚇", _t("metro")], ["🚕", _t("taxi")]] }
   };
-
-  var ALL = [];
-  Object.keys(CATS).forEach(function (k) { ALL = ALL.concat(CATS[k].items); });
+  var CATS_ADULTO = {
+    documentos: { label: _t("Documentos"), items: [["🪪", _t("cédula")], ["🧾", _t("factura")], ["📄", _t("contrato")], ["📋", _t("hoja de vida")], ["📑", _t("certificado")]] },
+    dinero: { label: _t("Dinero"), items: [["💵", _t("billete")], ["🪙", _t("moneda")], ["💳", _t("tarjeta débito")], ["🏦", _t("cuenta de ahorros")], ["📲", _t("billetera digital")]] },
+    trabajo: { label: _t("Trabajo"), items: [["⛑️", _t("casco")], ["🧤", _t("guantes de protección")], ["🗂️", _t("carpeta")], ["🪪", _t("carné de la empresa")], ["📆", _t("horario de turnos")]] }
+  };
+  function itemsOf(cats) { var all = []; Object.keys(cats).forEach(function (k) { cats[k].items.forEach(function (it) { all.push({ it: it, cat: k }); }); }); return all; }
 
   var FUNCIONES = [
-    { icon: "☂️", name: "paraguas", ok: "Para protegerme de la lluvia", bad: ["Para cortar papel", "Para escuchar música", "Para dormir"] },
-    { icon: "🪥", name: "cepillo de dientes", ok: "Para limpiar los dientes", bad: ["Para peinarme", "Para escribir", "Para tomar agua"] },
-    { icon: "🔑", name: "llave", ok: "Para abrir una puerta", bad: ["Para cocinar", "Para pintar", "Para medir el tiempo"] },
-    { icon: "🧤", name: "guantes", ok: "Para cuidar las manos del frío", bad: ["Para ver de lejos", "Para comer sopa", "Para escuchar"] },
-    { icon: "⏰", name: "reloj despertador", ok: "Para despertarme a tiempo", bad: ["Para lavar la ropa", "Para cortar el pan", "Para secarme el pelo"] },
-    { icon: "✏️", name: "lápiz", ok: "Para escribir y dibujar", bad: ["Para abrir latas", "Para barrer", "Para calentar comida"] },
-    { icon: "🥄", name: "cuchara", ok: "Para comer sopa", bad: ["Para cortar el cabello", "Para secar el piso", "Para escribir"] }
+    { i: "☂️", n: _t("paraguas"), ok: _t("Para protegerme de la lluvia"), bad: [_t("Para cortar papel"), _t("Para escuchar música"), _t("Para guardar comida")] },
+    { i: "🔑", n: _t("llave"), ok: _t("Para abrir una puerta"), bad: [_t("Para cocinar"), _t("Para medir el tiempo"), _t("Para pagar")] },
+    { i: "⏰", n: _t("despertador"), ok: _t("Para despertarme a tiempo"), bad: [_t("Para lavar la ropa"), _t("Para calentar comida"), _t("Para secarme el pelo")] },
+    { i: "🧯", n: _t("extintor"), ok: _t("Para apagar un incendio pequeño"), bad: [_t("Para regar las plantas"), _t("Para limpiar el piso"), _t("Para inflar llantas")] },
+    { i: "🩹", n: _t("curita"), ok: _t("Para cubrir una herida pequeña"), bad: [_t("Para pegar papeles"), _t("Para cerrar una bolsa"), _t("Para decorar")] },
+    { i: "🔌", n: _t("cargador"), ok: _t("Para cargar la batería del celular"), bad: [_t("Para hacer llamadas"), _t("Para encender la luz"), _t("Para conectar el agua")] },
+    { i: "🧽", n: _t("esponja"), ok: _t("Para lavar los platos"), bad: [_t("Para secarme el pelo"), _t("Para escribir"), _t("Para barrer")] }
+  ];
+  var FUNCIONES_ADULTO = [
+    { i: "🪪", n: _t("cédula"), ok: _t("Para identificarme"), bad: [_t("Para pagar el bus"), _t("Para abrir una puerta"), _t("Para cocinar")] },
+    { i: "💳", n: _t("tarjeta débito"), ok: _t("Para pagar o sacar mi dinero"), bad: [_t("Para identificarme ante la policía"), _t("Para abrir el correo"), _t("Para viajar en avión")] },
+    { i: "🧾", n: _t("recibo de pago"), ok: _t("Para demostrar que ya pagué"), bad: [_t("Para pedir empleo"), _t("Para votar"), _t("Para viajar")] },
+    { i: "📋", n: _t("hoja de vida"), ok: _t("Para mostrar mi experiencia al buscar trabajo"), bad: [_t("Para pagar impuestos"), _t("Para pedir una cita médica"), _t("Para tomar el bus")] },
+    { i: "📄", n: _t("fórmula médica"), ok: _t("Para reclamar medicamentos en la farmacia"), bad: [_t("Para entrar al cine"), _t("Para pagar el arriendo"), _t("Para abrir una cuenta")] },
+    { i: "📆", n: _t("agenda"), ok: _t("Para anotar citas y no olvidarlas"), bad: [_t("Para guardar dinero"), _t("Para medir la temperatura"), _t("Para cargar el celular")] }
   ];
 
   var CAUSAS = [
-    { icon: "💡", accion: "tocas el interruptor de la luz", ok: "La luz se enciende", bad: ["Empieza a llover", "Suena una canción"] },
-    { icon: "🚰", accion: "abres la llave del agua", ok: "Sale agua", bad: ["Se apaga la luz", "Aparece una flor"] },
-    { icon: "🔔", accion: "presionas el timbre", ok: "El timbre suena", bad: ["Se abre la ventana", "Sale humo"] },
-    { icon: "🧊", accion: "dejas un hielo al sol", ok: "El hielo se derrite", bad: ["El hielo crece", "El hielo canta"] },
-    { icon: "🚦", accion: "el semáforo se pone en rojo", ok: "Los carros se detienen", bad: ["Los carros aceleran", "Los carros vuelan"] }
+    { i: "💡", a: _t("tocas el interruptor de la luz"), ok: _t("La luz se enciende"), bad: [_t("Empieza a llover"), _t("Suena el celular")] },
+    { i: "🧊", a: _t("dejas un hielo al sol"), ok: _t("El hielo se derrite"), bad: [_t("El hielo crece"), _t("El hielo se vuelve agua caliente de inmediato")] },
+    { i: "🔋", a: _t("no cargas el celular en todo el día"), ok: _t("Se apaga por falta de batería"), bad: [_t("Se carga solo"), _t("Funciona más rápido")] },
+    { i: "🥛", a: _t("dejas la leche fuera de la nevera todo el día"), ok: _t("Se puede dañar"), bad: [_t("Se vuelve más fresca"), _t("Se convierte en queso para comer")] },
+    { i: "🚰", a: _t("dejas la llave del agua abierta"), ok: _t("Se desperdicia el agua"), bad: [_t("Se ahorra agua"), _t("Se apaga la luz")] }
+  ];
+  var CAUSAS_ADULTO = [
+    { i: "🔥", a: _t("dejas la estufa encendida sin vigilar"), ok: _t("Se puede quemar la comida o empezar un incendio"), bad: [_t("La comida se enfría sola"), _t("No pasa nada")] },
+    { i: "⏰", a: _t("no programas la alarma para ir a trabajar"), ok: _t("Puedes llegar tarde"), bad: [_t("Llegas más temprano"), _t("Te dan el día libre")] },
+    { i: "💸", a: _t("gastas todo tu dinero en la primera semana"), ok: _t("Te puede faltar dinero para lo necesario"), bad: [_t("Te sobra dinero"), _t("El banco te regala más")] },
+    { i: "🧾", a: _t("no pagas un servicio a tiempo"), ok: _t("Te cobran un recargo o te cortan el servicio"), bad: [_t("Te devuelven el dinero"), _t("El servicio mejora")] },
+    { i: "💊", a: _t("dejas de tomar un medicamento sin preguntar al médico"), ok: _t("Tu tratamiento puede no funcionar"), bad: [_t("Te curas más rápido"), _t("No importa")] },
+    { i: "📵", a: _t("no avisas que vas a faltar al trabajo"), ok: _t("Tu jefe se preocupa y puede haber un llamado de atención"), bad: [_t("Te suben el sueldo"), _t("Nadie lo nota nunca")] }
   ];
 
   var SOCIALES = [
-    { icon: "😢", t: "Un compañero está llorando.", ok: "Le pregunto qué le pasa y lo acompaño", bad: ["Me voy a jugar sin decirle nada"] },
-    { icon: "📚", t: "A tu compañera se le cayeron los cuadernos.", ok: "Le ayudo a recogerlos", bad: ["Me río y sigo caminando"] },
-    { icon: "✏️", t: "Alguien te presta un lápiz.", ok: "Le digo gracias", bad: ["Me lo quedo sin decir nada"] },
-    { icon: "👋", t: "Llegas a clase y ves a tu profesora.", ok: "La saludo", bad: ["Paso sin mirarla"] },
-    { icon: "🧸", t: "Quieres un juguete que tiene otro niño.", ok: "Le pido el juguete por favor", bad: ["Se lo quito"] }
+    { i: "😢", t: _t("Un compañero de clase está triste."), ok: _t("Le pregunto qué le pasa y lo escucho"), bad: [_t("Me burlo de él"), _t("Lo grabo con el celular")] },
+    { i: "📚", t: _t("A una compañera se le cayeron los cuadernos."), ok: _t("Le ayudo a recogerlos"), bad: [_t("Me río y sigo caminando"), _t("Los pateo")] },
+    { i: "✏️", t: _t("Alguien te presta un lapicero."), ok: _t("Le digo gracias y se lo devuelvo"), bad: [_t("Me lo quedo sin decir nada"), _t("Lo boto")] },
+    { i: "👋", t: _t("Llegas al salón y ves a tu profesora."), ok: _t("La saludo"), bad: [_t("Paso sin mirarla"), _t("Le grito desde lejos")] },
+    { i: "🎧", t: _t("Quieres usar el computador que está usando otra persona."), ok: _t("Le pregunto si me lo puede prestar cuando termine"), bad: [_t("Se lo quito"), _t("Lo apago para que se vaya")] }
+  ];
+  var SOCIALES_ADULTO = [
+    { i: "😓", t: _t("Un compañero de trabajo comete un error y se ve preocupado."), ok: _t("Le digo que no se preocupe y le ayudo a corregirlo"), bad: [_t("Me río de él delante de otros"), _t("Le cuento a todos")] },
+    { i: "⏳", t: _t("Alguien te interrumpe mientras estás concentrado."), ok: _t("Le pido amablemente que espere un momento"), bad: [_t("Le grito que se vaya"), _t("Lo ignoro y me voy")] },
+    { i: "🙋", t: _t("No entiendes una instrucción de tu jefe."), ok: _t("Le pido que me la explique de nuevo"), bad: [_t("Sigo sin preguntar y me equivoco"), _t("Hago otra cosa")] },
+    { i: "🤝", t: _t("Llega un compañero nuevo al trabajo."), ok: _t("Lo saludo y le explico cómo funcionan las cosas"), bad: [_t("Lo ignoro por completo"), _t("Le escondo sus cosas")] },
+    { i: "😠", t: _t("Un cliente te habla de forma grosera."), ok: _t("Respondo con calma y busco ayuda de un supervisor"), bad: [_t("Le respondo también de forma grosera"), _t("Me voy sin decir nada")] },
+    { i: "🏦", t: _t("No entiendes un trámite en el banco o en la EPS."), ok: _t("Pido que me lo expliquen más despacio"), bad: [_t("Me voy sin resolver mi duda"), _t("Firmo sin entender")] }
   ];
 
-  var ROUTINES = {
-    r3: [
-      { title: "Lavarse las manos", steps: [
-        { i: "🚰", t: "Abro el agua" }, { i: "🧼", t: "Me pongo jabón y froto" }, { i: "🧻", t: "Me seco las manos" }] },
-      { title: "Cepillarse los dientes", steps: [
-        { i: "🪥", t: "Pongo pasta en el cepillo" }, { i: "😁", t: "Me cepillo los dientes" }, { i: "🚰", t: "Me enjuago la boca" }] },
-      { title: "Ir al colegio", steps: [
-        { i: "🎒", t: "Alisto mi maleta" }, { i: "🚌", t: "Tomo el bus" }, { i: "🏫", t: "Llego al colegio" }] }
+  var SEMAFORO_BASICO = [
+    { i: "🚗", t: _t("Un desconocido se ofrece a llevarte a tu casa en su carro."), ok: _t("Le digo que no, gracias, y sigo mi camino"), bad: [_t("Me subo porque parece amable")] },
+    { i: "📱", t: _t("Alguien que no conoces te pide tu contraseña por mensaje."), ok: _t("No se la doy y le cuento a alguien de confianza"), bad: [_t("Se la envío porque insiste")] },
+    { i: "🚸", t: _t("Vas a cruzar y el semáforo peatonal está en rojo."), ok: _t("Espero a que cambie a verde"), bad: [_t("Cruzo corriendo porque tengo prisa")] },
+    { i: "🔥", t: _t("Hueles gas en la cocina."), ok: _t("No prendo nada, abro las ventanas y aviso"), bad: [_t("Prendo la estufa para revisar")] },
+    { i: "🔌", t: _t("Un enchufe está echando chispas."), ok: _t("No lo toco y aviso a un adulto o al encargado"), bad: [_t("Lo desconecto con las manos mojadas")] }
+  ];
+  var SEMAFORO_DINERO = [
+    { i: "📞", t: _t("Te llaman diciendo que ganaste un premio, pero debes pagar primero."), ok: _t("No pago nada y cuelgo"), bad: [_t("Pago porque quiero el premio")] },
+    { i: "💳", t: _t("Un mensaje dice que tu tarjeta se bloqueó y pide la clave."), ok: _t("No la doy y llamo directamente al banco"), bad: [_t("Envío la clave por el mensaje")] },
+    { i: "🛍️", t: _t("Quieres comprar algo, pero no te alcanza el dinero del mes."), ok: _t("Espero a tener el dinero o busco algo más barato"), bad: [_t("Pido prestado sin pensar cómo pagar")] },
+    { i: "🧾", t: _t("Un vendedor te presiona para firmar un contrato sin leerlo."), ok: _t("Pido tiempo para leerlo con calma"), bad: [_t("Firmo rápido para que deje de insistir")] },
+    { i: "🏧", t: _t("Un desconocido se ofrece a ayudarte en el cajero."), ok: _t("No acepto y pido ayuda al personal del banco"), bad: [_t("Le doy mi tarjeta para que me ayude")] }
+  ];
+  var SEMAFORO_TRABAJO = [
+    { i: "⚠️", t: _t("Ves un cable eléctrico dañado en tu área de trabajo."), ok: _t("Lo reporto al supervisor"), bad: [_t("Lo toco para ver si funciona")] },
+    { i: "🧤", t: _t("Debes usar guantes de protección, pero los olvidaste."), ok: _t("Aviso y pido unos antes de empezar"), bad: [_t("Trabajo sin ellos para no molestar")] },
+    { i: "🤒", t: _t("Te sientes muy enfermo para ir a trabajar."), ok: _t("Aviso a mi jefe y pido el día"), bad: [_t("Voy sin avisar y me siento peor")] },
+    { i: "😳", t: _t("Un compañero te pide que mientas para cubrir un error suyo."), ok: _t("Le digo que no puedo hacerlo"), bad: [_t("Miento para ayudarlo")] },
+    { i: "🕐", t: _t("Tu jefe te pide quedarte más tiempo y tenías una cita médica."), ok: _t("Le explico que tengo una cita y pregunto si puede ser otro día"), bad: [_t("Pierdo la cita sin decir nada")] }
+  ];
+
+  var RUTINAS = {
+    casa3: [
+      { t: _t("Lavarse las manos"), s: [["🚰", _t("Abro el agua")], ["🧼", _t("Me pongo jabón y froto")], ["🧻", _t("Me seco las manos")]] },
+      { t: _t("Cepillarse los dientes"), s: [["🪥", _t("Pongo crema en el cepillo")], ["😁", _t("Me cepillo los dientes")], ["🚰", _t("Me enjuago la boca")]] },
+      { t: _t("Cargar el celular"), s: [["🔌", _t("Conecto el cargador")], ["📱", _t("Conecto el celular")], ["🔋", _t("Espero a que cargue")]] },
+      { t: _t("Hacer un café"), s: [["🫖", _t("Caliento el agua")], ["☕", _t("Sirvo el café")], ["🥄", _t("Lo revuelvo")]] }
     ],
-    r4: [
-      { title: "Empezar el día", steps: [
-        { i: "🛏️", t: "Me levanto" }, { i: "🚿", t: "Me baño" }, { i: "👕", t: "Me visto" }, { i: "🥣", t: "Desayuno" }] },
-      { title: "Preparar un sándwich", steps: [
-        { i: "🍞", t: "Saco el pan" }, { i: "🧀", t: "Pongo el queso" }, { i: "🥪", t: "Cierro el sándwich" }, { i: "🍽️", t: "Me lo como" }] },
-      { title: "Guardar mis útiles", steps: [
-        { i: "📚", t: "Termino de estudiar" }, { i: "✏️", t: "Junto mis lápices" }, { i: "🎒", t: "Los guardo en la maleta" }, { i: "😌", t: "Cierro la maleta" }] }
+    casa4: [
+      { t: _t("Empezar el día"), s: [["🛏️", _t("Me levanto")], ["🚿", _t("Me baño")], ["👕", _t("Me visto")], ["🥣", _t("Desayuno")]] },
+      { t: _t("Lavar los platos"), s: [["🍽️", _t("Recojo los platos sucios")], ["🧽", _t("Los enjabono")], ["🚰", _t("Los enjuago")], ["🧺", _t("Los dejo secar")]] },
+      { t: _t("Lavar la ropa"), s: [["🧺", _t("Separo la ropa clara de la oscura")], ["🧴", _t("Pongo jabón en la lavadora")], ["🌀", _t("Lavo la ropa")], ["👕", _t("La cuelgo a secar")]] },
+      { t: _t("Calentar comida en el microondas"), s: [["🍱", _t("Pongo la comida en un plato")], ["⏲️", _t("Programo el tiempo")], ["🔥", _t("Caliento la comida")], ["🍽️", _t("La saco con cuidado")]] },
+      { t: _t("Cruzar la calle"), s: [["🚶", _t("Me detengo en el andén")], ["👀", _t("Miro a ambos lados")], ["🚦", _t("Espero el semáforo en verde")], ["✅", _t("Cruzo caminando")]] }
     ],
-    tarea: [
-      { title: "Cruzar la calle", steps: [
-        { i: "🚶", t: "Me detengo en la acera" }, { i: "👀", t: "Miro a ambos lados" }, { i: "🚦", t: "Espero que los carros se detengan" }, { i: "✅", t: "Cruzo caminando" }] },
-      { title: "Comprar pan", steps: [
-        { i: "🏪", t: "Voy a la tienda" }, { i: "🥖", t: "Pido el pan" }, { i: "💰", t: "Pago" }, { i: "🙏", t: "Recibo el cambio y digo gracias" }] },
-      { title: "Lavarse las manos antes de comer", steps: [
-        { i: "🚰", t: "Abro el agua" }, { i: "🧼", t: "Pongo jabón" }, { i: "🙌", t: "Froto mis manos" }, { i: "🚿", t: "Me enjuago" }, { i: "🧻", t: "Me seco" }] },
-      { title: "Usar el bus", steps: [
-        { i: "🚏", t: "Espero en la parada" }, { i: "🚌", t: "Subo cuando el bus se detiene" }, { i: "💳", t: "Pago mi pasaje" }, { i: "🪑", t: "Me siento o me sostengo" }] }
+    banco: [
+      { t: _t("Sacar dinero del cajero"), s: [["💳", _t("Introduzco la tarjeta")], ["🔢", _t("Marco mi clave sin que nadie vea")], ["💵", _t("Retiro el dinero")], ["👛", _t("Guardo la tarjeta y el dinero")]] },
+      { t: _t("Pagar una factura en el banco"), s: [["🧾", _t("Llevo la factura")], ["🏦", _t("Hago la fila")], ["💳", _t("Pago en la caja")], ["📄", _t("Guardo el recibo")]] },
+      { t: _t("Abrir una cuenta de ahorros"), s: [["🪪", _t("Llevo mi cédula")], ["📝", _t("Lleno el formulario")], ["✍️", _t("Firmo")], ["✅", _t("Recibo los datos de mi cuenta")]] },
+      { t: _t("Comprar en el supermercado"), s: [["📝", _t("Reviso mi lista")], ["🛒", _t("Busco los productos")], ["💳", _t("Pago en la caja")], ["🧾", _t("Reviso el recibo")]] }
+    ],
+    trabajo: [
+      { t: _t("Llegar puntual al trabajo"), s: [["⏰", _t("Me despierto con tiempo")], ["🚿", _t("Me alisto")], ["🚌", _t("Tomo el transporte a tiempo")], ["🏢", _t("Llego antes de la hora")]] },
+      { t: _t("Avisar que llegarás tarde"), s: [["📱", _t("Reviso la hora")], ["📞", _t("Llamo a mi jefe")], ["🗣️", _t("Explico el motivo")], ["🚶", _t("Sigo en camino")]] },
+      { t: _t("Empezar el turno"), s: [["🪪", _t("Muestro mi carné")], ["⏱️", _t("Marco la hora de entrada")], ["⛑️", _t("Me pongo el equipo de protección")], ["✅", _t("Empiezo mis tareas")]] }
+    ],
+    salud: [
+      { t: _t("Pedir una cita médica"), s: [["📞", _t("Llamo a la EPS")], ["🗣️", _t("Explico qué necesito")], ["📅", _t("Me dan una fecha")], ["📝", _t("Anoto la cita")]] },
+      { t: _t("Ir a la cita médica"), s: [["🪪", _t("Llevo mi documento")], ["🕐", _t("Llego a tiempo")], ["🩺", _t("El médico me revisa")], ["💊", _t("Recibo las indicaciones")]] },
+      { t: _t("Reclamar medicamentos"), s: [["📄", _t("Llevo la fórmula")], ["🏥", _t("Voy a la farmacia")], ["⏳", _t("Espero mi turno")], ["✅", _t("Recibo los medicamentos")]] }
+    ],
+    vida5: [
+      { t: _t("Buscar trabajo"), s: [["📋", _t("Actualizo mi hoja de vida")], ["🔎", _t("Busco ofertas")], ["📨", _t("Envío mi hoja de vida")], ["📞", _t("Respondo las llamadas")], ["🤝", _t("Voy a la entrevista")]] },
+      { t: _t("Mudarse a una habitación"), s: [["💰", _t("Reviso cuánto puedo pagar")], ["🔎", _t("Busco opciones")], ["👀", _t("Visito el lugar")], ["📄", _t("Leo el contrato")], ["🔑", _t("Recibo las llaves")]] },
+      { t: _t("Organizar el mes"), s: [["💵", _t("Recibo mi pago")], ["🏠", _t("Pago arriendo y servicios")], ["🛒", _t("Hago el mercado")], ["🐷", _t("Separo el ahorro")], ["🎬", _t("Uso lo que sobra para salir")]] },
+      { t: _t("Viajar en bus intermunicipal"), s: [["🗓️", _t("Elijo la fecha")], ["🎫", _t("Compro el tiquete")], ["🧳", _t("Empaco")], ["🚌", _t("Llego a la terminal con tiempo")], ["📲", _t("Aviso cuando llego")]] }
     ]
   };
 
-  // ─── Datos: vida adulta (Stage 2 en adelante, 15-26 años) ──────────────────
-
-  var CATS_ADULTO = {
-    documentos: { label: "Documento", items: [["🪪", "cédula"], ["🧾", "recibo"], ["📄", "contrato"], ["🎫", "tiquete"], ["📋", "hoja de vida"]] },
-    dinero: { label: "Dinero", items: [["💵", "billete"], ["🪙", "moneda"], ["💳", "tarjeta"], ["🏦", "cuenta bancaria"], ["🧧", "sobre de pago"]] },
-    trabajo: { label: "Trabajo", items: [["👷", "casco"], ["🧤", "guantes"], ["📎", "clip"], ["💻", "computador"], ["🗂️", "carpeta"]] }
+  var NECESIDAD = {
+    necesario: { label: _t("Necesario este mes"), items: [["🏠", _t("arriendo")], ["💡", _t("recibo de luz")], ["🚌", _t("pasajes para ir a trabajar")], ["🍚", _t("mercado")], ["💊", _t("medicamentos")]] },
+    espera: { label: _t("Puede esperar"), items: [["🎮", _t("videojuego nuevo")], ["👟", _t("tenis de marca")], ["🎬", _t("cine")], ["🎧", _t("audífonos nuevos")], ["🍕", _t("pedir domicilio")]] }
   };
-  var ALL_ADULTO = [];
-  Object.keys(CATS_ADULTO).forEach(function (k) { ALL_ADULTO = ALL_ADULTO.concat(CATS_ADULTO[k].items); });
-
-  var CATS_GASTOS = {
-    comida: { label: "Comida", items: [["🍔", "hamburguesa"], ["🍚", "arroz"], ["🥖", "pan"]] },
-    transporte_gasto: { label: "Transporte", items: [["🚌", "pasaje de bus"], ["⛽", "gasolina"], ["🚕", "taxi"]] },
-    vivienda: { label: "Vivienda", items: [["🏠", "arriendo"], ["💡", "recibo de luz"], ["🚰", "recibo de agua"]] },
-    ocio: { label: "Ocio", items: [["🎮", "videojuego"], ["🎬", "cine"], ["🎵", "concierto"]] }
+  var AYUDA = {
+    yo: { label: _t("Lo puedo hacer yo"), items: [["🧹", _t("barrer mi puesto")], ["📝", _t("anotar mis tareas")], ["🧤", _t("ponerme los guantes")], ["🗂️", _t("ordenar mi carpeta")], ["💧", _t("tomar agua en el descanso")]] },
+    ayuda: { label: _t("Pido ayuda"), items: [["⚡", _t("arreglar un cable dañado")], ["🩸", _t("una herida que no para de sangrar")], ["🧯", _t("un incendio")], ["🛠️", _t("una máquina que suena raro")], ["😵", _t("un compañero que se desmaya")]] }
   };
-  var ALL_GASTOS = [];
-  Object.keys(CATS_GASTOS).forEach(function (k) { ALL_GASTOS = ALL_GASTOS.concat(CATS_GASTOS[k].items); });
-
-  var ALL_STAGE5 = ALL_ADULTO.concat(ALL_GASTOS);
-
-  var FUNCIONES_ADULTO = [
-    { icon: "🪪", name: "cédula", ok: "Para identificarte", bad: ["Para pagar el bus", "Para abrir una puerta", "Para cocinar"] },
-    { icon: "💳", name: "tarjeta débito", ok: "Para pagar o sacar tu dinero", bad: ["Para identificarte ante la policía", "Para abrir el correo", "Para viajar en avión"] },
-    { icon: "🧾", name: "recibo de pago", ok: "Para comprobar que pagaste un servicio", bad: ["Para pedir empleo", "Para votar", "Para viajar"] },
-    { icon: "🎫", name: "tiquete de bus", ok: "Para poder subir al bus", bad: ["Para pagar el arriendo", "Para comprar comida", "Para dormir"] },
-    { icon: "📋", name: "hoja de vida", ok: "Para mostrar tu experiencia al buscar trabajo", bad: ["Para pagar impuestos", "Para pedir una cita médica", "Para tomar el bus"] },
-    { icon: "🔑", name: "llave de tu casa", ok: "Para entrar y salir de tu casa", bad: ["Para pagar el bus", "Para hacer una compra", "Para llamar por teléfono"] }
+  var URGENCIA = {
+    urgente: { label: _t("Urgente hoy"), items: [["🧾", _t("factura que vence hoy")], ["🤒", _t("fiebre muy alta")], ["🔑", _t("perdí las llaves de la casa")], ["🚰", _t("una fuga de agua")]] },
+    despues: { label: _t("Puede esperar"), items: [["👕", _t("comprar ropa")], ["📺", _t("ver una serie")], ["💇", _t("cortarme el pelo")], ["🧹", _t("ordenar el clóset")]] }
+  };
+  var A_QUIEN = [
+    [_t("Me duele mucho una muela"), _t("Odontólogo")], [_t("Perdí mi tarjeta débito"), _t("Banco")], [_t("Me robaron el celular"), _t("Policía")],
+    [_t("No sé qué tarea hacer en el turno"), _t("Jefe o supervisor")], [_t("Necesito una cita médica"), _t("EPS")], [_t("Se dañó la luz de la casa"), _t("Empresa de energía")]
+  ];
+  var DOCS_TRAMITE = [
+    [_t("Reclamar medicamentos"), _t("Fórmula médica")], [_t("Abrir una cuenta"), _t("Cédula")], [_t("Pedir trabajo"), _t("Hoja de vida")],
+    [_t("Demostrar que pagaste"), _t("Recibo de pago")], [_t("Viajar en bus intermunicipal"), _t("Tiquete")], [_t("Entrar a la empresa"), _t("Carné")]
   ];
 
-  var CAUSAS_ADULTO = [
-    { icon: "🔥", accion: "dejas la estufa encendida sin vigilar", ok: "Se puede quemar la comida o iniciar un incendio", bad: ["La comida se enfría sola", "No pasa nada"] },
-    { icon: "⏰", accion: "no programas la alarma para ir a trabajar", ok: "Puedes llegar tarde al trabajo", bad: ["Llegas más temprano", "Te dan el día libre"] },
-    { icon: "💸", accion: "gastas todo tu dinero antes de fin de mes", ok: "Te puede faltar dinero para lo necesario", bad: ["Te sobra más dinero", "El banco te regala más"] },
-    { icon: "🧾", accion: "no pagas un servicio a tiempo", ok: "Te pueden cobrar un recargo o cortar el servicio", bad: ["Te devuelven el dinero", "El servicio mejora"] },
-    { icon: "🔋", accion: "no cargas tu celular", ok: "Se puede apagar y no podrás usarlo", bad: ["Dura más tiempo encendido", "Se carga solo"] }
-  ];
+  // ─── Mecánicas ───────────────────────────────────────────────────────────
 
-  var SOCIALES_ADULTO = [
-    { icon: "😓", t: "Un compañero de trabajo comete un error y se ve preocupado.", ok: "Le digo que no se preocupe y le ayudo a corregirlo", bad: ["Me río de él delante de otros"] },
-    { icon: "⏳", t: "Alguien te interrumpe mientras estás concentrado en una tarea.", ok: "Le pido amablemente que espere un momento", bad: ["Le grito que se vaya"] },
-    { icon: "🙋", t: "No entiendes una instrucción de tu jefe.", ok: "Le pido que me la explique de nuevo", bad: ["Sigo sin preguntar y me equivoco"] },
-    { icon: "🤝", t: "Un compañero nuevo llega al trabajo.", ok: "Lo saludo y le explico cómo son las cosas", bad: ["Lo ignoro por completo"] },
-    { icon: "😠", t: "Un cliente te habla de forma grosera.", ok: "Respondo con calma y busco ayuda de un supervisor", bad: ["Le respondo también de forma grosera"] },
-    { icon: "🏦", t: "No entiendes un trámite en el banco o la EPS.", ok: "Pido que me expliquen más despacio", bad: ["Me voy sin resolver mi duda"] },
-    { icon: "🤒", t: "Te sientes mal y necesitas pedir el día libre a tu jefe.", ok: "Le explico con respeto y pido permiso", bad: ["No aviso y falto sin decir nada"] }
-  ];
-
-  /** Semáforo de decisiones: situaciones de juicio y seguridad cotidiana,
-      con la misma estructura simple de dos opciones que ya usa retoSocial. */
-  var SEMAFORO_BASICO = [
-    { icon: "🚗", t: "Un desconocido se ofrece a llevarte a tu casa en su carro.", ok: "Le digo que no, gracias, y sigo mi camino", bad: ["Subo al carro porque parece amable"] },
-    { icon: "📱", t: "Alguien que no conoces te pide tu contraseña por mensaje.", ok: "No se la doy y le cuento a alguien de confianza", bad: ["Se la envío porque insiste mucho"] },
-    { icon: "🚪", t: "Alguien toca a tu puerta y dice que es del banco sin avisar antes.", ok: "No abro y llamo al banco para confirmar", bad: ["Abro la puerta enseguida"] },
-    { icon: "💊", t: "Un desconocido te ofrece una pastilla en la calle.", ok: "La rechazo y me alejo", bad: ["La acepto porque insiste"] },
-    { icon: "🚸", t: "Vas a cruzar la calle y el semáforo peatonal está en rojo.", ok: "Espero a que cambie a verde", bad: ["Cruzo de todas formas porque tengo prisa"] }
-  ];
-  var SEMAFORO_DINERO = [
-    { icon: "📞", t: "Te llaman diciendo que ganaste un premio, pero piden que pagues primero.", ok: "No pago nada y cuelgo", bad: ["Pago porque quiero el premio"] },
-    { icon: "💳", t: "Un mensaje dice que tu tarjeta se bloqueó y pide el número completo.", ok: "No lo doy y llamo directamente al banco", bad: ["Envío el número por el mensaje"] },
-    { icon: "🛍️", t: "Quieres comprar algo pero no te alcanza el dinero del mes.", ok: "Espero a tener el dinero o busco algo más barato", bad: ["Pido prestado sin pensar cómo pagarlo"] },
-    { icon: "🧾", t: "Un vendedor te presiona para firmar un contrato sin leerlo.", ok: "Pido tiempo para leerlo con calma", bad: ["Firmo rápido para que no insista"] },
-    { icon: "💵", t: "Encuentras dinero que no es tuyo en el trabajo.", ok: "Lo entrego a mi jefe o a seguridad", bad: ["Me lo quedo sin decir nada"] }
-  ];
-  var SEMAFORO_TRABAJO = [
-    { icon: "⚠️", t: "Ves un cable eléctrico dañado en tu área de trabajo.", ok: "Lo reporto a mi jefe o supervisor", bad: ["Lo toco para revisar si funciona"] },
-    { icon: "🧤", t: "Tu trabajo requiere usar guantes de protección, pero los olvidaste.", ok: "Pido unos prestados o aviso antes de empezar", bad: ["Trabajo sin ellos para no molestar a nadie"] },
-    { icon: "🕐", t: "Tu jefe te pide quedarte horas extra sin avisarte antes.", ok: "Le pregunto si es posible o si puedo hacerlo otro día", bad: ["Me quedo sin decir nada, aunque tenía otro compromiso"] },
-    { icon: "🤒", t: "Te sientes muy enfermo para ir a trabajar.", ok: "Aviso a mi jefe y pido el día", bad: ["Voy a trabajar sin avisar y me siento peor"] },
-    { icon: "😳", t: "Un compañero te pide que mientas para cubrir un error suyo.", ok: "Le digo que no puedo hacerlo", bad: ["Miento para ayudarlo"] }
-  ];
-  var SEMAFORO_TODO = SEMAFORO_BASICO.concat(SEMAFORO_DINERO, SEMAFORO_TRABAJO);
-
-  // Rutinas de vida adulta: se añaden como claves nuevas al mismo objeto
-  // ROUTINES que ya usan las mecánicas rutina3/rutina4/tarea (no se toca
-  // r3/r4/tarea, que siguen siendo del Stage 1).
-  ROUTINES.banco = [
-    { title: "Pagar una cuenta en el banco", steps: [
-      { i: "🧾", t: "Llevo la factura al banco" }, { i: "🏦", t: "Hago la fila y espero mi turno" }, { i: "💳", t: "Pago y guardo el recibo" }] },
-    { title: "Sacar dinero del cajero", steps: [
-      { i: "💳", t: "Introduzco mi tarjeta" }, { i: "🔢", t: "Marco mi clave" }, { i: "💵", t: "Retiro el dinero y guardo la tarjeta" }] },
-    { title: "Abrir una cuenta de ahorros", steps: [
-      { i: "🪪", t: "Llevo mi cédula" }, { i: "📝", t: "Lleno el formulario" }, { i: "✅", t: "Firmo y recibo mi cuenta" }] }
-  ];
-  ROUTINES.lunch = [
-    { title: "Preparar un almuerzo sencillo", steps: [
-      { i: "🍚", t: "Sirvo el arroz" }, { i: "🍗", t: "Agrego la proteína" }, { i: "🥗", t: "Agrego la ensalada" }, { i: "🍽️", t: "Me siento a comer" }] },
-    { title: "Calentar comida en el microondas", steps: [
-      { i: "🍱", t: "Pongo la comida en un plato" }, { i: "⏲️", t: "Programo el tiempo" }, { i: "🔥", t: "Caliento la comida" }, { i: "🍽️", t: "La saco y como" }] },
-    { title: "Lavar los platos después de comer", steps: [
-      { i: "🍽️", t: "Recojo los platos sucios" }, { i: "🧽", t: "Los enjabono" }, { i: "🚰", t: "Los enjuago" }, { i: "🧺", t: "Los dejo secar" }] }
-  ];
-  ROUTINES.transporte = [
-    { title: "Usar el bus solo", steps: [
-      { i: "🚏", t: "Espero en la parada" }, { i: "🚌", t: "Subo cuando llega mi bus" }, { i: "💳", t: "Pago el pasaje" }, { i: "🔔", t: "Toco el timbre antes de mi parada" }] },
-    { title: "Pedir un taxi por aplicación", steps: [
-      { i: "📱", t: "Abro la aplicación" }, { i: "📍", t: "Pongo mi destino" }, { i: "🚕", t: "Espero el carro correcto" }, { i: "✅", t: "Confirmo que llegué bien" }] },
-    { title: "Usar el metro", steps: [
-      { i: "🎫", t: "Compro o cargo mi tarjeta" }, { i: "🚇", t: "Paso el torniquete" }, { i: "🚉", t: "Espero en el andén" }, { i: "🚪", t: "Bajo en mi estación" }] }
-  ];
-  ROUTINES.compra = [
-    { title: "Comprar en el supermercado con lista", steps: [
-      { i: "📝", t: "Reviso mi lista" }, { i: "🛒", t: "Recojo lo que necesito" }, { i: "💳", t: "Pago en la caja" }, { i: "🧾", t: "Guardo el recibo" }] },
-    { title: "Pagar servicios por app", steps: [
-      { i: "📱", t: "Abro la app del banco" }, { i: "🧾", t: "Busco la factura" }, { i: "✅", t: "Confirmo el pago" }, { i: "📩", t: "Guardo la confirmación" }] },
-    { title: "Devolver un producto en una tienda", steps: [
-      { i: "🧾", t: "Llevo el recibo" }, { i: "🛍️", t: "Muestro el producto" }, { i: "🗣️", t: "Explico el motivo" }, { i: "💵", t: "Recibo el cambio o devolución" }] }
-  ];
-  ROUTINES.trabajo = [
-    { title: "Llegar puntual al trabajo", steps: [
-      { i: "⏰", t: "Me despierto con tiempo" }, { i: "🚿", t: "Me alisto rápido" }, { i: "🚌", t: "Tomo el transporte a tiempo" }, { i: "🏢", t: "Llego antes de la hora de entrada" }] },
-    { title: "Avisar que llegarás tarde", steps: [
-      { i: "📱", t: "Reviso la hora" }, { i: "📞", t: "Llamo a mi jefe" }, { i: "🗣️", t: "Explico el motivo" }, { i: "🚶", t: "Voy en camino" }] },
-    { title: "Marcar entrada en el trabajo", steps: [
-      { i: "🪪", t: "Muestro mi carné" }, { i: "⏱️", t: "Marco mi hora de entrada" }, { i: "🗂️", t: "Voy a mi puesto" }, { i: "✅", t: "Empiezo mis tareas" }] }
-  ];
-  ROUTINES.cita = [
-    { title: "Pedir una cita médica", steps: [
-      { i: "📞", t: "Llamo a la EPS o clínica" }, { i: "🗣️", t: "Explico qué necesito" }, { i: "📅", t: "Me dan una fecha" }, { i: "📝", t: "Anoto la cita en mi agenda" }] },
-    { title: "Asistir a la cita médica", steps: [
-      { i: "🪪", t: "Llevo mi documento" }, { i: "🕐", t: "Llego a tiempo" }, { i: "🩺", t: "El doctor me revisa" }, { i: "💊", t: "Recibo las indicaciones" }] },
-    { title: "Recoger medicamentos en la farmacia", steps: [
-      { i: "📄", t: "Llevo la fórmula médica" }, { i: "💊", t: "Entrego la fórmula en la farmacia" }, { i: "⏳", t: "Espero mi turno" }, { i: "✅", t: "Recibo los medicamentos" }] }
-  ];
-
-  // ─── Mecánicas de opción única ────────────────────────────────────────────
-
-  /** Clasificación por un solo criterio. */
-  function retoClasificar(p) {
-    var source = p.catsSource || CATS;
-    var keys = p.cats;
-    var key = keys[rnd(0, keys.length - 1)];
-    var items = source[key].items;
-    var it = items[rnd(0, items.length - 1)];
-    var opts = keys.map(function (k) {
-      return { label: source[k].label, value: k, aria: source[k].label };
-    });
-    var prompt = "¿A qué grupo pertenece: " + it[1] + "?";
+  function aQueGrupo(p, s) {
+    var keys = shuffle(Object.keys(p.cats)).slice(0, grow(2, 4, s));
+    var k = keys[0], item = pick(p.cats[k].items);
     return {
-      skill: "clasificacion",
-      prompt: prompt,
-      speech: prompt,
-      visual: '<span class="cog-big">' + it[0] + "</span>",
-      options: shuffle(opts),
-      answer: key,
-      answerLabel: source[key].label,
-      hint: "Mira la imagen y piensa qué es. Luego elige su grupo.",
-      explain: "«" + it[1] + "» es del grupo " + source[key].label + "."
+      skill: "clasificar",
+      prompt: _t("¿A qué grupo pertenece?"),
+      visual: hero(item[0], item[1]),
+      speech: _t("¿A qué grupo pertenece ") + item[1] + "?",
+      options: shuffle(keys).map(function (key) { return { label: p.cats[key].label, value: key }; }),
+      answer: k,
+      hint: _t("Piensa para qué se usa o dónde lo encuentras."),
+      explain: item[1].charAt(0).toUpperCase() + item[1].slice(1) + _t(" es del grupo ") + p.cats[k].label + "."
     };
   }
 
-  /** Emparejamiento imagen-imagen idéntica. */
-  function retoIgual(p) {
-    var banco = (p && p.bancos) || ALL;
-    var pool = shuffle(banco);
-    var target = pool[0];
-    var opts = [target, pool[1], pool[2]].map(function (it) {
-      return {
-        label: '<span class="cog-emoji">' + it[0] + "</span>",
-        value: it[0],
-        aria: "Imagen de " + it[1]
-      };
-    });
-    var prompt = "Encuentra la imagen que es igual a: " + target[1] + ".";
+  function encontrarIgual(p, s) {
+    var pool = shuffle(itemsOf(p.cats)), target = pool[0].it;
+    var others = pool.slice(1, grow(3, 6, s)).map(function (x) { return x.it; });
+    if (s >= 3) {
+      var parecido = pool.filter(function (x) { return x.cat === pool[0].cat && x.it !== target && others.indexOf(x.it) === -1; })[0];
+      if (parecido) others[0] = parecido.it;
+    }
+    var opts = shuffle([target].concat(others)).map(function (it) { return { label: '<span style="font-size:40px">' + it[0] + "</span>", value: it[1], aria: it[1] }; });
     return {
-      skill: "emparejamiento_identico",
-      prompt: prompt,
-      speech: prompt,
-      visual: '<span class="cog-big">' + target[0] + "</span>",
-      options: shuffle(opts),
-      answer: target[0],
-      answerLabel: target[1],
-      hint: "Mira bien la imagen de arriba y busca la que se ve igual.",
-      explain: "Esa imagen es un(a) " + target[1] + ", igual a la de arriba."
+      skill: "atencion_visual",
+      prompt: s >= 2 ? _t("Busca el que es exactamente igual. Ojo: hay uno parecido.") : _t("Busca el que es igual al de arriba."),
+      visual: hero(target[0], s >= 3 ? "" : target[1]),
+      speech: _t("Busca el que es igual: ") + target[1],
+      options: opts,
+      answer: target[1],
+      hint: _t("Compara la forma completa, no solo el color."),
+      explain: _t("El igual es ") + target[1] + "."
     };
   }
 
-  /** Emparejamiento imagen-función: pasa de "igual" a "para qué sirve". */
-  function retoFuncion(p) {
-    var banco = (p && p.bancos) || FUNCIONES;
-    var f = banco[rnd(0, banco.length - 1)];
-    var prompt = "¿Para qué sirve: " + f.name + "?";
+  function clasificarGrupos(p, s) {
+    var keys = shuffle(Object.keys(p.cats)).slice(0, p.bins || 2);
+    var n = grow(p.min || 4, p.max || 6, s), items = [], answer = {};
+    var pool = shuffle(itemsOf(p.cats).filter(function (x) { return keys.indexOf(x.cat) !== -1; }));
+    pool.slice(0, n).forEach(function (x, k) { var id = "i" + k; items.push({ id: id, label: label(x.it, s) }); answer[id] = x.cat; });
     return {
-      skill: "imagen_funcion",
-      prompt: prompt,
-      speech: prompt,
-      visual: '<span class="cog-big">' + f.icon + "</span>",
-      options: textOptions(f.ok, f.bad, 3),
-      answer: f.ok,
-      answerLabel: f.ok,
-      hint: "Piensa en cuándo usas ese objeto en tu casa o en el trabajo.",
-      explain: "El " + f.name + ": " + f.ok.charAt(0).toLowerCase() + f.ok.slice(1) + "."
+      type: "classify", skill: p.skill || "clasificar",
+      prompt: p.prompt || _t("Lleva cada elemento a su grupo."),
+      bins: keys.map(function (k) { return { id: k, label: p.cats[k].label }; }),
+      items: items, answer: answer,
+      hint: p.hint || _t("Toca un elemento y luego el grupo donde va."),
+      explain: keys.map(function (k) { return p.cats[k].label + ": " + pool.slice(0, n).filter(function (x) { return x.cat === k; }).map(function (x) { return x.it[1]; }).join(", "); }).join(" · ") + "."
     };
   }
 
-  /** Causa-efecto. */
-  function retoCausa(p) {
-    var banco = (p && p.bancos) || CAUSAS;
-    var c = banco[rnd(0, banco.length - 1)];
-    var prompt = "¿Qué pasa cuando " + c.accion + "?";
+  function paraQueSirve(p, s) {
+    var f = pick(p.bank);
+    return {
+      skill: "funcion_objetos",
+      prompt: _t("¿Para qué sirve {o}?").replace("{o}", (/^[aeiouáéíóú]/i.test(f.n) ? _t("el ") : "") + f.n),
+      visual: hero(f.i, f.n),
+      options: textOpts(f.ok, f.bad, grow(2, 4, s)),
+      answer: f.ok, layout: "list",
+      hint: _t("Piensa en cuándo lo has visto usar."),
+      explain: _t("Sirve: ") + U.lower(f.ok) + "."
+    };
+  }
+
+  function queHaceFalta(p, s) {
+    var pares = p.pairs, n = grow(3, Math.min(5, pares.length), s), set = shuffle(pares).slice(0, n);
+    var left = [], right = [], ans = {};
+    set.forEach(function (x, k) { left.push({ id: "a" + k, label: x[0] }); right.push({ id: "b" + k, label: x[1] }); ans["a" + k] = "b" + k; });
+    return {
+      type: "match", skill: p.skill || "relacionar",
+      prompt: p.prompt,
+      left: shuffle(left), right: shuffle(right), answer: ans,
+      hint: p.hint || _t("Toca uno de la izquierda y luego su pareja a la derecha."),
+      explain: set.map(function (x) { return x[0] + " → " + x[1]; }).join(" · ") + "."
+    };
+  }
+
+  function unirUso(p, s) {
+    var n = grow(3, 5, s), set = shuffle(p.bank).slice(0, n);
+    var left = [], right = [], ans = {};
+    set.forEach(function (f, k) { left.push({ id: "o" + k, label: s >= 4 ? f.n : ico(f.i, f.n) }); right.push({ id: "u" + k, label: f.ok }); ans["o" + k] = "u" + k; });
+    return {
+      type: "match", skill: "funcion_objetos",
+      prompt: _t("Une cada objeto con su uso."),
+      left: shuffle(left), right: shuffle(right), answer: ans,
+      hint: _t("Empieza por el objeto que mejor conoces."),
+      explain: set.map(function (f) { return f.n + ": " + U.lower(f.ok); }).join(" · ") + "."
+    };
+  }
+
+  function queNoPertenece(p, s) {
+    var keys = shuffle(Object.keys(p.cats)), main = keys[0];
+    var same = shuffle(p.cats[main].items).slice(0, grow(3, 4, s));
+    var intruder = pick(p.cats[keys[1]].items);
+    var opts = shuffle(same.concat([intruder])).map(function (it) { return { label: label(it, s, 3), value: it[1], aria: it[1] }; });
+    return {
+      skill: "categorizar",
+      prompt: _t("¿Cuál no pertenece al grupo?"),
+      options: opts,
+      answer: intruder[1],
+      hint: _t("Busca qué tienen en común casi todos."),
+      explain: _t("Los demás son del grupo ") + p.cats[main].label + "; " + intruder[1] + _t(" es de ") + p.cats[keys[1]].label + "."
+    };
+  }
+
+  function causaEfecto(p, s) {
+    var c = pick(p.bank);
     return {
       skill: "causa_efecto",
-      prompt: prompt,
-      speech: prompt,
-      visual: '<span class="cog-big">' + c.icon + "</span>",
-      options: textOptions(c.ok, c.bad, 3),
-      answer: c.ok,
-      answerLabel: c.ok,
-      hint: "Imagina que lo haces tú. ¿Qué ves que ocurre enseguida?",
-      explain: "Cuando " + c.accion + ": " + c.ok.charAt(0).toLowerCase() + c.ok.slice(1) + "."
+      prompt: _t("¿Qué pasa si ") + c.a + "?",
+      visual: s <= 2 ? hero(c.i, "") : "",
+      options: textOpts(c.ok, c.bad, s >= 2 ? 3 : 2),
+      answer: c.ok, layout: "list",
+      hint: _t("Imagina la situación paso a paso: ¿qué pasaría después?"),
+      explain: c.ok + "."
     };
   }
 
-  /** Habilidades sociales guiadas: dos respuestas simples. */
-  function retoSocial(p) {
-    var banco = (p && p.bancos) || SOCIALES;
-    var s = banco[rnd(0, banco.length - 1)];
-    var prompt = "Situación: " + s.t + " ¿Qué haces?";
+  function social(p, s) {
+    var x = pick(p.bank);
     return {
-      skill: "habilidad_social",
-      prompt: prompt,
-      speech: prompt,
-      visual: '<span class="cog-big">' + s.icon + "</span>",
-      options: textOptions(s.ok, s.bad, 2),
-      answer: s.ok,
-      answerLabel: s.ok,
-      hint: "Piensa qué te gustaría que hicieran contigo en esa situación.",
-      explain: "Eso ayuda a que todos se sientan bien."
+      skill: "habilidades_sociales",
+      prompt: _t("¿Qué es lo más adecuado?"),
+      visual: scene(x.i, x.t),
+      speech: x.t + _t(" ¿Qué es lo más adecuado?"),
+      options: textOpts(x.ok, x.bad, s >= 2 ? 3 : 2),
+      answer: x.ok, layout: "list",
+      hint: _t("Piensa cómo se sentiría la otra persona con cada opción."),
+      explain: _t("Lo adecuado es: ") + U.lower(x.ok) + "."
     };
   }
 
-  /** Semáforo de decisiones: juicio situacional en escenarios de seguridad
-      cotidiana (calle, dinero, trabajo). Misma estructura simple que
-      retoSocial: dos opciones, sin distractores complejos. */
-  function retoSemaforo(p) {
-    var banco = (p && p.bancos) || SEMAFORO_BASICO;
-    var s = banco[rnd(0, banco.length - 1)];
-    var prompt = "Situación: " + s.t + " ¿Qué haces?";
+  function semaforo(p, s) {
+    var x = pick(p.bank);
     return {
-      skill: "semaforo_decisiones",
-      prompt: prompt,
-      speech: prompt,
-      visual: '<span class="cog-big">' + s.icon + "</span>",
-      options: textOptions(s.ok, s.bad, 2),
-      answer: s.ok,
-      answerLabel: s.ok,
-      hint: "Piensa en lo que te mantiene seguro o te ayuda a resolver bien la situación.",
-      explain: "Esa decisión te cuida a ti y evita problemas."
+      skill: "decision_segura",
+      prompt: _t("Semáforo de decisiones: ¿qué haces?"),
+      visual: scene(x.i, x.t),
+      speech: x.t + _t(" ¿Qué haces?"),
+      options: textOpts(x.ok, x.bad.concat(s >= 2 ? [_t("Lo hago para no quedar mal")] : []), s >= 2 ? 3 : 2),
+      answer: x.ok, layout: "list",
+      hint: _t("Pregúntate: ¿esto me puede poner en riesgo a mí o a otros?"),
+      explain: _t("Lo seguro es: ") + U.lower(x.ok) + "."
     };
   }
 
-  // ─── Mecánicas con interfaz propia ────────────────────────────────────────
-
-  /**
-   * Rutinas y tareas en secuencia. Se tocan las tarjetas en el orden correcto.
-   * Nivel de ayuda (help): 1 resalta siempre el paso siguiente, 2 lo resalta
-   * tras el primer error, 3 no resalta. Con p.fade la ayuda se retira reto a
-   * reto dentro del mismo nivel.
-   */
-  function roundRutina(p, ctx, index) {
-    var list = ROUTINES[p.list];
-    var r = list[((p.offset || 0) + index) % list.length];
-    var support = (ctx && ctx.support) || 1;
-    var help = p.fade ? Math.min(3, support + index) : support;
-    var prompt = "Ordena los pasos: " + r.title + ". Toca primero el paso que se hace primero.";
-
+  function ordenarRutina(p, s) {
+    var r = pick(p.bank), steps = r.s;
     return {
-      skill: "secuencia_" + p.list,
+      type: "order", skill: "secuencias",
+      prompt: _t("Ordena los pasos para: ") + U.lower(r.t) + ".",
+      slotsLabel: _t("Primero → después"),
+      items: shuffle(steps.map(function (st, k) { return { id: "s" + k, label: label(st, s) }; })),
+      answer: steps.map(function (st, k) { return "s" + k; }),
+      answerLabel: steps.map(function (st) { return st[1]; }).join(" → "),
+      hint: _t("¿Qué es lo primero que harías? Empieza por ahí."),
+      explain: steps.map(function (st, k) { return (k + 1) + ". " + st[1]; }).join(" ") + "."
+    };
+  }
+
+  function pasoQueFalta(p, s) {
+    var r = pick(p.bank), gap = rnd(s >= 2 ? 0 : 1, r.s.length - 1), ok = r.s[gap][1];
+    var others = [];
+    Object.keys(RUTINAS).forEach(function (k) { RUTINAS[k].forEach(function (x) { if (x !== r) x.s.forEach(function (st) { others.push(st[1]); }); }); });
+    var steps = r.s.map(function (st) { return { i: st[0], t: st[1] }; });
+    return {
+      skill: "secuencias",
+      prompt: _t("Para ") + U.lower(r.t) + _t(", ¿qué paso falta?"),
+      visual: stepsList(steps, gap),
+      options: textOpts(ok, shuffle(others).slice(0, 4), s >= 2 ? 4 : 3),
+      answer: ok, layout: "list",
+      hint: _t("Lee el paso de antes y el de después del espacio vacío."),
+      explain: _t("Falta: ") + U.lower(ok) + "."
+    };
+  }
+
+  function antesDespues(p, s) {
+    var r = pick(p.bank), k = rnd(1, r.s.length - 1), antes = Math.random() < 0.5 || s < 2;
+    var ref = antes ? r.s[k] : r.s[k - 1], ok = antes ? r.s[k - 1][1] : r.s[k][1];
+    var bads = r.s.filter(function (x) { return x[1] !== ok && x[1] !== ref[1]; }).map(function (x) { return x[1]; });
+    if (bads.length < 1) return antesDespues(p, s);
+    return {
+      skill: "secuencias",
+      prompt: _t("Para ") + U.lower(r.t) + _t(": ¿qué va justo ") + (antes ? _t("antes") : _t("después")) + _t(" de «") + U.lower(ref[1]) + _t("»?"),
+      visual: hero(ref[0], ""),
+      options: textOpts(ok, bads, Math.min(3, bads.length + 1)),
+      answer: ok, layout: "list",
+      hint: _t("Imagina que lo estás haciendo ahora mismo."),
+      explain: (antes ? _t("Antes va: ") : _t("Después va: ")) + U.lower(ok) + "."
+    };
+  }
+
+  function encontrarErrorRutina(p, s) {
+    var r = pick(p.bank), n = r.s.length, i = rnd(0, n - 2);
+    var shown = r.s.slice();
+    var t = shown[i]; shown[i] = shown[i + 1]; shown[i + 1] = t;
+    var opts = shown.map(function (st, k) { return { label: (k + 1) + ". " + st[1], value: k, aria: _t("Paso ") + (k + 1) + ": " + st[1] }; });
+    return {
+      skill: "secuencias",
+      layout: "list",
+      prompt: _t("En esta rutina de «") + U.lower(r.t) + _t("» hay dos pasos cambiados de lugar. Toca el primero de los dos que está fuera de orden."),
+      options: opts,
+      answer: i,
+      hint: _t("Lee la rutina en voz alta: ¿en qué momento deja de tener sentido?"),
+      explain: _t("Los pasos ") + (i + 1) + _t(" y ") + (i + 2) + _t(" están cambiados: primero va «") + U.lower(r.s[i][1]) + _t("».")
+    };
+  }
+
+  function leerRecibo(p, s) {
+    var empresas = [["💡", _t("Energía")], ["🚰", _t("Acueducto")], ["📶", _t("Internet")], ["🔥", _t("Gas")]];
+    var e = pick(empresas), valor = rnd(25, 180) * 1000, dia = rnd(5, 28), mes = pick([_t("marzo"), _t("abril"), _t("mayo"), _t("junio")]);
+    var tengo = valor + (Math.random() < 0.5 ? -1 : 1) * rnd(2, 20) * 1000;
+    var preguntas = [
+      { q: _t("¿Cuánto hay que pagar?"), ok: cop(valor), bad: [cop(valor + 10000), cop(dia * 1000), cop(Math.round(valor / 2))] },
+      { q: _t("¿Hasta qué día se puede pagar sin recargo?"), ok: fecha(dia, mes), bad: [fecha(dia > 3 ? dia - 3 : dia + 3, mes), fecha(1, mes), _t("Cualquier día")] },
+      { q: _t("Tienes ") + cop(tengo) + _t(". ¿Te alcanza para pagarlo?"), ok: tengo >= valor ? _t("Sí, me alcanza") : _t("No, me faltan ") + cop(valor - tengo), bad: [tengo >= valor ? _t("No, me falta dinero") : _t("Sí, me alcanza"), _t("No se puede saber")] }
+    ];
+    var q = preguntas[Math.min(2, Math.floor(s / 2) + (p.hard ? 1 : 0))];
+    return {
+      skill: "lectura_funcional",
+      prompt: q.q,
+      visual: '<div class="cog-doc"><h4>' + ico(e[0], _t("Factura de ") + e[1]) + _t("</h4><p><span>Valor a pagar</span><strong>") + cop(valor) + _t("</strong></p><p><span>Pague hasta</span><strong>") + fecha(dia, mes) + _t("</strong></p><p><span>Referencia</span><strong>") + rnd(100000, 999999) + "</strong></p></div>",
+      options: textOpts(q.ok, q.bad, 3),
+      answer: q.ok, layout: "list",
+      hint: _t("Busca en la factura la línea que responde la pregunta."),
+      explain: _t("La respuesta es: ") + q.ok + "."
+    };
+  }
+
+  function horarioTurnos(p, s) {
+    var nombres = ["Laura", "Andrés", "Camila", "Julián"], dias = [_t("Lunes"), _t("Martes"), _t("Miércoles"), _t("Jueves")];
+    var turnos = [_t("6 a. m. – 2 p. m."), _t("2 p. m. – 10 p. m.")];
+    var table = nombres.map(function () { return dias.map(function () { return pick(turnos); }); });
+    var who = rnd(0, 3), day = rnd(0, 3), ok = table[who][day];
+    var html = '<table class="dm-table" style="border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:14px;background:var(--surface)"><tr><th style="padding:8px 12px;background:var(--canvas)"></th>' +
+      dias.slice(0, grow(2, 4, s)).map(function (d) { return '<th style="padding:8px 12px;background:var(--canvas)">' + d + "</th>"; }).join("") + "</tr>" +
+      nombres.map(function (n, r) { return '<tr><th style="padding:8px 12px;text-align:left">' + n + "</th>" + table[r].slice(0, grow(2, 4, s)).map(function (t) { return '<td style="padding:8px 12px;border-top:1px solid var(--line)">' + t + "</td>"; }).join("") + "</tr>"; }).join("") + "</table>";
+    day = Math.min(day, grow(2, 4, s) - 1); ok = table[who][day];
+    return {
+      skill: "lectura_funcional",
+      prompt: _t("¿En qué turno trabaja {p} el {d}?").replace("{p}", nombres[who]).replace("{d}", diaEnFrase(dias[day])),
+      visual: html,
+      options: turnos.map(function (t) { return { label: t, value: t }; }),
+      answer: ok,
+      hint: _t("Busca la fila con el nombre y baja por la columna del día."),
+      explain: _t("{p} trabaja de {h} el {d}.").replace("{p}", nombres[who]).replace("{h}", ok).replace("{d}", diaEnFrase(dias[day]))
+    };
+  }
+
+  function decidirDosCriterios(p, s) {
+    var casos = [
+      { t: _t("Tienes que llegar en 20 minutos y tienes ") + cop(12000) + _t(". El bus tarda 15 minutos y cuesta ") + cop(3200) + _t("; el taxi tarda 10 minutos y cuesta ") + cop(18000) + ".", ok: _t("Tomo el bus"), bad: [_t("Tomo el taxi"), _t("Me voy caminando 50 minutos")] },
+      { t: _t("Tienes ") + cop(20000) + _t(" para el almuerzo de dos días. Un almuerzo cuesta ") + cop(16000) + _t(" y uno casero que llevas cuesta ") + cop(6000) + ".", ok: _t("Llevo almuerzo casero los dos días"), bad: [_t("Compro el almuerzo de ") + cop(16000) + _t(" el primer día"), _t("No almuerzo")] },
+      { t: _t("Mañana entras a las 7 a. m. y el bus se demora 40 minutos. Te gusta dormir mucho."), ok: _t("Pongo la alarma a las 5:45 a. m."), bad: [_t("Pongo la alarma a las 6:45 a. m."), _t("No pongo alarma")] },
+      { t: _t("Te ofrecen dos trabajos: uno paga más pero queda a 2 horas; otro paga un poco menos y queda a 20 minutos."), ok: _t("Comparo cuánto gasto en transporte y tiempo antes de decidir"), bad: [_t("Elijo el que paga más sin pensar en nada más"), _t("No elijo ninguno")] }
+    ];
+    var c = casos[rnd(0, Math.min(casos.length - 1, s))];
+    return {
+      skill: "toma_decisiones",
+      prompt: _t("¿Qué decisión es la mejor?"),
+      visual: scene("🤔", c.t),
+      speech: c.t + _t(" ¿Qué decisión es la mejor?"),
+      options: textOpts(c.ok, c.bad, 3),
+      answer: c.ok, layout: "list",
+      hint: _t("Revisa dos cosas: el tiempo y el dinero que tienes."),
+      explain: _t("La mejor opción es: ") + U.lower(c.ok) + "."
+    };
+  }
+
+  function memoriaPares(p, s) {
+    var pairs = grow(p.pairs[0], p.pairs[1], s), support = 1;
+    var banco = itemsOf(p.cats).map(function (x) { return x.it; });
+    var picked = shuffle(banco).slice(0, pairs), deck = shuffle(picked.concat(picked));
+    var prompt = _t("Encuentra las parejas. Toca dos cartas: si son iguales, quedan abiertas.");
+    return {
+      skill: "memoria_visual",
       prompt: prompt,
-      speech: prompt,
-      hint: "Piensa qué haces primero y sigue paso a paso.",
+      hint: _t("Recuerda dónde viste cada dibujo antes de que se taparan."),
       mount: function (host, api) {
-        var n = r.steps.length;
+        var timers = [], alive = true;
+        function later(fn, ms) { timers.push(setTimeout(function () { if (alive) fn(); }, ms)); }
         host.innerHTML = "";
-        var live = liveRegion();
-        var status = el("p", "cog-status");
-        var done = el("ol", "cog-list");
-        done.setAttribute("aria-label", "Pasos ya ordenados");
-        var pool = el("div", "cog-steps");
-        pool.setAttribute("role", "group");
-        pool.setAttribute("aria-label", "Pasos para ordenar");
-        host.appendChild(live);
-        host.appendChild(status);
-        host.appendChild(done);
-        host.appendChild(pool);
-
-        var order = shuffle(r.steps.map(function (s, i) { return { s: s, i: i }; }));
-        var guard = 0;
-        while (guard++ < 10 && order.every(function (o, k) { return o.i === k; })) {
-          order = shuffle(order);
-        }
-
-        var pos = 0, errors = 0, finished = false;
-        var highlight = help === 1;
-        var buttons = [];
-
-        function refresh() {
-          status.textContent = "Paso " + Math.min(pos + 1, n) + " de " + n;
-          buttons.forEach(function (b) {
-            b.el.classList.toggle("cog-next", highlight && b.o.i === pos);
-          });
-        }
-
-        order.forEach(function (o) {
-          var b = el("button", "game-option cog-step");
-          b.type = "button";
-          var ic = el("span", "cog-step-icon");
-          ic.textContent = o.s.i;
-          ic.setAttribute("aria-hidden", "true");
-          var tx = el("span");
-          tx.textContent = o.s.t;
-          b.appendChild(ic);
-          b.appendChild(tx);
-          b.setAttribute("aria-label", o.s.t);
-          b.addEventListener("click", function () { tap(b, o); });
-          pool.appendChild(b);
-          buttons.push({ el: b, o: o });
-        });
-
-        function tap(btn, o) {
-          if (finished) return;
-          if (o.i === pos) {
-            pos++;
-            buttons = buttons.filter(function (x) { return x.el !== btn; });
-            btn.remove();
-            var li = el("li");
-            li.textContent = o.s.i + " " + o.s.t;
-            done.appendChild(li);
-            live.textContent = "Paso " + pos + ": " + o.s.t;
-            api.say("Paso " + pos + ": " + o.s.t);
-            api.feedback("", "");
-            if (pos === n) { end(); return; }
-            refresh();
-            if (buttons[0]) buttons[0].el.focus();
-          } else {
-            errors++;
-            btn.classList.add("is-wrong");
-            setTimeout(function () { btn.classList.remove("is-wrong"); }, 500);
-            api.feedback("Ese paso va después. Mira cuál se hace primero.", "retry");
-            if (help === 2) highlight = true;
-            refresh();
-            if (errors === 2) api.hint();
-          }
-        }
-
-        function end() {
-          finished = true;
-          status.textContent = "¡Rutina completa!";
-          var stars = errors === 0 ? 1 : (errors === 1 ? 0.75 : (errors <= 3 ? 0.5 : 0.25));
-          api.done({
-            stars: stars,
-            message: errors === 0 ? "¡Todos los pasos en orden!" : "¡Rutina completada!",
-            error: errors ? { wrong: errors, routine: r.title, help_level: help, attempts: errors + 1 } : null
-          });
-        }
-
-        refresh();
-        return function () { finished = true; };
-      }
-    };
-  }
-
-  /** Memoria visual simple: pocas parejas y sin límite de tiempo. */
-  function roundMemoria(p, ctx) {
-    var support = (ctx && ctx.support) || 1;
-    var banco = p.bancos || ALL;
-    var picked = shuffle(banco).slice(0, p.pairs);
-    var deck = shuffle(picked.concat(picked));
-    var preview = support === 1 ? 3500 : (support === 2 ? 2200 : 0);
-    var prompt = "Encuentra las parejas. Toca dos cartas: si son iguales, se quedan abiertas. No hay límite de tiempo.";
-
-    return {
-      skill: "memoria_visual_simple",
-      prompt: prompt,
-      speech: prompt,
-      hint: "Recuerda dónde viste cada dibujo. Abre una carta y busca su pareja.",
-      mount: function (host, api) {
-        var s = scheduler();
-        host.innerHTML = "";
-        var live = liveRegion();
-        var status = el("p", "cog-status");
-        var grid = el("div", "cog-grid");
-        grid.style.setProperty("--cols", p.pairs === 3 ? 3 : 4);
-        host.appendChild(live);
-        host.appendChild(status);
-        host.appendChild(grid);
-
-        var cards = [], open = null, lock = true, found = 0, errors = 0, finished = false;
-
-        function show(c) {
-          c.up = true;
-          c.b.textContent = c.it[0];
-          c.b.setAttribute("aria-label", "Carta " + c.n + ": " + c.it[1]);
-        }
-        function hide(c) {
-          c.up = false;
-          c.b.textContent = "❓";
-          c.b.setAttribute("aria-label", "Carta " + c.n + ", boca abajo");
-        }
-
-        deck.forEach(function (it, i) {
-          var c = { it: it, n: i + 1, up: false, matched: false };
-          c.b = el("button", "game-option cog-card");
-          c.b.type = "button";
+        var status = document.createElement("p"); status.className = "cog-status"; status.setAttribute("role", "status");
+        var grid = document.createElement("div"); grid.className = "cog-grid";
+        grid.style.setProperty("--cols", pairs <= 3 ? 3 : 4);
+        host.appendChild(status); host.appendChild(grid);
+        var cards = [], open = null, lock = true, found = 0, errors = 0;
+        function show(c) { c.up = true; c.b.textContent = c.it[0]; c.b.setAttribute("aria-label", _t("Carta ") + c.n + ": " + c.it[1]); }
+        function hide(c) { c.up = false; c.b.textContent = "?"; c.b.setAttribute("aria-label", _t("Carta ") + c.n + _t(", boca abajo")); }
+        deck.forEach(function (it, k) {
+          var c = { it: it, n: k + 1 };
+          c.b = document.createElement("button"); c.b.type = "button"; c.b.className = "game-option cog-card";
           c.b.addEventListener("click", function () { flip(c); });
-          grid.appendChild(c.b);
-          cards.push(c);
-          show(c);
+          grid.appendChild(c.b); cards.push(c); show(c);
         });
-
-        function refresh() {
-          status.textContent = "Parejas encontradas: " + found + " de " + p.pairs;
-        }
-
-        function ready() {
-          cards.forEach(hide);
-          lock = false;
-          refresh();
-        }
-
-        if (preview > 0) {
-          status.textContent = "Mira bien las cartas. Se van a tapar en unos segundos.";
-          s.later(ready, preview);
-        } else {
-          ready();
-        }
-
+        status.textContent = _t("Mira las cartas: se van a tapar en unos segundos.");
+        later(function () { cards.forEach(hide); lock = false; status.textContent = _t("Parejas: {n} de {t}").replace("{n}", 0).replace("{t}", pairs); }, grow(4500, 2500, s));
         function flip(c) {
-          if (lock || finished || c.matched || c.up) return;
-          show(c);
+          if (lock || c.matched || c.up) return;
+          show(c); api.sound("tap");
           if (!open) { open = c; return; }
-          var first = open;
-          open = null;
-          if (first.it[0] === c.it[0]) {
+          var first = open; open = null;
+          if (first.it[1] === c.it[1]) {
             first.matched = c.matched = true;
-            first.b.classList.add("is-correct");
-            c.b.classList.add("is-correct");
+            first.b.classList.add("is-correct"); c.b.classList.add("is-correct");
             first.b.disabled = c.b.disabled = true;
-            found++;
-            live.textContent = "Pareja encontrada: " + c.it[1];
-            api.say("Pareja: " + c.it[1]);
-            refresh();
-            if (found === p.pairs) end();
+            found++; status.textContent = _t("Parejas: {n} de {t}").replace("{n}", found).replace("{t}", pairs);
+            api.sound("ok");
+            if (found === pairs) api.done({ stars: errors <= pairs ? 1 : errors <= pairs * 2 ? 0.75 : 0.5, message: _t("¡Encontraste todas las parejas!"), error: errors > pairs ? { wrong: errors, pairs: pairs } : null });
           } else {
-            errors++;
-            lock = true;
-            live.textContent = "No son iguales.";
-            s.later(function () { hide(first); hide(c); lock = false; }, 1000);
-            if (errors === 4) api.hint();
+            errors++; lock = true;
+            later(function () { hide(first); hide(c); lock = false; }, 1000);
+            if (errors === pairs + 1) api.hint();
+            // Si sigue costando, se muestran de nuevo las cartas por un momento.
+            if (errors > pairs && (errors - pairs) % (pairs * 2) === 0) {
+              later(function () {
+                lock = true; status.textContent = _t("Mira otra vez dónde está cada carta.");
+                cards.forEach(function (x) { if (!x.matched) show(x); });
+                later(function () { cards.forEach(function (x) { if (!x.matched) hide(x); }); lock = false; status.textContent = _t("Parejas: {n} de {t}").replace("{n}", found).replace("{t}", pairs); }, 2000);
+              }, 1100);
+            }
           }
         }
-
-        function end() {
-          finished = true;
-          var stars = errors <= p.pairs ? 1 : (errors <= p.pairs * 2 ? 0.75 : 0.5);
-          api.done({
-            stars: stars,
-            message: "¡Encontraste todas las parejas!",
-            error: errors ? { wrong: errors, pairs: p.pairs, attempts: errors + 1 } : null
-          });
-        }
-
-        return function () { s.stop(); };
+        return function () { alive = false; timers.forEach(clearTimeout); };
       }
     };
   }
 
-  // ─── Definición de los niveles (50: 5 Stages de 10 niveles) ────────────────
+  function repasoIntegrado(p, s) {
+    var mecs = [
+      function () { return aQueGrupo({ cats: CATS_ADULTO }, s); },
+      function () { return ordenarRutina({ bank: RUTINAS.vida5.concat(RUTINAS.salud) }, s); },
+      function () { return causaEfecto({ bank: CAUSAS_ADULTO }, s); },
+      function () { return semaforo({ bank: SEMAFORO_DINERO.concat(SEMAFORO_TRABAJO) }, s); },
+      function () { return leerRecibo({ hard: true }, s); }
+    ];
+    return mecs[s % mecs.length]();
+  }
 
-  var CONSTRUCTORES = {
-    clasificar: function (p) { return retoClasificar(p); },
-    igual: function (p) { return retoIgual(p); },
-    funcion: function (p) { return retoFuncion(p); },
-    causa: function (p) { return retoCausa(p); },
-    social: function (p) { return retoSocial(p); },
-    semaforo: function (p) { return retoSemaforo(p); },
-    memoria: roundMemoria,
-    rutina3: roundRutina,
-    rutina4: roundRutina,
-    tarea: roundRutina
+  // ─── Plan ────────────────────────────────────────────────────────────────
+  var PLAN = {
+    1: [
+      [aQueGrupo, { cats: CATS }, _t("Vas a decidir a qué grupo pertenece cada objeto de la casa.")],
+      [encontrarIgual, { cats: CATS }, _t("Vas a buscar el objeto que es exactamente igual.")],
+      [clasificarGrupos, { cats: CATS, min: 4, max: 6 }, _t("Vas a llevar cada objeto a su grupo.")],
+      [paraQueSirve, { bank: FUNCIONES }, _t("Vas a decir para qué sirve cada objeto.")],
+      [causaEfecto, { bank: CAUSAS }, _t("Vas a pensar qué pasa después de una acción.")],
+      [ordenarRutina, { bank: RUTINAS.casa3 }, _t("Vas a ordenar rutinas cortas de tres pasos.")],
+      [unirUso, { bank: FUNCIONES }, _t("Vas a unir cada objeto con su uso.")],
+      [queNoPertenece, { cats: CATS }, _t("Vas a encontrar el objeto que no pertenece al grupo.")],
+      [memoriaPares, { cats: CATS, pairs: [3, 5] }, _t("Vas a encontrar parejas de cartas usando tu memoria.")],
+      [semaforo, { bank: SEMAFORO_BASICO }, _t("Vas a elegir la decisión segura en situaciones de todos los días.")]
+    ],
+    2: [
+      [ordenarRutina, { bank: RUTINAS.casa4 }, _t("Vas a ordenar rutinas de la casa de cuatro pasos.")],
+      [pasoQueFalta, { bank: RUTINAS.casa4 }, _t("Vas a descubrir qué paso falta en una rutina.")],
+      [antesDespues, { bank: RUTINAS.casa4 }, _t("Vas a decidir qué va antes y qué va después.")],
+      [clasificarGrupos, { cats: { aseo: CATS.aseo, cocina: CATS.cocina, ropa: CATS.ropa }, bins: 3, min: 5, max: 7 }, _t("Vas a clasificar objetos de la casa en tres grupos.")],
+      [social, { bank: SOCIALES }, _t("Vas a elegir cómo actuar con otras personas.")],
+      [causaEfecto, { bank: CAUSAS.concat(CAUSAS_ADULTO.slice(0, 2)) }, _t("Vas a prever consecuencias en la casa.")],
+      [queNoPertenece, { cats: CATS }, _t("Vas a encontrar el que no pertenece, con grupos más parecidos.")],
+      [memoriaPares, { cats: { tecnologia: CATS.tecnologia, cocina: CATS.cocina, aseo: CATS.aseo }, pairs: [4, 6] }, _t("Vas a encontrar parejas con más cartas.")],
+      [encontrarErrorRutina, { bank: RUTINAS.casa4 }, _t("Vas a encontrar los pasos cambiados de lugar en una rutina.")],
+      [semaforo, { bank: SEMAFORO_BASICO }, _t("Vas a tomar decisiones seguras en la casa y en la calle.")]
+    ],
+    3: [
+      [clasificarGrupos, { cats: CATS_ADULTO, bins: 3, min: 5, max: 7 }, _t("Vas a clasificar documentos, dinero y objetos de trabajo.")],
+      [paraQueSirve, { bank: FUNCIONES_ADULTO }, _t("Vas a decir para qué sirven documentos y objetos de la vida adulta.")],
+      [ordenarRutina, { bank: RUTINAS.banco }, _t("Vas a ordenar los pasos de trámites de dinero.")],
+      [clasificarGrupos, { cats: NECESIDAD, min: 4, max: 7, skill: "prioridades", prompt: _t("¿Es necesario este mes o puede esperar?"), hint: _t("Pregúntate: ¿qué pasa si no lo pago este mes?") }, _t("Vas a separar gastos necesarios de los que pueden esperar.")],
+      [pasoQueFalta, { bank: RUTINAS.banco }, _t("Vas a descubrir qué paso falta en un trámite.")],
+      [causaEfecto, { bank: CAUSAS_ADULTO }, _t("Vas a prever las consecuencias de decisiones con dinero.")],
+      [queHaceFalta, { pairs: DOCS_TRAMITE, prompt: _t("Une cada trámite con el documento que necesitas."), skill: "documentos" }, _t("Vas a unir cada trámite con el documento que necesitas.")],
+      [leerRecibo, {}, _t("Vas a leer una factura y responder con sus datos.")],
+      [semaforo, { bank: SEMAFORO_DINERO }, _t("Vas a reconocer engaños con dinero y elegir lo seguro.")],
+      [antesDespues, { bank: RUTINAS.banco }, _t("Vas a decidir el orden correcto en trámites.")]
+    ],
+    4: [
+      [ordenarRutina, { bank: RUTINAS.trabajo }, _t("Vas a ordenar rutinas del trabajo.")],
+      [ordenarRutina, { bank: RUTINAS.salud }, _t("Vas a ordenar los pasos para cuidar tu salud.")],
+      [social, { bank: SOCIALES_ADULTO }, _t("Vas a elegir cómo actuar con compañeros, jefes y clientes.")],
+      [semaforo, { bank: SEMAFORO_TRABAJO }, _t("Vas a tomar decisiones seguras en el trabajo.")],
+      [clasificarGrupos, { cats: AYUDA, min: 4, max: 7, skill: "pedir_ayuda", prompt: _t("¿Lo puedes hacer tú o debes pedir ayuda?"), hint: _t("Si hay riesgo para ti o para otros, pide ayuda.") }, _t("Vas a decidir qué puedes hacer tú y cuándo pedir ayuda.")],
+      [queHaceFalta, { pairs: A_QUIEN, prompt: _t("Une cada problema con quién te puede ayudar."), skill: "pedir_ayuda" }, _t("Vas a unir cada problema con quién te puede ayudar.")],
+      [horarioTurnos, {}, _t("Vas a leer un horario de turnos.")],
+      [pasoQueFalta, { bank: RUTINAS.salud.concat(RUTINAS.trabajo) }, _t("Vas a descubrir qué paso falta en rutinas de trabajo y salud.")],
+      [causaEfecto, { bank: CAUSAS_ADULTO }, _t("Vas a prever consecuencias en el trabajo y la salud.")],
+      [memoriaPares, { cats: CATS_ADULTO, pairs: [4, 6] }, _t("Vas a encontrar parejas con objetos de la vida adulta.")]
+    ],
+    5: [
+      [ordenarRutina, { bank: RUTINAS.vida5 }, _t("Vas a ordenar tareas largas de cinco pasos.")],
+      [encontrarErrorRutina, { bank: RUTINAS.vida5 }, _t("Vas a encontrar errores de orden en planes largos.")],
+      [clasificarGrupos, { cats: URGENCIA, min: 4, max: 7, skill: "prioridades", prompt: _t("¿Es urgente hoy o puede esperar?"), hint: _t("Urgente es lo que trae un problema si no lo haces hoy.") }, _t("Vas a decidir qué es urgente y qué puede esperar.")],
+      [decidirDosCriterios, {}, _t("Vas a tomar decisiones pensando en el tiempo y el dinero.")],
+      [pasoQueFalta, { bank: RUTINAS.vida5 }, _t("Vas a descubrir qué paso falta en un plan.")],
+      [social, { bank: SOCIALES_ADULTO }, _t("Vas a resolver situaciones sociales más difíciles.")],
+      [semaforo, { bank: SEMAFORO_BASICO.concat(SEMAFORO_DINERO, SEMAFORO_TRABAJO) }, _t("Vas a tomar decisiones seguras en cualquier situación.")],
+      [queHaceFalta, { pairs: DOCS_TRAMITE.concat(A_QUIEN.slice(0, 2)), prompt: _t("Une cada situación con lo que necesitas."), skill: "documentos" }, _t("Vas a unir situaciones con lo que necesitas para resolverlas.")],
+      [leerRecibo, { hard: true }, _t("Vas a leer facturas y decidir si te alcanza el dinero.")],
+      [repasoIntegrado, {}, _t("Repaso final: un reto de cada habilidad que trabajaste.")]
+    ]
   };
 
-  var NIVELES = {
-    // ══ Stage 1 · Base (1-10): sin cambios ═══════════════════════════════════
-    1: { rounds: 5, mechanics: ["clasificar"],
-         params: { clasificar: { cats: ["animal", "comida"] } },
-         intro: "Stage 1 · Nivel 1 · ¡Hola! Soy NOVA. Hoy vamos a ordenar cosas y aprender rutinas, paso a paso y sin prisa. Primero: ¿a qué grupo pertenece cada objeto?" },
-    2: { rounds: 5, mechanics: ["igual"], params: { igual: {} },
-         intro: "Stage 1 · Nivel 2 · Ahora buscamos imágenes iguales. Mira el dibujo de arriba y elige el que se ve igual." },
-    3: { rounds: 3, mechanics: ["rutina3"], params: { rutina3: { list: "r3" } },
-         intro: "Stage 1 · Nivel 3 · Las rutinas tienen pasos. Toca los pasos en el orden en que se hacen. Si te equivocas, no pasa nada: puedes intentarlo otra vez." },
-    4: { rounds: 5, mechanics: ["causa"], params: { causa: {} },
-         intro: "Stage 1 · Nivel 4 · Cuando hacemos algo, pasa algo. Veamos qué ocurre en cada caso." },
-    5: { rounds: 5, mechanics: ["funcion"], params: { funcion: {} },
-         intro: "Stage 1 · Nivel 5 · Cada objeto sirve para algo. Elige para qué sirve cada uno." },
-    6: { rounds: 3, mechanics: ["memoria"], params: { memoria: { pairs: 3 } },
-         intro: "Stage 1 · Nivel 6 · Juego de memoria: encuentra las parejas. No hay límite de tiempo." },
-    7: { rounds: 5, mechanics: ["social"], params: { social: {} },
-         intro: "Stage 1 · Nivel 7 · A veces hay que decidir cómo tratar a los demás. Elige lo que ayuda a que todos estén bien." },
-    8: { rounds: 3, mechanics: ["rutina4"], params: { rutina4: { list: "r4" } },
-         intro: "Stage 1 · Nivel 8 · Las rutinas ahora tienen cuatro pasos. Tú puedes ordenarlas." },
-    9: { rounds: 4, mechanics: ["tarea"], params: { tarea: { list: "tarea", fade: true } },
-         intro: "Stage 1 · Nivel 9 · Tareas de la vida diaria. Al principio te ayudo mucho, y poco a poco te ayudo menos, porque cada vez lo haces mejor." },
-    10: { rounds: 8,
-          mechanics: ["clasificar", "funcion", "rutina3", "memoria", "causa", "social", "rutina4", "tarea"],
-          params: {
-            clasificar: { cats: ["animal", "comida", "ropa"] },
-            funcion: {}, causa: {}, social: {},
-            rutina3: { list: "r3" }, rutina4: { list: "r4" },
-            memoria: { pairs: 4 },
-            tarea: { list: "tarea", fade: true }
-          },
-          intro: "Stage 1 · Nivel 10 · Última misión de la base: aparece todo lo que aprendiste. Ya sabes hacerlo. Con calma, paso a paso." },
-
-    // ══ Stage 2 · Media (11-20): rutinas de vida independiente ══════════════
-    11: { rounds: 10, mechanics: ["clasificar"],
-          params: { clasificar: { cats: ["documentos", "dinero", "trabajo"], catsSource: CATS_ADULTO } },
-          intro: "Stage 2 · Nivel 11 · Objetos de tu casa y tu trabajo: documentos, dinero y herramientas. ¿A qué grupo pertenece cada uno?" },
-    12: { rounds: 10, mechanics: ["igual"], params: { igual: { bancos: ALL_ADULTO } },
-          intro: "Stage 2 · Nivel 12 · Busca la imagen igual entre objetos de uso diario adulto." },
-    13: { rounds: 10, mechanics: ["rutina3"], params: { rutina3: { list: "banco" } },
-          intro: "Stage 2 · Nivel 13 · Aprendemos a pagar una cuenta o usar el banco, paso a paso." },
-    14: { rounds: 10, mechanics: ["causa"], params: { causa: { bancos: CAUSAS_ADULTO } },
-          intro: "Stage 2 · Nivel 14 · Cuando haces algo en tu casa o tu trabajo, algo pasa. Veamos qué ocurre." },
-    15: { rounds: 10, mechanics: ["funcion"], params: { funcion: { bancos: FUNCIONES_ADULTO } },
-          intro: "Stage 2 · Nivel 15 · Documentos y objetos que usas en tu vida diaria: ¿para qué sirve cada uno?" },
-    16: { rounds: 10, mechanics: ["memoria"], params: { memoria: { bancos: ALL_ADULTO, pairs: 4 } },
-          intro: "Stage 2 · Nivel 16 · Juego de memoria con objetos de trabajo y documentos." },
-    17: { rounds: 10, mechanics: ["social"], params: { social: { bancos: SOCIALES_ADULTO } },
-          intro: "Stage 2 · Nivel 17 · Situaciones en el trabajo: ¿qué haces en cada caso?" },
-    18: { rounds: 10, mechanics: ["rutina4"], params: { rutina4: { list: "lunch" } },
-          intro: "Stage 2 · Nivel 18 · Aprendemos a preparar un almuerzo sencillo para ti mismo." },
-    19: { rounds: 10, mechanics: ["semaforo"], params: { semaforo: { bancos: SEMAFORO_BASICO } },
-          intro: "Stage 2 · Nivel 19 · Mecánica nueva: el Semáforo de decisiones. Situaciones cotidianas donde eliges lo más seguro." },
-    20: { rounds: 10,
-          mechanics: ["clasificar", "igual", "rutina3", "causa", "funcion", "memoria", "social", "rutina4", "semaforo"],
-          params: {
-            clasificar: { cats: ["documentos", "dinero", "trabajo"], catsSource: CATS_ADULTO },
-            igual: { bancos: ALL_ADULTO }, rutina3: { list: "banco" }, causa: { bancos: CAUSAS_ADULTO },
-            funcion: { bancos: FUNCIONES_ADULTO }, memoria: { bancos: ALL_ADULTO, pairs: 4 },
-            social: { bancos: SOCIALES_ADULTO }, rutina4: { list: "lunch" }, semaforo: { bancos: SEMAFORO_BASICO }
-          },
-          intro: "Stage 2 · Nivel 20 · Reto integrador de la etapa Media: mezcla todo lo practicado." },
-
-    // ══ Stage 3 · Alta (21-30): dinero y trámites ═══════════════════════════
-    21: { rounds: 10, mechanics: ["clasificar"],
-          params: { clasificar: { cats: ["comida", "transporte_gasto", "vivienda", "ocio"], catsSource: CATS_GASTOS } },
-          intro: "Stage 3 · Nivel 21 · Clasifica gastos: comida, transporte, vivienda u ocio." },
-    22: { rounds: 10, mechanics: ["rutina4"], params: { rutina4: { list: "transporte" } },
-          intro: "Stage 3 · Nivel 22 · Aprendemos a usar el transporte público solo." },
-    23: { rounds: 10, mechanics: ["causa"], params: { causa: { bancos: CAUSAS_ADULTO } },
-          intro: "Stage 3 · Nivel 23 · Sigue practicando qué pasa cuando manejas mal el dinero o el tiempo." },
-    24: { rounds: 10, mechanics: ["funcion"], params: { funcion: { bancos: FUNCIONES_ADULTO } },
-          intro: "Stage 3 · Nivel 24 · Documentos importantes: ¿para qué sirve cada uno?" },
-    25: { rounds: 10, mechanics: ["memoria"], params: { memoria: { bancos: ALL_GASTOS, pairs: 4 } },
-          intro: "Stage 3 · Nivel 25 · Juego de memoria con tipos de gasto." },
-    26: { rounds: 10, mechanics: ["semaforo"], params: { semaforo: { bancos: SEMAFORO_DINERO } },
-          intro: "Stage 3 · Nivel 26 · Semáforo de decisiones: situaciones de dinero y compras." },
-    27: { rounds: 10, mechanics: ["rutina4"], params: { rutina4: { list: "compra" } },
-          intro: "Stage 3 · Nivel 27 · Aprendemos a comprar en el supermercado con una lista." },
-    28: { rounds: 10, mechanics: ["social"], params: { social: { bancos: SOCIALES_ADULTO } },
-          intro: "Stage 3 · Nivel 28 · Pedir ayuda en una entidad, como el banco o la EPS." },
-    29: { rounds: 10, mechanics: ["rutina3", "causa"],
-          params: { rutina3: { list: "banco" }, causa: { bancos: CAUSAS_ADULTO } },
-          intro: "Stage 3 · Nivel 29 · Rutinas de banco y causa-efecto, alternadas." },
-    30: { rounds: 10,
-          mechanics: ["clasificar", "rutina4", "causa", "funcion", "memoria", "semaforo", "rutina3", "social"],
-          params: {
-            clasificar: { cats: ["comida", "transporte_gasto", "vivienda", "ocio"], catsSource: CATS_GASTOS },
-            rutina4: { list: "transporte" }, causa: { bancos: CAUSAS_ADULTO }, funcion: { bancos: FUNCIONES_ADULTO },
-            memoria: { bancos: ALL_GASTOS, pairs: 4 }, semaforo: { bancos: SEMAFORO_DINERO },
-            rutina3: { list: "banco" }, social: { bancos: SOCIALES_ADULTO }
-          },
-          intro: "Stage 3 · Nivel 30 · Reto integrador de la etapa Alta: mezcla todo lo practicado." },
-
-    // ══ Stage 4 · Muy Alta (31-40): trabajo y salud ═════════════════════════
-    31: { rounds: 10, mechanics: ["rutina4"], params: { rutina4: { list: "trabajo" } },
-          intro: "Stage 4 · Nivel 31 · Aprendemos a llegar puntual al trabajo, paso a paso." },
-    32: { rounds: 10, mechanics: ["semaforo"], params: { semaforo: { bancos: SEMAFORO_TRABAJO } },
-          intro: "Stage 4 · Nivel 32 · Semáforo de decisiones: situaciones de seguridad en el trabajo." },
-    33: { rounds: 10, mechanics: ["clasificar", "funcion"],
-          params: { clasificar: { cats: ["trabajo", "documentos"], catsSource: CATS_ADULTO }, funcion: { bancos: FUNCIONES_ADULTO } },
-          intro: "Stage 4 · Nivel 33 · Clasificación y función de elementos de trabajo y documentos." },
-    34: { rounds: 10, mechanics: ["rutina4"], params: { rutina4: { list: "cita" } },
-          intro: "Stage 4 · Nivel 34 · Aprendemos a agendar y asistir a una cita médica." },
-    35: { rounds: 10, mechanics: ["memoria", "causa"],
-          params: { memoria: { bancos: ALL_GASTOS, pairs: 4 }, causa: { bancos: CAUSAS_ADULTO } },
-          intro: "Stage 4 · Nivel 35 · Memoria y causa-efecto, combinadas." },
-    36: { rounds: 10, mechanics: ["social"], params: { social: { bancos: SOCIALES_ADULTO } },
-          intro: "Stage 4 · Nivel 36 · Resolver un malentendido con un compañero de trabajo." },
-    37: { rounds: 10, mechanics: ["semaforo", "rutina4"],
-          params: { semaforo: { bancos: SEMAFORO_TRABAJO }, rutina4: { list: "trabajo" } },
-          intro: "Stage 4 · Nivel 37 · Decisiones de seguridad y rutina de trabajo, alternadas." },
-    38: { rounds: 10, mechanics: ["clasificar", "memoria"],
-          params: { clasificar: { cats: ["documentos", "dinero"], catsSource: CATS_ADULTO }, memoria: { bancos: ALL_ADULTO, pairs: 4 } },
-          intro: "Stage 4 · Nivel 38 · Documentos importantes: clasifica y recuerda." },
-    39: { rounds: 10, mechanics: ["rutina4", "social"],
-          params: { rutina4: { list: "trabajo" }, social: { bancos: SOCIALES_ADULTO } },
-          intro: "Stage 4 · Nivel 39 · Rutina de trabajo y situaciones sociales, como pedir un permiso." },
-    40: { rounds: 10,
-          mechanics: ["rutina4", "semaforo", "clasificar", "memoria", "causa", "funcion", "social"],
-          params: {
-            rutina4: { list: "trabajo" }, semaforo: { bancos: SEMAFORO_TRABAJO },
-            clasificar: { cats: ["trabajo", "documentos"], catsSource: CATS_ADULTO },
-            memoria: { bancos: ALL_ADULTO, pairs: 4 }, causa: { bancos: CAUSAS_ADULTO },
-            funcion: { bancos: FUNCIONES_ADULTO }, social: { bancos: SOCIALES_ADULTO }
-          },
-          intro: "Stage 4 · Nivel 40 · Reto integrador de la etapa Muy Alta: mezcla todo lo practicado." },
-
-    // ══ Stage 5 · Súper Difícil (41-50): integración total ══════════════════
-    41: { rounds: 10, mechanics: ["semaforo", "causa"],
-          params: { semaforo: { bancos: SEMAFORO_TODO }, causa: { bancos: CAUSAS_ADULTO } },
-          intro: "Stage 5 · Nivel 41 · Decisiones y causa-efecto, sin previo aviso de cuál toca." },
-    42: { rounds: 10, mechanics: ["clasificar", "memoria"],
-          params: {
-            clasificar: { cats: ["comida", "transporte_gasto", "vivienda", "ocio"], catsSource: CATS_GASTOS },
-            memoria: { bancos: ALL_GASTOS, pairs: 4 }
-          },
-          intro: "Stage 5 · Nivel 42 · Clasificar gastos y recordar parejas, combinado." },
-    43: { rounds: 10, mechanics: ["funcion", "igual"],
-          params: { funcion: { bancos: FUNCIONES_ADULTO }, igual: { bancos: ALL_STAGE5 } },
-          intro: "Stage 5 · Nivel 43 · Función de objetos e imágenes iguales, alternadas." },
-    44: { rounds: 10, mechanics: ["rutina4", "social"],
-          params: { rutina4: { list: "compra" }, social: { bancos: SOCIALES_ADULTO } },
-          intro: "Stage 5 · Nivel 44 · Rutina de compra y situaciones sociales, combinadas." },
-    45: { rounds: 10, mechanics: ["semaforo", "clasificar", "funcion"],
-          params: {
-            semaforo: { bancos: SEMAFORO_TODO },
-            clasificar: { cats: ["documentos", "dinero", "trabajo"], catsSource: CATS_ADULTO },
-            funcion: { bancos: FUNCIONES_ADULTO }
-          },
-          intro: "Stage 5 · Nivel 45 · Tres mecánicas de juicio y clasificación, combinadas." },
-    46: { rounds: 10, mechanics: ["memoria", "causa", "rutina3"],
-          params: { memoria: { bancos: ALL_STAGE5, pairs: 4 }, causa: { bancos: CAUSAS_ADULTO }, rutina3: { list: "banco" } },
-          intro: "Stage 5 · Nivel 46 · Memoria, causa-efecto y rutina de banco, alternadas." },
-    47: { rounds: 10, mechanics: ["social", "semaforo", "rutina4"],
-          params: { social: { bancos: SOCIALES_ADULTO }, semaforo: { bancos: SEMAFORO_TODO }, rutina4: { list: "trabajo" } },
-          intro: "Stage 5 · Nivel 47 · Situaciones sociales, decisiones y rutina de trabajo combinadas." },
-    48: { rounds: 10, mechanics: ["clasificar", "igual", "funcion", "memoria"],
-          params: {
-            clasificar: { cats: ["comida", "transporte_gasto", "vivienda", "ocio"], catsSource: CATS_GASTOS },
-            igual: { bancos: ALL_STAGE5 }, funcion: { bancos: FUNCIONES_ADULTO }, memoria: { bancos: ALL_STAGE5, pairs: 4 }
-          },
-          intro: "Stage 5 · Nivel 48 · Cuatro mecánicas alternadas, sin previo aviso." },
-    49: { rounds: 10, mechanics: ["semaforo", "causa", "social", "rutina3", "rutina4"],
-          params: {
-            semaforo: { bancos: SEMAFORO_TODO }, causa: { bancos: CAUSAS_ADULTO }, social: { bancos: SOCIALES_ADULTO },
-            rutina3: { list: "banco" }, rutina4: { list: "cita" }
-          },
-          intro: "Stage 5 · Nivel 49 · Mezcla exigente de casi todas las mecánicas. Falta solo el reto final." },
-    50: { rounds: 10,
-          mechanics: ["clasificar", "igual", "funcion", "causa", "social", "memoria", "rutina3", "rutina4", "semaforo"],
-          params: {
-            clasificar: { cats: ["documentos", "dinero", "trabajo"], catsSource: CATS_ADULTO },
-            igual: { bancos: ALL_STAGE5 }, funcion: { bancos: FUNCIONES_ADULTO }, causa: { bancos: CAUSAS_ADULTO },
-            social: { bancos: SOCIALES_ADULTO }, memoria: { bancos: ALL_STAGE5, pairs: 4 },
-            rutina3: { list: "banco" }, rutina4: { list: "trabajo" }, semaforo: { bancos: SEMAFORO_TODO }
-          },
-          intro: "Stage 5 · Nivel 50 · Reto final del Clasificador de Rutinas: todo lo que aprendiste sobre tu vida independiente. ¡Tú puedes!" }
+  var HABILIDADES = {
+    clasificar: _t("Clasificar por grupos"),
+    atencion_visual: _t("Fijarse en los detalles"),
+    funcion_objetos: _t("Saber para qué sirven las cosas"),
+    causa_efecto: _t("Prever consecuencias"),
+    secuencias: _t("Ordenar los pasos de una rutina"),
+    categorizar: _t("Encontrar lo que no pertenece"),
+    memoria_visual: _t("Memoria visual"),
+    decision_segura: _t("Tomar decisiones seguras"),
+    habilidades_sociales: _t("Actuar bien con otras personas"),
+    prioridades: _t("Decidir qué es prioritario"),
+    documentos: _t("Saber qué documento usar"),
+    lectura_funcional: _t("Leer facturas y horarios"),
+    pedir_ayuda: _t("Saber cuándo y a quién pedir ayuda"),
+    toma_decisiones: _t("Tomar decisiones con dos criterios"),
+    relacionar: _t("Relacionar ideas")
   };
 
   global.IndecapGame.register({
     slug: "cognitiva_rutinas",
-
-    getLevel: function (level) {
-      var base = NIVELES[level] || NIVELES[1];
-      // Se copia la configuración para que un nivel nunca mute a otro.
+    skillLabels: HABILIDADES,
+    plan: PLAN,
+    getActivity: function (index) {
+      var nivel = Math.min(5, Math.max(1, Math.ceil(index / 10)));
+      var act = PLAN[nivel][(index - 1) % 10];
       return {
-        rounds: base.rounds,
-        mechanics: base.mechanics.slice(),
-        params: base.params,
-        offset: rnd(0, 99),
-        intro: base.intro
+        intro: act[2] + _t(" Son ") + RETOS + _t(" retos que suben de dificultad, sin límite de tiempo."),
+        rounds: RETOS,
+        build: function (step) { return act[0](act[1], step); }
       };
-    },
-
-    buildRound: function (cfg, index, ctx) {
-      var m = cfg.mechanics[index % cfg.mechanics.length];
-      var p = Object.assign({}, cfg.params[m], { offset: cfg.offset });
-      return CONSTRUCTORES[m](p, ctx || { support: 1 }, index);
     }
   });
 })(window);

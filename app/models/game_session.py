@@ -1,7 +1,10 @@
 import json
-from datetime import datetime
 
 from app.extensions import db
+from app.utils.fechas import utc_now
+
+
+FEELINGS = ("bien", "regular", "dificil")
 
 
 class GameSession(db.Model):
@@ -27,10 +30,13 @@ class GameSession(db.Model):
     support_level = db.Column(db.Integer, default=1)   # 1 guiado, 2 parcial, 3 independiente
     completed = db.Column(db.Boolean, default=True)
 
+    # Autoevaluación al terminar: cómo se sintió el estudiante.
+    feeling = db.Column(db.String(16), nullable=True)
+
     errors_json = db.Column(db.Text, default="[]")
     accessibility_json = db.Column(db.Text, default="{}")
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=utc_now, index=True)
 
     # ---- Helpers de serialización ----
 

@@ -1,114 +1,86 @@
 {% extends "dashboard/student/base_student.html" %}
-{% block title %}{{ _('Etapas') }} — {{ game.name }} — indecap-aprende{% endblock %}
+{% block title %}{{ game.name }} — indecap-aprende{% endblock %}
 
 {% block student_content %}
-<style>
-  .stage-map { display: flex; flex-direction: column; gap: 0.9rem; }
-  .stage-map__header {
-    display: flex; align-items: center; justify-content: flex-end;
-    gap: 1rem; margin-bottom: -0.4rem;
-  }
-  .stage-map__exit {
-    width: 40px; height: 40px; border-radius: 50%;
-    background: var(--teacher-bg); color: var(--teacher-navy);
-    display: flex; align-items: center; justify-content: center;
-    text-decoration: none; font-size: 1.05rem; flex-shrink: 0;
-    border: 1px solid #e6e9f2;
-  }
-  .stage-map__exit:hover { background: #eef0f6; color: var(--teacher-navy); }
-  .stage-card { border-left: 6px solid var(--teacher-gold); padding: 1rem 1.25rem; }
-  .stage-card.is-locked { border-left-color: #cfd6ea; opacity: 0.75; }
-  .stage-card__header {
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;
-  }
-  .stage-card__title { font-weight: 700; color: var(--teacher-navy); margin: 0; font-size: 1rem; }
-  .stage-card__subtitle { color: #6b7280; font-size: 0.82rem; margin: 2px 0 0; }
-  .stage-card__progress {
-    font-size: 0.8rem; font-weight: 600; color: var(--teacher-navy);
-    background: var(--teacher-bg); border-radius: 999px; padding: 4px 12px;
-  }
-  .stage-card__lock-note {
-    font-size: 0.85rem; color: #6b7280; margin: 0;
-  }
-  .stage-levels {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-    gap: 8px;
-    max-width: 100%;
-  }
-  .stage-level {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 2px;
-    min-height: 56px;
-    border-radius: 12px;
-    border: 2px solid var(--teacher-navy);
-    background: #fff;
-    color: var(--teacher-navy);
-    font-weight: 700;
-    font-size: 1rem;
-    text-decoration: none;
-    padding: 4px;
-  }
-  .stage-level:hover { background: var(--teacher-bg); color: var(--teacher-navy); }
-  .stage-level.is-completed {
-    background: var(--teacher-navy); color: #fff;
-  }
-  .stage-level.is-completed:hover { background: var(--teacher-navy-light); color: #fff; }
-  .stage-level.is-locked {
-    border-color: #cfd6ea; color: #9aa2b4; background: var(--teacher-bg);
-    cursor: default; pointer-events: none;
-  }
-  .stage-level__caption { font-size: 0.62rem; font-weight: 500; }
-  @media (max-width: 480px) {
-    .stage-levels { grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); }
-    .stage-level { font-size: 0.9rem; min-height: 50px; }
-  }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
 
-<div class="stage-map">
-  <div class="stage-map__header">
-    <a href="{{ url_for('dashboard.student_juegos') }}" class="stage-map__exit" aria-label="{{ _('Volver a Juegos') }}">✕</a>
-  </div>
+{% macro stars(n, size='sm') -%}
+<span class="map-stars map-stars--{{ size }}" role="img" aria-label="{{ _('%(n)s de 3 estrellas', n=n) }}">
+  {%- for i in range(3) -%}
+  <svg viewBox="0 0 24 24" class="{{ 'is-on' if i < n else '' }}" aria-hidden="true"><path d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4L2.8 9.3l6.4-.8z"/></svg>
+  {%- endfor -%}
+</span>
+{%- endmacro %}
 
-  {% if preview %}
-  <div class="teacher-card">
-    <p class="text-muted mb-0">{{ _('Modo vista previa: como docente puedes ver todas las etapas y niveles, pero el progreso no se guarda.') }}</p>
-  </div>
-  {% endif %}
-
-  {% for stage in stages %}
-  <div class="teacher-card stage-card {{ '' if stage.unlocked else 'is-locked' }}">
-    <div class="stage-card__header">
-      <div>
-        <p class="stage-card__title">{{ _('Etapa %(number)s', number=stage.number) }} · {{ stage.name }}</p>
-        <p class="stage-card__subtitle">{{ _('Niveles %(start)s–%(end)s', start=stage.start, end=stage.end) }}</p>
+<div class="map">
+  <header class="map-hero">
+    <div>
+      <p class="map-hero__eyebrow">{{ game.condition }}</p>
+      <h1 class="map-hero__title">{{ game.name }}</h1>
+      <p class="map-hero__sub">{{ _('5 niveles con 10 actividades cada uno. Supera una actividad para abrir la siguiente.') }}</p>
+    </div>
+    <div class="map-hero__progress">
+      <div class="map-hero__stat">
+        <strong>{{ total_completed }}<small>/{{ game.levels }}</small></strong>
+        <span>{{ _('actividades superadas') }}</span>
       </div>
-      <span class="stage-card__progress">{{ stage.completed_count }}/{{ stage.levels | length }} {{ _('superados') }}</span>
+      <div class="map-hero__stat">
+        <strong>{{ total_stars }}<small>/{{ game.levels * 3 }}</small></strong>
+        <span>{{ _('estrellas') }}</span>
+      </div>
+    </div>
+    <a href="{{ url_for('dashboard.student_juegos') }}" class="map-hero__exit" aria-label="{{ _('Volver a Juegos') }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </a>
+  </header>
+
+  {% for lvl in levels %}
+  <section class="map-level {{ '' if lvl.unlocked else 'is-locked' }}" aria-labelledby="nivel-{{ lvl.number }}">
+    <div class="map-level__head">
+      <span class="map-level__num" aria-hidden="true">{{ lvl.number }}</span>
+      <div class="map-level__titles">
+        <h2 class="map-level__title" id="nivel-{{ lvl.number }}">{{ _('Nivel %(n)s', n=lvl.number) }} · {{ lvl.name }}</h2>
+        {% if lvl.theme %}<p class="map-level__theme">{{ lvl.theme }}</p>{% endif %}
+      </div>
+      <div class="map-level__progress">
+        <span class="map-bar" aria-hidden="true"><span style="width: {{ (lvl.completed_count * 100 / lvl.activities|length)|round|int }}%"></span></span>
+        <span class="map-level__count">{{ _('%(done)s/%(total)s actividades', done=lvl.completed_count, total=lvl.activities|length) }}</span>
+      </div>
     </div>
 
-    {% if not stage.unlocked %}
-      <p class="stage-card__lock-note">🔒 {{ _('Completa la etapa anterior para desbloquear esta.') }}</p>
+    {% if not lvl.unlocked %}
+      <p class="map-level__lock">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        {{ _('Supera el nivel anterior para abrir este.') }}
+      </p>
     {% else %}
-      <div class="stage-levels">
-        {% for lvl in stage.levels %}
-          {% if lvl.unlocked %}
-            <a href="{{ url_for('games.play', slug=game.slug, level=lvl.level, trastorno_id=trastorno.id if trastorno else '') }}"
-               class="stage-level {{ 'is-completed' if lvl.completed else '' }}"
-               aria-label="{% if lvl.completed %}{{ _('Nivel %(pos)s de la etapa %(stage)s, superado', pos=lvl.position, stage=stage.number) }}{% else %}{{ _('Nivel %(pos)s de la etapa %(stage)s', pos=lvl.position, stage=stage.number) }}{% endif %}">
-              {{ lvl.position }}
-              <span class="stage-level__caption">{{ '✓' if lvl.completed else _('Jugar') }}</span>
-            </a>
+      <ol class="map-activities">
+        {% for act in lvl.activities %}
+        <li>
+          {% if act.unlocked %}
+          <a href="{{ url_for('games.play', slug=game.slug, level=act.index, trastorno_id=trastorno.id if trastorno else '') }}"
+             class="map-activity {{ 'is-done' if act.completed else 'is-open' }}">
+            <span class="map-activity__pos">{{ act.position }}</span>
+            <span class="map-activity__title">{{ act.title }}</span>
+            {% if act.completed %}
+              {{ stars(act.stars) }}
+            {% else %}
+              <span class="map-activity__cta">{{ _('Jugar') }}</span>
+            {% endif %}
+          </a>
           {% else %}
-            <span class="stage-level is-locked" aria-label="{{ _('Nivel %(pos)s bloqueado', pos=lvl.position) }}">
-              🔒
-              <span class="stage-level__caption">{{ lvl.position }}</span>
+          <span class="map-activity is-locked" aria-label="{{ _('Actividad %(n)s bloqueada', n=act.position) }}">
+            <span class="map-activity__pos">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
             </span>
+            <span class="map-activity__title">{{ act.title }}</span>
+          </span>
           {% endif %}
+        </li>
         {% endfor %}
-      </div>
+      </ol>
     {% endif %}
-  </div>
+  </section>
   {% endfor %}
 </div>
 {% endblock %}

@@ -1,975 +1,1054 @@
 /**
  * MERCADO ESPACIAL — Discalculia
  *
- * Habilidad núcleo: sentido numérico y correspondencia cantidad-símbolo.
- * Progresión concreto → pictórico → abstracto en 10 niveles base. El nivel 10
- * es evaluación embebida: mezcla todas las habilidades sin presentarse como
- * examen.
+ * Habilidad central: sentido numérico y su uso en situaciones reales.
  *
- * MAPA DE ETAPAS (5 Stages de 10 niveles, 50 en total, numeración continua):
- *   Stage 1 · Base            → niveles 1-10  (sin cambio de contenido)
- *   Stage 2 · Media           → niveles 11-20 (matemática financiera cotidiana)
- *   Stage 3 · Alta            → niveles 21-30 (finanzas personales, promedios)
- *   Stage 4 · Muy Alta        → niveles 31-40 (proporciones, planificación)
- *   Stage 5 · Súper Difícil   → niveles 41-50 (integración total, mínimo apoyo)
+ * 5 niveles × 10 actividades. Cada actividad se juega en 5 retos que suben
+ * de dificultad (step 0 → 4): números más grandes, menos apoyo visual y más
+ * pasos. Progresión concreto → pictórico → abstracto entre niveles.
  *
- * Cada nivel tiene 10 retos. El desbloqueo de nivel a nivel (score >= 60) lo
- * sigue manejando games/services.py::get_unlocked_level sin ningún cambio:
- * es agnóstico al número total de niveles.
+ *   Nivel 1 · Base           Sentido numérico (hasta 100)
+ *   Nivel 2 · Media          Valor posicional y operaciones (hasta 1.000)
+ *   Nivel 3 · Alta           Dinero y tiempo en pesos colombianos
+ *   Nivel 4 · Muy Alta       Razonamiento aplicado
+ *   Nivel 5 · Súper Difícil  Problemas de varios pasos
  *
- * Contenido pensado para jóvenes de 15 a 26 años: a partir del nivel 11 se
- * introducen contextos de vida adulta (precios por unidad, propinas,
- * presupuesto, interés simple, promedios, conversión de unidades, regla de
- * tres y lectura de tablas), para que la progresión no se sienta repetitiva
- * ni infantil.
- *
- * El repaso de errores al cierre de cada nivel lo maneja el motor
- * (core/engine.js) de forma automática: si el estudiante falla una actividad,
- * al terminar el nivel se genera una actividad nueva de esa misma mecánica
- * antes de cerrar. Este archivo no necesita implementar nada para eso.
- *
- * Neutralidad cultural y visual:
- *  - Las figuras son formas geométricas nombradas en la consigna; nunca se
- *    depende del color (daltonismo, alto contraste).
- *  - Dinero con "$" genérico, sin país ni denominaciones locales.
- *  - Sin modismos ni referencias a comidas, fiestas o costumbres concretas.
- *
- * Los distractores modelan errores reales (dígitos invertidos, operación
- * equivocada, confundir manecillas). Los estilos se inyectan desde aquí.
+ * Todo el dinero es en pesos colombianos (COP), con monedas y billetes
+ * dibujados en SVG propio (no reproducen el diseño de los billetes reales).
+ * Las respuestas son enteros exactos. Los distractores modelan errores
+ * reales: invertir cifras, equivocar la operación, olvidar lo que se lleva.
+ * Nunca se depende del color: las figuras se nombran en la consigna.
  */
 (function (global) {
   "use strict";
+  var _t = global.IndecapGame.tr;
 
-  // ─── Utilidades ───────────────────────────────────────────────────────────
-  function rnd(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
-  function pick(a) { return a[rnd(0, a.length - 1)]; }
-  function shuffle(arr) {
-    var a = arr.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-      var j = rnd(0, i), t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a;
-  }
+  var U = global.IndecapGame.util;
+  var rnd = U.rnd, pick = U.pick, shuffle = U.shuffle, grow = U.grow, cop = U.cop, miles = U.miles;
+  var RETOS = 5;
 
-  var FORMAS = [
-    { i: "●", s: "círculos" },
-    { i: "■", s: "cuadrados" },
-    { i: "▲", s: "triángulos" },
-    { i: "◆", s: "rombos" }
-  ];
-
-  function tokens(count, icon) {
-    var html = "";
-    for (var i = 0; i < count; i++) html += '<span class="game-token">' + icon + "</span>";
-    return html;
-  }
-
-  /** Opciones numéricas: la respuesta, distractores dados y relleno cercano. */
-  function numChoices(answer, cands, n, min, max, fmt) {
-    var out = [answer];
-    shuffle(cands).forEach(function (c) {
-      if (out.length < n && c !== answer && c >= min && c <= max && out.indexOf(c) === -1) out.push(c);
-    });
-    var g = 0;
-    while (out.length < n && g++ < 80) {
-      var c = answer + rnd(1, 4) * (Math.random() < 0.5 ? -1 : 1);
-      if (c >= min && c <= max && out.indexOf(c) === -1) out.push(c);
-    }
-    return shuffle(out).map(function (v) {
-      var f = fmt ? fmt(v) : { label: String(v), aria: "Número " + v };
-      return { label: f.label, value: v, aria: f.aria };
-    });
-  }
-  function fmtMoney(v) { return { label: "$" + v, aria: v + " unidades de dinero" }; }
-
-  /** Opciones de texto (horas, fracciones). */
-  function strChoices(answer, cands, n, ariaFn) {
-    var out = [answer];
-    shuffle(cands).forEach(function (c) {
-      if (out.length < n && out.indexOf(c) === -1) out.push(c);
-    });
-    return shuffle(out).map(function (v) {
-      return { label: v, value: v, aria: ariaFn ? ariaFn(v) : v };
-    });
-  }
-
-  var STYLE_ID = "discalculia-styles";
+  // ─── Estilos propios del juego ────────────────────────────────────────────
   (function injectStyles() {
-    if (document.getElementById(STYLE_ID)) return;
+    if (document.getElementById("dm-styles")) return;
     var css = [
-      ".game-token{color:var(--g-text)}",
-      ".game-shell.is-high-contrast .game-equation{color:var(--g-text)}",
-      ".dm-blocks{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:flex-end}",
-      ".dm-col{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-end;justify-content:center;border:3px dashed var(--indecap-border,#DCE4EA);border-radius:12px;padding:10px;max-width:210px}",
-      ".dm-hun{display:inline-block;width:46px;height:46px;border:3px solid var(--g-text);background:var(--g-accent-soft);border-radius:4px}",
-      ".dm-ten{display:inline-block;width:14px;height:46px;border:2px solid var(--g-text);background:var(--g-accent-soft);border-radius:3px}",
-      ".dm-uni{display:inline-block;width:14px;height:14px;border:2px solid var(--g-text);background:var(--g-accent-soft);border-radius:2px}",
-      ".dm-receipt{border:3px dashed var(--g-text);border-radius:12px;padding:12px 22px;text-align:left;font-size:1.2rem;color:var(--g-text);min-width:230px}",
-      ".dm-receipt p{margin:4px 0}",
-      ".dm-coin{display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:50%;border:3px solid var(--g-frame-dark);background:var(--g-accent-soft);color:var(--g-frame-dark);font-weight:700}",
-      ".dm-bill{width:88px;height:50px;border-radius:6px}"
-    ].join("\n");
-    var s = document.createElement("style"); s.id = STYLE_ID; s.textContent = css; document.head.appendChild(s);
+      ".dm-row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;align-items:center}",
+      ".dm-money{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:560px}",
+      ".dm-money svg{width:auto;height:auto;stroke:none}",
+      ".dm-receipt{min-width:260px;padding:16px 20px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--sh-xs);text-align:left;font-size:16px}",
+      ".dm-receipt p{display:flex;justify-content:space-between;gap:24px;margin:0;padding:6px 0;border-bottom:1px dashed var(--line)}",
+      ".dm-receipt p:last-child{border-bottom:0;font-weight:700}",
+      ".dm-receipt strong{font-variant-numeric:tabular-nums}",
+      ".dm-steps{list-style:none;margin:0;padding:0;display:grid;gap:6px;text-align:left;font-size:16px;font-variant-numeric:tabular-nums}",
+      ".dm-steps li{padding:10px 14px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface)}",
+      ".dm-table{border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;font-size:15px;background:var(--surface)}",
+      ".dm-table th,.dm-table td{padding:8px 14px;border-bottom:1px solid var(--line);text-align:left}",
+      ".dm-table th{background:var(--canvas);font-weight:600}",
+      ".dm-table tr:last-child td{border-bottom:0}",
+      ".dm-svg{display:block}",
+      ".dm-svg text{font-family:var(--font-ui);font-weight:700}",
+      ".game-shell.is-high-contrast .dm-svg .dm-fill{fill:#000!important;stroke:#fff!important}",
+      ".game-shell.is-high-contrast .dm-svg text{fill:#fff!important}",
+      ".game-shell.is-high-contrast .dm-svg .dm-ink{stroke:#fff!important}"
+    ].join("");
+    var tag = document.createElement("style");
+    tag.id = "dm-styles";
+    tag.textContent = css;
+    document.head.appendChild(tag);
   })();
 
-  // ─── Gráficos SVG (usan currentColor: funcionan en alto contraste) ────────
-  function rectaSvg(max, step, marker) {
-    var x0 = 30, x1 = 490, y = 58;
-    function X(v) { return x0 + (x1 - x0) * v / max; }
-    var s = '<svg viewBox="0 0 520 110" width="100%" style="max-width:520px;color:var(--g-text)" aria-hidden="true">';
-    s += '<line x1="' + x0 + '" y1="' + y + '" x2="' + x1 + '" y2="' + y + '" stroke="currentColor" stroke-width="3"/>';
-    for (var v = 0; v <= max; v += step) {
-      var anchor = (v === 0 || v === max || v === max / 2);
-      var h = anchor ? 14 : 8;
-      s += '<line x1="' + X(v).toFixed(1) + '" y1="' + (y - h) + '" x2="' + X(v).toFixed(1) + '" y2="' + (y + h) + '" stroke="currentColor" stroke-width="' + (anchor ? 3 : 2) + '"/>';
-      if (anchor) {
-        s += '<text x="' + X(v).toFixed(1) + '" y="' + (y + 36) + '" text-anchor="middle" font-size="17" font-weight="700" fill="currentColor">' + v + "</text>";
-      }
+  // ─── Dibujos SVG ─────────────────────────────────────────────────────────
+  var COIN = { 50: ["#d9dee8", "#9aa3b5"], 100: ["#e6c97a", "#a8862e"], 200: ["#d9dee8", "#8a93a6"], 500: ["#efd28a", "#9c7a22"], 1000: ["#e8c770", "#8f6d17"] };
+  var BILL = { 2000: "#dfe8fb", 5000: "#ebe1f7", 10000: "#fde3d6", 20000: "#fff1c4", 50000: "#f8dce8", 100000: "#dcf2e5" };
+
+  function coinSvg(v) {
+    var c = COIN[v] || COIN[100];
+    return _t('<svg class="dm-svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="moneda de ') + v + ' pesos">' +
+      '<circle class="dm-fill" cx="32" cy="32" r="29" fill="' + c[0] + '" stroke="' + c[1] + '" stroke-width="3"/>' +
+      '<circle cx="32" cy="32" r="22" fill="none" stroke="' + c[1] + '" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>' +
+      '<text x="32" y="37" text-anchor="middle" font-size="' + (v >= 1000 ? 13 : 15) + '" fill="#2b2f3a">' + cop(v) + "</text></svg>";
+  }
+  function billSvg(v) {
+    var f = BILL[v] || BILL[2000];
+    return _t('<svg class="dm-svg" width="116" height="60" viewBox="0 0 116 60" role="img" aria-label="billete de ') + miles(v).replace(/\./g, "") + ' pesos">' +
+      '<rect class="dm-fill" x="1.5" y="1.5" width="113" height="57" rx="8" fill="' + f + '" stroke="#7d869a" stroke-width="1.5"/>' +
+      '<rect x="8" y="8" width="100" height="44" rx="5" fill="none" stroke="#7d869a" stroke-width="1" opacity=".45"/>' +
+      '<circle cx="24" cy="30" r="10" fill="none" stroke="#7d869a" stroke-width="1" opacity=".5"/>' +
+      '<text x="70" y="36" text-anchor="middle" font-size="16" fill="#1d2233">' + cop(v) + "</text></svg>";
+  }
+  function moneySvg(v) { return v >= 2000 ? billSvg(v) : coinSvg(v); }
+  function moneyRow(values) { return '<div class="dm-money">' + values.map(moneySvg).join("") + "</div>"; }
+
+  function clockSvg(h, m) {
+    var ticks = "";
+    for (var i = 0; i < 12; i++) {
+      var a = i * Math.PI / 6;
+      ticks += '<line class="dm-ink" x1="' + (60 + 46 * Math.sin(a)) + '" y1="' + (60 - 46 * Math.cos(a)) + '" x2="' + (60 + 52 * Math.sin(a)) + '" y2="' + (60 - 52 * Math.cos(a)) + '" stroke="#10204a" stroke-width="' + (i % 3 === 0 ? 3 : 1.5) + '"/>';
     }
-    var mx = X(marker);
-    s += '<path d="M' + mx.toFixed(1) + " " + (y - 6) + " l-9 -20 h18 z\" fill=\"var(--g-accent)\" stroke=\"currentColor\" stroke-width=\"2\"/>";
-    return s + "</svg>";
+    var nums = "";
+    [12, 3, 6, 9].forEach(function (n, k) {
+      var a = k * Math.PI / 2;
+      nums += '<text x="' + (60 + 37 * Math.sin(a)) + '" y="' + (65 - 37 * Math.cos(a)) + '" text-anchor="middle" font-size="12" fill="#10204a">' + n + "</text>";
+    });
+    var am = m * Math.PI / 30, ah = ((h % 12) + m / 60) * Math.PI / 6;
+    return '<svg class="dm-svg" width="140" height="140" viewBox="0 0 120 120" role="img" aria-label="reloj">' +
+      '<circle class="dm-fill" cx="60" cy="60" r="56" fill="#fff" stroke="#10204a" stroke-width="3"/>' + ticks + nums +
+      '<line class="dm-ink" x1="60" y1="60" x2="' + (60 + 26 * Math.sin(ah)) + '" y2="' + (60 - 26 * Math.cos(ah)) + '" stroke="#10204a" stroke-width="5" stroke-linecap="round"/>' +
+      '<line class="dm-ink" x1="60" y1="60" x2="' + (60 + 40 * Math.sin(am)) + '" y2="' + (60 - 40 * Math.cos(am)) + '" stroke="#c9a24a" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle cx="60" cy="60" r="4" fill="#10204a"/></svg>';
   }
 
-  function relojSvg(h, m) {
-    var cx = 100, cy = 100, s = '<svg viewBox="0 0 200 200" width="190" height="190" style="color:var(--g-text)" aria-hidden="true">';
-    s += '<circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="4"/>';
-    var i, a;
-    for (i = 0; i < 60; i++) {
-      a = i * 6 * Math.PI / 180;
-      var len = i % 5 === 0 ? 8 : 4;
-      s += '<line x1="' + (cx + 92 * Math.sin(a)).toFixed(1) + '" y1="' + (cy - 92 * Math.cos(a)).toFixed(1) +
-        '" x2="' + (cx + (92 - len) * Math.sin(a)).toFixed(1) + '" y2="' + (cy - (92 - len) * Math.cos(a)).toFixed(1) +
-        '" stroke="currentColor" stroke-width="' + (i % 5 === 0 ? 2.5 : 1) + '"/>';
+  function fractionSvg(parts, filled) {
+    var w = 280, cell = w / parts, s = "";
+    for (var i = 0; i < parts; i++) {
+      s += '<rect class="dm-fill" x="' + (i * cell + 1) + '" y="1" width="' + (cell - 2) + '" height="46" rx="4" fill="' + (i < filled ? "#10204a" : "#fff") + '" stroke="#10204a" stroke-width="2"/>';
     }
-    for (i = 1; i <= 12; i++) {
-      a = i * 30 * Math.PI / 180;
-      s += '<text x="' + (cx + 70 * Math.sin(a)).toFixed(1) + '" y="' + (cy - 70 * Math.cos(a) + 6).toFixed(1) +
-        '" text-anchor="middle" font-size="18" font-weight="700" fill="currentColor">' + i + "</text>";
-    }
-    function hand(deg, len, w) {
-      var r = deg * Math.PI / 180;
-      return '<line x1="100" y1="100" x2="' + (cx + len * Math.sin(r)).toFixed(1) + '" y2="' + (cy - len * Math.cos(r)).toFixed(1) +
-        '" stroke="currentColor" stroke-width="' + w + '" stroke-linecap="round"/>';
-    }
-    s += hand(((h % 12) + m / 60) * 30, 42, 7);
-    s += hand(m * 6, 66, 4);
-    s += '<circle cx="100" cy="100" r="5" fill="currentColor"/>';
-    return s + "</svg>";
+    return '<svg class="dm-svg" width="' + (w + 2) + '" height="48" viewBox="0 0 ' + (w + 2) + _t(' 48" role="img" aria-label="barra dividida en ') + parts + _t(' partes, ') + filled + _t(' pintadas">') + s + "</svg>";
   }
 
-  function barraSvg(n, k) {
-    var W = 300, H = 56, w = W / n;
-    var s = '<svg viewBox="0 0 ' + (W + 4) + " " + (H + 4) + '" width="300" style="max-width:100%;color:var(--g-text)" aria-hidden="true">';
-    for (var i = 0; i < n; i++) {
-      s += '<rect x="' + (2 + i * w).toFixed(1) + '" y="2" width="' + w.toFixed(1) + '" height="' + H +
-        '" fill="' + (i < k ? "currentColor" : "none") + '" stroke="currentColor" stroke-width="3"/>';
-    }
-    return s + "</svg>";
+  function blocksSvg(c, d, u) {
+    var x = 0, s = "";
+    for (var i = 0; i < c; i++) { s += '<rect class="dm-fill" x="' + x + '" y="0" width="56" height="56" fill="#f8e9c6" stroke="#10204a" stroke-width="2"/>'; x += 64; }
+    for (i = 0; i < d; i++) { s += '<rect class="dm-fill" x="' + x + '" y="0" width="12" height="56" fill="#f8e9c6" stroke="#10204a" stroke-width="2"/>'; x += 18; }
+    for (i = 0; i < u; i++) { s += '<rect class="dm-fill" x="' + x + '" y="44" width="12" height="12" fill="#f8e9c6" stroke="#10204a" stroke-width="2"/>'; x += 18; }
+    return '<svg class="dm-svg" width="' + Math.max(x, 20) + '" height="58" viewBox="0 -1 ' + Math.max(x, 20) + ' 58" role="img" aria-label="' + c + _t(' centenas, ') + d + _t(' decenas y ') + u + _t(' unidades">') + s + "</svg>";
   }
 
-  // ─── Mecánicas (Stage 1 · Base) ────────────────────────────────────────────
+  function numberLineSvg(min, max, step, target) {
+    var w = 520, pad = 20, span = max - min, s = "";
+    var X = function (v) { return pad + (v - min) / span * (w - 2 * pad); };
+    s += '<line class="dm-ink" x1="' + pad + '" y1="40" x2="' + (w - pad) + '" y2="40" stroke="#10204a" stroke-width="3"/>';
+    for (var v = min; v <= max; v += step) {
+      var label = (v === min || v === max || (v - min) % (step * 2) === 0);
+      s += '<line class="dm-ink" x1="' + X(v) + '" y1="32" x2="' + X(v) + '" y2="48" stroke="#10204a" stroke-width="2"/>';
+      if (label) s += '<text x="' + X(v) + '" y="68" text-anchor="middle" font-size="12" fill="#4b5568">' + miles(v) + "</text>";
+    }
+    s += '<path d="M' + (X(target) - 9) + ' 6 L' + (X(target) + 9) + ' 6 L' + X(target) + ' 26 Z" fill="#c9a24a"/>';
+    return '<svg class="dm-svg" width="' + w + '" height="76" viewBox="0 0 ' + w + _t(' 76" role="img" aria-label="recta numérica de ') + min + _t(' a ') + max + _t(' con una flecha">') + s + "</svg>";
+  }
 
-  /** Subitización y conteo selectivo: cuántas figuras de un tipo, sin contar una a una. */
-  function retoSubitizar(p) {
-    var formas = shuffle(FORMAS).slice(0, p.kinds || 1);
-    var meta = formas[0], n = rnd(p.min, p.max), items = [], i;
-    for (i = 0; i < n; i++) items.push(meta.i);
-    if (formas.length > 1) {
-      var extra = rnd(p.min, p.max), otras = formas.slice(1);
-      for (i = 0; i < extra; i++) items.push(pick(otras).i);
+  var FIGURAS = [
+    { s: _t("círculos"), d: '<circle cx="14" cy="14" r="11"/>' },
+    { s: _t("cuadrados"), d: '<rect x="3" y="3" width="22" height="22" rx="3"/>' },
+    { s: _t("triángulos"), d: '<path d="M14 2 L26 25 L2 25 Z"/>' },
+    { s: _t("estrellas"), d: '<path d="M14 1.5l3.6 7.6 8.3 1-6.1 5.7 1.6 8.2L14 20l-7.4 4 1.6-8.2L2.1 10.1l8.3-1z"/>' }
+  ];
+  function shapeSvg(f) { return '<svg class="dm-svg" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true" fill="#10204a" stroke="none">' + f.d + "</svg>"; }
+  function shapeGroup(items) { return '<div class="game-group">' + items.map(shapeSvg).join("") + "</div>"; }
+
+  function receipt(rows) {
+    return '<div class="dm-receipt">' + rows.map(function (r) { return "<p><span>" + r[0] + "</span><strong>" + r[1] + "</strong></p>"; }).join("") + "</div>";
+  }
+
+  // ─── Formatos de respuesta ───────────────────────────────────────────────
+  function num(v) { return { label: miles(v), aria: String(v) }; }
+  function money(v) { return { label: cop(v), aria: U.copAria(v) }; }
+  function input(answer, extra) {
+    var r = { type: "input", answer: answer, maxLength: String(answer).length + 2 };
+    Object.keys(extra || {}).forEach(function (k) { r[k] = extra[k]; });
+    return r;
+  }
+  function moneyInput(answer, extra) {
+    var r = input(answer, extra);
+    r.prefix = "$";
+    r.answerLabel = cop(answer);
+    return r;
+  }
+  function merge(a, b) { Object.keys(b).forEach(function (k) { a[k] = b[k]; }); return a; }
+
+  /** Descompone un valor en billetes y monedas colombianas, de mayor a menor. */
+  function breakDown(value, allowed) {
+    var out = [];
+    allowed.slice().sort(function (a, b) { return b - a; }).forEach(function (d) {
+      while (value >= d) { out.push(d); value -= d; }
+    });
+    return out;
+  }
+
+  // Productos y precios de referencia en pesos (redondeados a 50 o 100).
+  var PRODUCTOS = [
+    { n: _t("cuaderno"), p: [3500, 6500] }, { n: _t("lapicero"), p: [1200, 2500] },
+    { n: _t("pasaje de bus"), p: [2800, 3400] }, { n: _t("empanada"), p: [2000, 3500] },
+    { n: _t("jugo"), p: [3000, 5500] }, { n: _t("almuerzo"), p: [14000, 22000] },
+    { n: _t("recarga de datos"), p: [5000, 20000] }, { n: _t("camiseta"), p: [25000, 48000] },
+    { n: _t("audífonos"), p: [30000, 85000] }, { n: _t("libro"), p: [28000, 60000] }
+  ];
+  function price(prod, round) { round = round || 100; return Math.round(rnd(prod.p[0], prod.p[1]) / round) * round; }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // NIVEL 1 · Sentido numérico
+  // ═════════════════════════════════════════════════════════════════════════
+
+  function contarVistazo(p, s) {
+    var f = pick(FIGURAS), n = rnd(grow(3, 8, s), grow(5, 12, s));
+    var items = [];
+    for (var i = 0; i < n; i++) items.push(f);
+    if (s >= 2) {
+      var otra = pick(FIGURAS.filter(function (x) { return x !== f; }));
+      for (i = 0; i < grow(1, 6, s); i++) items.push(otra);
     }
     items = shuffle(items);
-    var html = items.map(function (ic) { return '<span class="game-token">' + ic + "</span>"; }).join("");
-    var prompt = "¿Cuántos " + meta.s + " " + meta.i + " hay?";
+    var prompt = _t("¿Cuántos ") + f.s + _t(" hay?");
+    var r = { skill: "subitizacion", prompt: prompt, visual: shapeGroup(items),
+      hint: _t("Agrúpalos de a dos o de a tres en vez de contarlos uno por uno."),
+      explain: _t("Hay ") + n + " " + f.s + "." };
+    return s < 3 ? merge(r, { options: U.choices(n, [n - 1, n + 1, n + 2, n - 2], 4, num, 1), answer: n })
+                 : merge(r, input(n));
+  }
+
+  function dondeHayMas(p, s) {
+    var fa = pick(FIGURAS), fb = pick(FIGURAS.filter(function (x) { return x !== fa; }));
+    var a = rnd(grow(3, 8, s), grow(6, 14, s));
+    var diff = [0, 1, 2, 3][rnd(0, s >= 3 ? 1 : 3)];
+    var b = Math.max(1, a + (Math.random() < 0.5 ? -diff : diff));
+    var ia = [], ib = [], i;
+    for (i = 0; i < a; i++) ia.push(fa);
+    for (i = 0; i < b; i++) ib.push(fb);
+    var ans = a > b ? _t("MÁS") : a < b ? _t("MENOS") : _t("IGUAL");
     return {
-      skill: "subitizacion", prompt: prompt, speech: prompt,
-      visual: '<div class="game-group">' + html + "</div>",
-      options: numChoices(n, [n + 1, n - 1, n + 2, n - 2], 4, 1, p.max + 12),
-      answer: n, answerLabel: n,
-      hint: "Agrúpalos de a dos o de a tres en vez de contar uno por uno.",
-      explain: "Hay " + n + " " + meta.s + "."
+      skill: "comparacion_magnitud",
+      prompt: _t("¿Hay más, menos o igual cantidad de ") + fa.s + _t(" (izquierda) que de ") + fb.s + _t(" (derecha)?"),
+      visual: '<div class="dm-row">' + shapeGroup(ia) + shapeGroup(ib) + "</div>",
+      options: [_t("MÁS"), _t("IGUAL"), _t("MENOS")].map(function (v) { return { label: v, value: v }; }),
+      answer: ans,
+      hint: _t("Empareja de a uno: el grupo al que le sobren figuras tiene más."),
+      explain: _t("Hay ") + a + " " + fa.s + " y " + b + " " + fb.s + "."
     };
   }
 
-  /** Comparación de magnitudes entre dos grupos de figuras distintas. */
-  function retoComparar(p) {
-    var par = shuffle(FORMAS).slice(0, 2), A = par[0], B = par[1];
-    var a = rnd(p.min, p.max), b = rnd(p.min, p.max);
-    if (Math.random() < 0.2) b = a; else if (b === a) b = a < p.max ? a + 1 : a - 1;
-    var resp = a > b ? "mas" : (a < b ? "menos" : "igual");
-    var prompt = "¿Hay MÁS, MENOS o IGUAL cantidad de " + A.s + " " + A.i + " (izquierda) que de " + B.s + " " + B.i + " (derecha)?";
+  function ordenarNumeros(p, s) {
+    var n = p.n ? p.n + (s >= 3 ? 1 : 0) : grow(3, 5, s), max = grow(p.min, p.max, s), set = [];
+    while (set.length < n) {
+      var v = rnd(1, max);
+      if (p.close && set.length) v = Math.min(max, Math.max(1, set[0] + rnd(-max / 8, max / 8) | 0));
+      if (set.indexOf(v) === -1) set.push(v);
+    }
+    var desc = s >= 3 && p.desc;
+    var sorted = set.slice().sort(function (a, b) { return desc ? b - a : a - b; });
     return {
-      skill: "comparacion_magnitud", prompt: prompt,
-      speech: "¿Hay más, menos o igual cantidad de " + A.s + ", a la izquierda, que de " + B.s + ", a la derecha?",
-      visual: '<div class="game-group">' + tokens(a, A.i) + '</div><div class="game-group">' + tokens(b, B.i) + "</div>",
-      options: [
-        { label: "MÁS", value: "mas", aria: "Más" },
-        { label: "IGUAL", value: "igual", aria: "Igual" },
-        { label: "MENOS", value: "menos", aria: "Menos" }
-      ],
-      answer: resp, answerLabel: resp === "mas" ? "MÁS" : (resp === "menos" ? "MENOS" : "IGUAL"),
-      hint: "Empareja de a uno: el grupo al que le sobren figuras tiene más.",
-      explain: "Hay " + a + " " + A.s + " y " + b + " " + B.s + "."
+      type: "order", skill: "orden_numeros",
+      prompt: desc ? _t("Ordena de mayor a menor.") : _t("Ordena de menor a mayor."),
+      items: shuffle(set).map(function (v) { return { id: "n" + v, label: miles(v) }; }),
+      answer: sorted.map(function (v) { return "n" + v; }),
+      answerLabel: sorted.map(miles).join(" → "),
+      hint: _t("Mira primero cuántas cifras tiene cada número; luego compara de izquierda a derecha."),
+      explain: _t("El orden es ") + sorted.map(miles).join(", ") + "."
     };
   }
 
-  /** Comparar números cuyos dígitos son los mismos en distinto orden. */
-  function retoCompararNum(p) {
-    var nums;
-    if (p.digits === 2) {
-      var t = rnd(1, 9), u = rnd(1, 9);
-      while (u === t) u = rnd(1, 9);
-      var c = rnd(10, 99), a = t * 10 + u, b = u * 10 + t;
-      while (c === a || c === b) c = rnd(10, 99);
-      nums = [a, b, c];
+  function unidadesDecenas(p, s) {
+    var hundreds = p.hundreds && s >= 1;
+    var c = hundreds ? rnd(1, 9) : 0, d = rnd(s >= 2 ? 1 : 1, 9), u = rnd(0, 9);
+    var n = c * 100 + d * 10 + u;
+    var r = {
+      skill: "valor_posicional_bloques",
+      prompt: _t("¿Qué número forman estos bloques?") + (s === 0 ? _t(" Cada barra vale 10 y cada cuadrito vale 1.") : ""),
+      visual: blocksSvg(c, d, u),
+      hint: hundreds ? _t("Cada cuadro grande vale 100, cada barra 10 y cada cuadrito 1.") : _t("Cuenta las barras de 10 en 10 y suma los cuadritos."),
+      explain: (c ? c + _t(" centenas, ") : "") + d + _t(" decenas y ") + u + _t(" unidades forman ") + n + "."
+    };
+    var swapped = c ? u * 100 + d * 10 + c : u * 10 + d;
+    return s < 2 ? merge(r, { options: U.choices(n, [swapped, n + 10, n - 10, n + 1], 4, num, 0), answer: n })
+                 : merge(r, input(n));
+  }
+
+  /** Retos 1-2: leer la flecha. Retos 3-5: ubicar el número moviendo el control. */
+  function rectaUbicar(p, s) {
+    if (s <= 1) return rectaLeer({ min: p.max, max: p.max, step: p.lineStep || p.step * 2 }, s);
+    var max = grow(p.max, p.max2 || p.max, s), step = s >= 3 && p.fine ? p.fine : p.step;
+    var target = rnd(1, max / step - 1) * step;
+    return {
+      type: "slider", skill: "recta_numerica",
+      prompt: _t("Mueve el control hasta el ") + miles(target) + ".",
+      min: 0, max: max, step: step, answer: target, start: 0,
+      tolerance: 0,
+      hint: _t("Fíjate en la mitad de la recta: ¿el número está antes o después?"),
+      explain: _t("El ") + miles(target) + _t(" está a ") + Math.round(target / max * 100) + _t(" % del camino entre 0 y ") + miles(max) + "."
+    };
+  }
+
+  function rectaLeer(p, s) {
+    var max = grow(p.min, p.max, s), step = p.step;
+    var target = rnd(1, max / step - 1) * step;
+    return {
+      skill: "recta_numerica",
+      prompt: _t("¿Qué número señala la flecha?"),
+      visual: numberLineSvg(0, max, step, target),
+      options: U.choices(target, [target + step, target - step, target + 2 * step], 4, num, 0),
+      answer: target,
+      hint: _t("Cuenta los saltos desde la marca con número más cercana."),
+      explain: _t("Cada marca avanza ") + step + _t(". La flecha está en ") + miles(target) + "."
+    };
+  }
+
+  function operar(p, s) {
+    var op = p.op === "mix" ? pick(["+", "−"]) : p.op;
+    var max = grow(p.min, p.max, s), a, b, ans, prompt;
+    if (op === "+") {
+      a = rnd(Math.ceil(max / 5), max); b = rnd(Math.ceil(max / 6), max);
+      if (p.carry) { a = a - (a % 10) + rnd(5, 9); b = b - (b % 10) + rnd(5, 9); }
+      ans = a + b;
     } else {
-      var d = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 3);
-      var perms = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];
-      nums = shuffle(perms).slice(0, 3).map(function (q) { return d[q[0]] * 100 + d[q[1]] * 10 + d[q[2]]; });
+      a = rnd(Math.ceil(max / 2), max); b = rnd(Math.ceil(max / 8), a - 1);
+      if (p.carry) { a = a - (a % 10) + rnd(0, 4); b = b - (b % 10) + rnd(5, 9); if (b >= a) b = a - rnd(1, 5); }
+      ans = a - b;
+    }
+    var missing = p.missing && s >= 2;
+    if (missing) {
+      prompt = op === "+" ? miles(a) + " + ? = " + miles(ans) : miles(a) + " − ? = " + miles(ans);
+      var r = input(b);
+      return merge(r, {
+        skill: "aritmetica_falta", prompt: _t("¿Qué número falta?"),
+        visual: '<p class="game-equation">' + prompt.replace("?", '<span class="is-blank">?</span>') + "</p>",
+        speech: _t("¿Qué número falta? ") + prompt.replace("?", _t("cuánto")),
+        hint: op === "+" ? _t("Resta: el total menos el número que ya conoces.") : _t("Resta: el primer número menos el resultado."),
+        explain: _t("El número que falta es ") + miles(b) + "."
+      });
+    }
+    var withTokens = p.tokens && s <= 1 && a <= 20 && b <= 20;
+    return merge(input(ans), {
+      skill: op === "+" ? "aritmetica_suma" : "aritmetica_resta",
+      prompt: _t("Resuelve:"),
+      visual: (withTokens ? shapeGroup(new Array(a).fill(FIGURAS[0])) + (op === "+" ? shapeGroup(new Array(b).fill(FIGURAS[1])) : "") : "") +
+        '<p class="game-equation">' + miles(a) + " " + op + " " + miles(b) + ' = <span class="is-blank">?</span></p>',
+      speech: miles(a) + (op === "+" ? _t(" más ") : _t(" menos ")) + miles(b),
+      hint: p.carry ? (op === "+" ? _t("Suma primero las unidades; si pasan de 9, lleva una decena.") : _t("Si arriba hay menos unidades, pide prestada una decena.")) :
+        (op === "+" ? _t("Empieza por el número mayor y cuenta hacia adelante.") : _t("Cuenta hacia atrás desde el número mayor.")),
+      explain: miles(a) + " " + op + " " + miles(b) + " = " + miles(ans) + "."
+    });
+  }
+
+  function secuencia(p, s) {
+    var step = pick(p.steps), len = 5, kind = pick(p.kinds);
+    var start = rnd(p.start[0], p.start[1]), seq = [], v = start;
+    for (var i = 0; i < len; i++) {
+      seq.push(v);
+      if (kind === "suma") v += step;
+      else if (kind === "resta") v -= step;
+      else if (kind === "doble") v *= 2;
+      else if (kind === "alterna") v += (i % 2 === 0 ? step : -Math.ceil(step / 2));
+    }
+    if (kind === "resta" && seq[len - 1] < 0) return secuencia(p, s);
+    var hide = s >= 2 ? rnd(1, len - 1) : len - 1;
+    var ans = seq[hide];
+    var shown = seq.map(function (x, k) { return k === hide ? '<span class="is-blank">?</span>' : miles(x); }).join(", ");
+    var rule = kind === "suma" ? _t("suma ") + step : kind === "resta" ? _t("resta ") + step : kind === "doble" ? _t("se duplica") : _t("sube ") + step + _t(" y baja ") + Math.ceil(step / 2);
+    return merge(input(ans), {
+      skill: "patron_" + kind,
+      prompt: _t("¿Qué número falta en la secuencia?"),
+      visual: '<p class="game-equation">' + shown + "</p>",
+      speech: _t("¿Qué número falta? ") + seq.map(function (x, k) { return k === hide ? _t("cuánto") : x; }).join(", "),
+      hint: _t("Mira cuánto cambia de un número al siguiente."),
+      explain: _t("La regla es: ") + rule + _t(". Falta el ") + miles(ans) + "."
+    });
+  }
+
+  function contarDinero(p, s) {
+    var count = grow(p.n[0], p.n[1], s), vals = [];
+    for (var i = 0; i < count; i++) vals.push(pick(p.denoms));
+    vals.sort(function (a, b) { return b - a; });
+    var total = vals.reduce(function (x, y) { return x + y; }, 0);
+    return merge(moneyInput(total), {
+      skill: p.denoms.some(function (d) { return d >= 2000; }) ? "dinero_billetes" : "dinero_monedas",
+      prompt: _t("¿Cuánto dinero hay en total?"),
+      visual: moneyRow(vals),
+      speech: _t("¿Cuánto dinero hay? ") + vals.map(U.copAria).join(", "),
+      hint: _t("Empieza por los de mayor valor y ve sumando."),
+      explain: vals.map(cop).join(" + ") + " = " + cop(total) + "."
+    });
+  }
+
+  function parImpar(p, s) {
+    var n = grow(4, 6, s), set = [];
+    while (set.length < n) { var v = rnd(1, grow(p.min, p.max, s)); if (set.indexOf(v) === -1) set.push(v); }
+    var ans = {};
+    set.forEach(function (v) { ans["n" + v] = v % 2 === 0 ? "par" : "impar"; });
+    return {
+      type: "classify", skill: "par_impar",
+      prompt: _t("Clasifica cada número: ¿es par o impar?"),
+      bins: [{ id: "par", label: _t("Pares") }, { id: "impar", label: _t("Impares") }],
+      items: set.map(function (v) { return { id: "n" + v, label: miles(v) }; }),
+      answer: ans,
+      hint: _t("Solo mira la última cifra: si termina en 0, 2, 4, 6 u 8 es par."),
+      explain: _t("Pares: ") + set.filter(function (v) { return v % 2 === 0; }).map(miles).join(", ") + "."
+    };
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // NIVEL 2 · Valor posicional y operaciones
+  // ═════════════════════════════════════════════════════════════════════════
+
+  function compararNumeros(p, s) {
+    var digits = p.digits, n = 4, set = [];
+    var base = rnd(Math.pow(10, digits - 1), Math.pow(10, digits) - 1);
+    var low = Math.pow(10, digits - 1), high = Math.pow(10, digits) - 1;
+    if (s >= 3) {
+      var rev = parseInt(String(base).split("").reverse().join(""), 10);
+      set.push(base);
+      if (rev >= low && rev !== base) set.push(rev);
+    }
+    while (set.length < n) {
+      var v = s >= 2 ? Math.min(high, Math.max(low, base + rnd(-60, 60))) : rnd(low, high);
+      if (set.indexOf(v) === -1) set.push(v);
     }
     var mayor = Math.random() < 0.5;
-    var ord = nums.slice().sort(function (x, y) { return x - y; });
-    var ans = mayor ? ord[2] : ord[0];
-    var prompt = "¿Cuál de estos números es el " + (mayor ? "MAYOR" : "MENOR") + "?";
+    var ans = mayor ? Math.max.apply(null, set) : Math.min.apply(null, set);
     return {
-      skill: "comparacion_numeros", prompt: prompt, speech: prompt, visual: "",
-      options: shuffle(nums).map(function (v) { return { label: String(v), value: v, aria: "Número " + v }; }),
-      answer: ans, answerLabel: ans,
-      hint: p.digits === 2 ? "Compara primero las decenas; si empatan, las unidades." : "Compara de izquierda a derecha: primero las centenas.",
-      explain: "El " + (mayor ? "mayor" : "menor") + " es " + ans + "."
+      skill: "comparacion_numeros",
+      prompt: _t("¿Cuál es el número ") + (mayor ? _t("mayor") : _t("menor")) + "?",
+      options: shuffle(set).map(function (v) { return { label: miles(v), value: v, aria: String(v) }; }),
+      answer: ans,
+      hint: _t("Compara cifra por cifra empezando por la izquierda (centenas, luego decenas)."),
+      explain: _t("El ") + (mayor ? _t("mayor") : _t("menor")) + _t(" es ") + miles(ans) + "."
     };
   }
 
-  /** Valor posicional: bloques → número, y valor de un dígito. */
-  function retoPosicional(p) {
-    var modo = pick(p.modes), i;
-    if (modo === "digito") {
-      var nd = p.hundreds ? 3 : 2;
-      var dig = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, nd);
-      var num = dig.reduce(function (acc, d) { return acc * 10 + d; }, 0);
-      var pos = rnd(0, nd - 1), d = dig[pos], k = nd - 1 - pos, val = d * Math.pow(10, k);
-      var prompt = "En el número " + num + ", ¿qué valor tiene el dígito " + d + "?";
-      return {
-        skill: "valor_posicional", prompt: prompt, speech: prompt, visual: '<span class="game-equation">' + num + "</span>",
-        options: numChoices(val, [d, d * 10, d * 100, d * 1000], 4, 1, 9000),
-        answer: val, answerLabel: val,
-        hint: "De derecha a izquierda: unidades, decenas, centenas.",
-        explain: "El " + d + " está en el lugar de " + (k === 0 ? "las unidades" : (k === 1 ? "las decenas" : "las centenas")) + ": vale " + val + "."
-      };
-    }
-    var h = p.hundreds ? rnd(1, 3) : 0, t = rnd(p.hundreds ? 0 : 1, 9), u = rnd(0, 9);
-    var value = h * 100 + t * 10 + u;
-    var html = '<div class="dm-blocks">';
-    if (h) { html += '<div class="dm-col">'; for (i = 0; i < h; i++) html += '<span class="dm-hun"></span>'; html += "</div>"; }
-    if (t) { html += '<div class="dm-col">'; for (i = 0; i < t; i++) html += '<span class="dm-ten"></span>'; html += "</div>"; }
-    if (u) { html += '<div class="dm-col">'; for (i = 0; i < u; i++) html += '<span class="dm-uni"></span>'; html += "</div>"; }
-    html += "</div>";
-    var leyenda = (h ? "Cada cuadrado grande vale 100, " : "Cada ") + (h ? "cada barra vale 10 " : "barra vale 10 ") +
-      "y cada cuadrito vale 1. ¿Qué número forman los bloques?";
-    var swapped = h ? h * 100 + u * 10 + t : u * 10 + t;
+  function valorPosicional(p, s) {
+    var n = rnd(grow(100, 1000, s), grow(999, 9999, s));
+    var str = String(n), pos = rnd(0, str.length - 1), d = parseInt(str[pos], 10);
+    if (d === 0) return valorPosicional(p, s);
+    var place = Math.pow(10, str.length - 1 - pos), ans = d * place;
+    var names = { 1: _t("unidades"), 10: _t("decenas"), 100: _t("centenas"), 1000: _t("unidades de mil") };
+    var digitsHtml = str.split("").map(function (c, k) { return k === pos ? '<span class="is-blank" style="border:0;color:var(--gold-600)">' + c + "</span>" : c; }).join("");
+    var r = {
+      skill: "valor_posicional",
+      prompt: _t("¿Cuánto vale el ") + d + _t(" resaltado en ") + miles(n) + "?",
+      visual: '<p class="game-equation">' + digitsHtml + "</p>",
+      hint: _t("Fíjate en la posición: unidades, decenas, centenas, unidades de mil, de derecha a izquierda."),
+      explain: _t("Está en las ") + names[place] + _t(", así que vale ") + miles(ans) + "."
+    };
+    return s < 2 ? merge(r, { options: U.choices(ans, [d, d * 10, d * 100, d * 1000].filter(function (x) { return x !== ans; }), 4, num, 1), answer: ans })
+                 : merge(r, input(ans));
+  }
+
+  function gruposIguales(p, s) {
+    var g = rnd(2, grow(4, 9, s)), m = rnd(2, grow(5, 9, s)), ans = g * m;
+    var groups = "";
+    if (s <= 1) for (var i = 0; i < g; i++) groups += shapeGroup(new Array(m).fill(FIGURAS[i % 4]));
+    var contexto = pick([[_t("cajas"), _t("marcadores")], [_t("filas"), _t("sillas")], [_t("paquetes"), _t("galletas")], [_t("bolsas"), _t("naranjas")]]);
+    return merge(input(ans), {
+      skill: "multiplicacion_grupos",
+      prompt: _t("Hay ") + g + " " + contexto[0] + _t(" con ") + m + " " + contexto[1] + _t(" cada una. ¿Cuántos ") + contexto[1] + _t(" hay en total?"),
+      visual: groups ? '<div class="dm-row">' + groups + "</div>" : '<p class="game-equation">' + g + " × " + m + ' = <span class="is-blank">?</span></p>',
+      hint: _t("Es sumar ") + m + _t(" tantas veces como ") + contexto[0] + _t(" hay: ") + g + _t(" veces."),
+      explain: g + " × " + m + " = " + ans + "."
+    });
+  }
+
+  function repartir(p, s) {
+    var g = rnd(2, grow(4, 9, s)), each = rnd(2, grow(5, 12, s)), total = g * each;
+    var ctx = pick([[_t("personas"), _t("dulces")], [_t("equipos"), _t("jugadores")], [_t("mesas"), _t("platos")], [_t("grupos"), _t("hojas")]]);
+    return merge(input(each), {
+      skill: "division_reparto",
+      prompt: _t("Se reparten ") + total + " " + ctx[1] + _t(" en partes iguales entre ") + g + " " + ctx[0] + _t(". ¿Cuántos le tocan a cada uno?"),
+      visual: '<p class="game-equation">' + total + " ÷ " + g + ' = <span class="is-blank">?</span></p>',
+      hint: _t("Busca el número que multiplicado por ") + g + _t(" da ") + total + ".",
+      explain: total + " ÷ " + g + " = " + each + _t(", porque ") + g + " × " + each + " = " + total + "."
+    });
+  }
+
+  function horaTexto(h, m) { return h + ":" + String(m).padStart(2, "0"); }
+  function leerHora(p, s) {
+    var mins = s <= 1 ? [0, 30] : s <= 2 ? [0, 15, 30, 45] : p.fine ? [5, 10, 20, 25, 35, 40, 50, 55] : [0, 15, 30, 45];
+    var h = rnd(1, 12), m = pick(mins), ans = horaTexto(h, m);
+    var others = [horaTexto(h, (m + 30) % 60), horaTexto((h % 12) + 1, m), horaTexto(m / 5 || 12, h * 5 % 60), horaTexto(h === 1 ? 12 : h - 1, m)];
     return {
-      skill: "valor_posicional_bloques", prompt: leyenda, speech: leyenda, visual: html,
-      options: numChoices(value, [swapped, value + 10, value - 10, value + 1, value - 1, value + 100, value - 100], 4, 1, 999),
-      answer: value, answerLabel: value,
-      hint: "Cuenta cada tipo por separado y suma: primero los grandes, luego las barras, luego los cuadritos.",
-      explain: (h ? h + " de 100 + " : "") + t + " de 10 + " + u + " de 1 = " + value + "."
+      skill: "lectura_reloj",
+      prompt: _t("¿Qué hora marca el reloj?"),
+      visual: clockSvg(h, m),
+      options: U.textChoices(ans, others, 4),
+      answer: ans,
+      hint: _t("La manecilla corta (azul) marca la hora; la larga (dorada) marca los minutos: cada número son 5 minutos."),
+      explain: _t("La corta está en el ") + h + (m >= 30 ? _t(" (pasando hacia el siguiente)") : "") + _t(" y la larga en ") + m + _t(" minutos: ") + ans + "."
     };
   }
 
-  /** Recta numérica: leer la posición de una flecha. */
-  function retoRecta(p) {
-    var marker, tries = 0;
-    do { marker = rnd(1, p.max / p.step - 1) * p.step; tries++; } while (marker === p.max / 2 && tries < 30);
-    var prompt = "¿Qué número señala la flecha en la recta?";
+  function fracciones(p, s) {
+    var parts = pick(p.parts.slice(0, grow(2, p.parts.length, s))), filled = rnd(1, parts - 1);
+    var ans = filled + "/" + parts;
+    var others = [(parts - filled) + "/" + parts, parts + "/" + filled, filled + "/" + (parts + 1), (filled + 1) + "/" + parts].filter(function (x) { return x !== ans; });
     return {
-      skill: "recta_numerica", prompt: prompt, speech: prompt,
-      visual: rectaSvg(p.max, p.step, marker),
-      options: numChoices(marker, [marker + p.step, marker - p.step, marker + 2 * p.step, marker - 2 * p.step], 4, 0, p.max),
-      answer: marker, answerLabel: marker,
-      hint: "Mira los números marcados y cuenta cuántas rayitas hay hasta la flecha.",
-      explain: "La flecha señala el " + marker + "."
+      skill: "fracciones",
+      prompt: _t("¿Qué fracción de la barra está pintada?"),
+      visual: fractionSvg(parts, filled),
+      options: U.textChoices(ans, others, 4),
+      answer: ans,
+      hint: _t("Abajo va el total de partes; arriba, cuántas están pintadas."),
+      explain: _t("Hay ") + filled + _t(" partes pintadas de ") + parts + ": " + ans + "."
     };
   }
 
-  /** Aritmética: suma, resta y número faltante, con llevada. */
-  function retoOperar(p) {
-    var op = pick(p.ops), a, b, c, res, ans, eq, cands, explain, tries = 0;
-    if (op === "suma") {
-      do { a = rnd(5, p.max - 5); b = rnd(3, p.max - a); tries++; } while (p.carry && (a % 10) + (b % 10) < 10 && tries < 60);
-      res = a + b; ans = res; eq = a + " + " + b + " = ?";
-      cands = [res + 1, res - 1, res + 10, res - 10, Math.abs(a - b)];
-      explain = a + " más " + b + " es " + res + ".";
-    } else if (op === "resta") {
-      do { a = rnd(10, p.max); b = rnd(3, a - 1); tries++; } while (p.carry && (a % 10) >= (b % 10) && tries < 60);
-      res = a - b; ans = res; eq = a + " − " + b + " = ?";
-      cands = [res + 1, res - 1, res + 10, res - 10, a + b];
-      explain = a + " menos " + b + " es " + res + ".";
+  /** Muestra una operación resuelta paso a paso con un paso equivocado. */
+  function encontrarError(p, s) {
+    var a = rnd(grow(25, 300, s), grow(60, 900, s)), b = rnd(grow(15, 150, s), grow(40, 500, s));
+    if (p.money) { a = Math.round(a * 100 / 50) * 50 + 10000; b = Math.round(b * 100 / 50) * 50 + 2000; }
+    var fmt = p.money ? cop : miles;
+    var steps, wrongIdx, correct;
+    if (!p.money) {
+      a = a - (a % 10) + rnd(5, 9); b = b - (b % 10) + rnd(5, 9);
+      var ua = a % 10, ub = b % 10, u = ua + ub;
+      var da = Math.floor(a / 10) % 10, db = Math.floor(b / 10) % 10, dSum = da + db + 1;
+      correct = a + b;
+      wrongIdx = rnd(0, 2);
+      steps = [
+        _t("Unidades: ") + ua + " + " + ub + " = " + (wrongIdx === 0 ? u - 1 : u) + _t(", escribo ") + ((wrongIdx === 0 ? u - 1 : u) % 10) + _t(" y llevo 1"),
+        _t("Decenas: ") + da + " + " + db + " + 1 = " + (wrongIdx === 1 ? dSum - 1 : dSum),
+        _t("Resultado: ") + miles(a) + " + " + miles(b) + " = " + miles(wrongIdx === 2 ? correct - 10 : correct)
+      ];
     } else {
-      var tipo = rnd(1, 3);
-      if (tipo === 1) {
-        a = rnd(3, p.max - 6); b = rnd(3, p.max - a); c = a + b; ans = b; eq = a + " + ? = " + c;
-        cands = [b + 1, b - 1, c, a, c + a]; explain = "Faltan " + b + ": " + a + " + " + b + " = " + c + ".";
-      } else if (tipo === 2) {
-        a = rnd(10, p.max); b = rnd(3, a - 2); c = a - b; ans = b; eq = a + " − ? = " + c;
-        cands = [b + 1, b - 1, c, a + c, a - 1]; explain = "Se quitaron " + b + ": " + a + " − " + b + " = " + c + ".";
-      } else {
-        b = rnd(3, 20); c = rnd(3, p.max - b); a = b + c; ans = a; eq = "? − " + b + " = " + c;
-        cands = [c, b, a + 1, a - 1, a + 10]; explain = "Había " + a + ": " + a + " − " + b + " = " + c + ".";
-      }
+      var desc = pick([10, 20, 25]), conDesc = a - a * desc / 100, pago = Math.ceil((conDesc + b) / 10000) * 10000 + 10000;
+      correct = pago - (conDesc + b);
+      wrongIdx = rnd(0, 2);
+      steps = [
+        _t("Descuento del ") + desc + _t(" % sobre ") + fmt(a) + ": " + fmt(wrongIdx === 0 ? a * desc / 10 : a * desc / 100),
+        _t("Total a pagar: ") + fmt(conDesc) + " + " + fmt(b) + " = " + fmt(wrongIdx === 1 ? conDesc + b + 1000 : conDesc + b),
+        _t("Vueltas de ") + fmt(pago) + ": " + fmt(wrongIdx === 2 ? correct + 1000 : correct)
+      ];
     }
+    var opts = steps.map(function (t, i) { return { label: _t("Paso ") + (i + 1) + ": " + t, value: i, aria: _t("Paso ") + (i + 1) + ". " + t }; });
     return {
-      skill: "aritmetica_" + op, prompt: "Calcula el valor que falta:", speech: "Calcula. " + eq.replace("?", "cuánto").replace("−", "menos").replace("+", "más"),
-      visual: '<span class="game-equation">' + eq.replace("?", '<span class="is-blank">?</span>') + "</span>",
-      options: numChoices(ans, cands, 4, 0, p.max + 25),
-      answer: ans, answerLabel: ans,
-      hint: op === "suma" ? "Suma primero las unidades. Si pasan de 9, lleva una decena." :
-            (op === "resta" ? "Si las unidades no alcanzan, toma una decena del número de la izquierda." :
-            "Piensa en la operación contraria para encontrar el número que falta."),
-      explain: explain
+      skill: p.money ? "problema_tres_pasos" : "revision_suma",
+      layout: "list",
+      prompt: _t("Uno de estos pasos tiene un error. ¿Cuál?"),
+      visual: "",
+      options: opts,
+      answer: wrongIdx,
+      hint: _t("Revisa cada paso por separado y haz tú la cuenta."),
+      explain: _t("El paso ") + (wrongIdx + 1) + _t(" está mal. ") + (p.money ? _t("Las vueltas correctas son ") + cop(correct) + "." : _t("El resultado correcto es ") + miles(correct) + ".")
     };
   }
 
-  /** Sumar monedas y billetes. */
-  function retoMonedas(p) {
-    var n = rnd(p.n[0], p.n[1]), vals = [], sum = 0, html = "", i;
-    for (i = 0; i < n; i++) { var v = pick(p.coins); vals.push(v); sum += v; }
-    vals.sort(function (x, y) { return y - x; });
-    vals.forEach(function (v) { html += '<span class="dm-coin' + (v >= 50 ? " dm-bill" : "") + '">' + v + "</span>"; });
-    var prompt = "¿Cuánto dinero hay en total sumando estas monedas y billetes?";
+  // ═════════════════════════════════════════════════════════════════════════
+  // NIVEL 3 · Dinero y tiempo
+  // ═════════════════════════════════════════════════════════════════════════
+
+  function cuantoFalta(p, s) {
+    var prod = PRODUCTOS[rnd(grow(0, 4, s), grow(4, 9, s))], cost = price(prod, 100);
+    var have = Math.max(500, Math.round((cost - rnd(cost * 0.15, cost * 0.6)) / 500) * 500);
+    var vals = breakDown(have, [50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100]);
+    return merge(moneyInput(cost - have), {
+      skill: "dinero_faltante",
+      prompt: _t("El ") + prod.n + _t(" cuesta ") + cop(cost) + _t(" y tienes esto. ¿Cuánto te falta?"),
+      visual: moneyRow(vals),
+      speech: _t("El ") + prod.n + _t(" cuesta ") + U.copAria(cost) + _t(". Tienes ") + U.copAria(have) + _t(". ¿Cuánto te falta?"),
+      hint: _t("Primero cuenta cuánto tienes; luego resta: precio menos lo que tienes."),
+      explain: _t("Tienes ") + cop(have) + ". " + cop(cost) + " − " + cop(have) + " = " + cop(cost - have) + "."
+    });
+  }
+
+  function vueltas(p, s) {
+    var prod = PRODUCTOS[rnd(grow(0, 3, s), grow(5, 9, s))], cost = price(prod, s >= 3 ? 50 : 100);
+    var bills = [2000, 5000, 10000, 20000, 50000, 100000].filter(function (b) { return b > cost; });
+    var pay = bills[Math.min(bills.length - 1, s >= 2 ? 1 : 0)] || 100000;
+    var ans = pay - cost;
+    return merge(moneyInput(ans), {
+      skill: "dinero_cambio",
+      prompt: _t("Compras un ") + prod.n + _t(" de ") + cop(cost) + _t(" y pagas con este billete. ¿Cuánto te devuelven?"),
+      visual: billSvg(pay) + receipt([[_t("Total"), cop(cost)], [_t("Pagas con"), cop(pay)], [_t("Vueltas"), "?"]]),
+      speech: _t("Compras un ") + prod.n + _t(" de ") + U.copAria(cost) + _t(" y pagas con ") + U.copAria(pay) + _t(". ¿Cuánto te devuelven?"),
+      hint: _t("Cuenta desde el precio hasta el billete: primero hasta el siguiente mil, luego de mil en mil."),
+      explain: cop(pay) + " − " + cop(cost) + " = " + cop(ans) + "."
+    });
+  }
+
+  function compraVarios(p, s) {
+    var n = grow(2, 4, s), items = shuffle(PRODUCTOS.slice(0, 7)).slice(0, n), rows = [], total = 0;
+    items.forEach(function (it) {
+      var q = s >= 2 ? rnd(1, 3) : 1, pr = price(it, 100);
+      total += q * pr;
+      rows.push([(q > 1 ? q + " × " : "") + it.n, cop(pr) + (q > 1 ? " c/u" : "")]);
+    });
+    rows.push([_t("Total"), "?"]);
+    return merge(moneyInput(total), {
+      skill: "dinero_suma",
+      prompt: _t("¿Cuánto cuesta toda la compra?"),
+      visual: receipt(rows),
+      hint: _t("Si un producto se compra varias veces, multiplica primero; luego suma todo."),
+      explain: _t("El total es ") + cop(total) + "."
+    });
+  }
+
+  function descuento(p, s) {
+    var pct = pick(s <= 1 ? [10, 50] : s <= 3 ? [10, 20, 25, 50] : [15, 20, 25, 30, 40]);
+    var prod = PRODUCTOS[rnd(5, 9)], pr = Math.round(price(prod, 1000) / 1000) * 1000;
+    var desc = pr * pct / 100, ans = pr - desc;
+    var askDiscount = s <= 1;
+    var r = {
+      skill: "descuento",
+      prompt: askDiscount ? _t("Un ") + prod.n + _t(" de ") + cop(pr) + _t(" tiene ") + pct + _t(" % de descuento. ¿Cuánto te descuentan?") :
+        _t("Un ") + prod.n + _t(" de ") + cop(pr) + _t(" tiene ") + pct + _t(" % de descuento. ¿Cuánto pagas?"),
+      visual: receipt([[_t("Precio"), cop(pr)], [_t("Descuento"), pct + " %"], [askDiscount ? _t("Descuento en pesos") : _t("Pagas"), "?"]]),
+      hint: pct === 50 ? _t("El 50 % es la mitad.") : _t("Calcula el 10 % (quita un cero) y multiplícalo para llegar a ") + pct + " %.",
+      explain: _t("El ") + pct + _t(" % de ") + cop(pr) + _t(" es ") + cop(desc) + (askDiscount ? "." : _t(". Pagas ") + cop(pr) + " − " + cop(desc) + " = " + cop(ans) + ".")
+    };
+    return merge(r, moneyInput(askDiscount ? desc : ans));
+  }
+
+  function precioUnidad(p, s) {
+    var prod = pick([[_t("galletas"), _t("paquete")], [_t("huevos"), _t("huevo")], [_t("lápices"), _t("lápiz")], [_t("jabones"), _t("jabón")]]);
+    var uA = rnd(5, 15) * 100, uB = uA + (Math.random() < 0.5 ? 1 : -1) * rnd(1, s >= 3 ? 1 : 4) * 100;
+    var qA = rnd(2, 6), qB = qA + rnd(2, 6);
+    var ans = uA < uB ? "A" : "B";
     return {
-      skill: "dinero_suma", prompt: prompt, speech: prompt,
-      visual: '<div class="dm-blocks">' + html + "</div>",
-      options: numChoices(sum, [sum + 1, sum - 1, sum + 5, sum - 5, sum + 10, sum - 10], 4, 1, sum + 25, fmtMoney),
-      answer: sum, answerLabel: "$" + sum,
-      hint: "Empieza por los valores más grandes y ve sumando.",
-      explain: "En total hay $" + sum + "."
+      skill: "precio_unitario",
+      prompt: _t("¿Qué oferta de ") + prod[0] + _t(" sale más barata por unidad?"),
+      visual: receipt([[_t("Oferta A: ") + qA + " " + prod[0], cop(qA * uA)], [_t("Oferta B: ") + qB + " " + prod[0], cop(qB * uB)]]),
+      options: [{ label: _t("Oferta A"), value: "A" }, { label: _t("Oferta B"), value: "B" }],
+      answer: ans,
+      hint: _t("Divide cada precio entre la cantidad para saber cuánto cuesta cada ") + prod[1] + ".",
+      explain: "A: " + cop(uA) + _t(" por ") + prod[1] + ". B: " + cop(uB) + _t(" por ") + prod[1] + _t(". Sale más barata la oferta ") + ans + "."
     };
   }
 
-  /** Calcular el vuelto de una compra. */
-  function retoCambio(p) {
-    var price = rnd(3, p.priceMax);
-    var bills = [10, 20, 50, 100, 200].filter(function (b) { return b > price; });
-    var pay = bills[rnd(0, Math.min(1, bills.length - 1))], change = pay - price;
-    var prompt = "El total de la compra es $" + price + " y pagas con $" + pay + ". ¿Cuánto te devuelven?";
+  function sumarMinutos(h, m, add) { var t = h * 60 + m + add; return [Math.floor(t / 60) % 24, t % 60]; }
+  function horaTermina(p, s) {
+    var h = rnd(6, 17), m = pick([0, 10, 15, 20, 30, 40, 45]);
+    var dur = pick(s <= 1 ? [30, 45, 60] : s <= 3 ? [50, 75, 90, 105] : [95, 125, 140, 155]);
+    var fin = sumarMinutos(h, m, dur), ans = horaTexto(fin[0], fin[1]);
+    var actividad = pick([_t("la clase"), _t("el partido"), _t("la película"), _t("el turno"), _t("el taller")]);
+    var w1 = sumarMinutos(h, m, dur - 10), w2 = sumarMinutos(h, m, dur + 60 - (dur % 60 === 0 ? 30 : 0)), w3 = sumarMinutos(h, 0, dur);
     return {
-      skill: "dinero_cambio", prompt: prompt, speech: prompt,
-      visual: '<div class="dm-receipt"><p>Total: <strong>$' + price + "</strong></p><p>Pagas con: <strong>$" + pay + "</strong></p><p>Vuelto: <strong>?</strong></p></div>",
-      options: numChoices(change, [change + 1, change - 1, change + 5, change - 5, price, price + pay], 4, 0, pay + price, fmtMoney),
-      answer: change, answerLabel: "$" + change,
-      hint: "El vuelto es lo que falta para llegar desde el total hasta lo que pagaste.",
-      explain: "$" + pay + " − $" + price + " = $" + change + "."
+      skill: "duracion_tiempo",
+      prompt: actividad.charAt(0).toUpperCase() + actividad.slice(1) + _t(" empieza a las ") + horaTexto(h, m) + _t(" y dura ") + dur + _t(" minutos. ¿A qué hora termina?"),
+      options: U.textChoices(ans, [horaTexto(w1[0], w1[1]), horaTexto(w2[0], w2[1]), horaTexto(w3[0], w3[1])], 4),
+      answer: ans,
+      hint: _t("Suma primero las horas completas (60 minutos) y luego los minutos que sobran."),
+      explain: dur + _t(" minutos son ") + Math.floor(dur / 60) + " h " + (dur % 60) + _t(" min. Termina a las ") + ans + "."
     };
   }
 
-  function horaTxt(h, m) {
-    h = ((h - 1 + 12 * 4) % 12) + 1;
-    return h + ":" + (m < 10 ? "0" + m : m);
-  }
-
-  /** Leer la hora en un reloj de agujas. */
-  function retoReloj(p) {
-    var h = rnd(1, 12), m = pick(p.minutes), ans = horaTxt(h, m);
-    var cands = [horaTxt(h + 1, m), horaTxt(h - 1, m), horaTxt(h, (m + 30) % 60), horaTxt(h, (m + 15) % 60),
-                 horaTxt(m === 0 ? 12 : m / 5, (h % 12) * 5)]; // confundir la manecilla corta con la larga
-    var prompt = "¿Qué hora marca el reloj?";
+  function estimar(p, s) {
+    var n = grow(2, 4, s), vals = [], total = 0;
+    for (var i = 0; i < n; i++) { var v = rnd(11, 99) * (s >= 2 ? 100 : 10) + rnd(1, 9) * (s >= 2 ? 10 : 1); vals.push(v); total += v; }
+    var unit = s >= 2 ? 1000 : 100;
+    var est = vals.reduce(function (a, v) { return a + Math.round(v / unit) * unit; }, 0);
+    var opts = [est, est + 2 * unit * n, Math.max(unit, est - 2 * unit * n), est * 10];
     return {
-      skill: "lectura_reloj", prompt: prompt, speech: prompt,
-      visual: relojSvg(h, m),
-      options: strChoices(ans, cands.filter(function (c) { return c !== ans; }), 4, function (v) { return "Hora " + v; }),
-      answer: ans, answerLabel: ans,
-      hint: "La manecilla corta marca la hora y la larga los minutos. Cada número de la esfera vale 5 minutos.",
-      explain: "El reloj marca las " + ans + "."
+      skill: "estimacion",
+      prompt: _t("Sin hacer la cuenta exacta, ¿cuál es el resultado más cercano a ") + vals.map(miles).join(" + ") + "?",
+      options: shuffle(opts).map(function (v) { return { label: _t("Cerca de ") + miles(v), value: v, aria: _t("cerca de ") + v }; }),
+      answer: est,
+      hint: _t("Redondea cada número a la ") + (unit === 1000 ? _t("unidad de mil") : _t("centena")) + _t(" más cercana y suma los redondeos."),
+      explain: _t("Redondeando queda cerca de ") + miles(est) + _t(". La suma exacta es ") + miles(total) + "."
     };
   }
 
-  /** Duración: a qué hora termina una actividad. */
-  function retoTiempo(p) {
-    var h = rnd(1, 12), m = pick([0, 15, 30, 45]), dur = pick(p.durations);
-    var tot = (h % 12) * 60 + m + dur, hh = Math.floor(tot / 60) % 12 || 12, mm = tot % 60;
-    var ans = horaTxt(hh, mm);
-    var cands = [horaTxt(hh, (mm + 15) % 60), horaTxt(hh, (mm + 30) % 60), horaTxt(hh + 1, mm), horaTxt(hh - 1, mm), horaTxt(h, (m + dur) % 60)];
-    var cosa = pick(["Un turno", "Una reunión", "Un taller", "Una clase"]);
-    var prompt = cosa + " empieza a las " + horaTxt(h, m) + " y dura " + dur + " minutos. ¿A qué hora termina?";
+  function emparejarDinero(p, s) {
+    var n = grow(3, 4, s), targets = shuffle([2000, 5000, 10000, 20000, 50000]).slice(0, n);
+    var left = [], right = [], ans = {};
+    targets.forEach(function (t, i) {
+      var parts = t === 2000 ? [1000, 1000] : t === 5000 ? [2000, 2000, 1000] : t === 10000 ? [5000, 2000, 2000, 1000] :
+        t === 20000 ? [10000, 5000, 5000] : [20000, 20000, 10000];
+      if (s >= 3 && t === 10000) parts = [5000, 5000];
+      left.push({ id: "l" + i, label: parts.map(cop).join(" + ") });
+      right.push({ id: "r" + i, label: cop(t) });
+      ans["l" + i] = "r" + i;
+    });
     return {
-      skill: "duracion_tiempo", prompt: prompt, speech: prompt,
-      visual: relojSvg(h, m),
-      options: strChoices(ans, cands.filter(function (c) { return c !== ans; }), 4, function (v) { return "Hora " + v; }),
-      answer: ans, answerLabel: ans,
-      hint: "Suma los minutos por partes: primero hasta la hora en punto y luego el resto.",
-      explain: "Termina a las " + ans + "."
+      type: "match", skill: "equivalencia_dinero",
+      prompt: _t("Une cada grupo de billetes y monedas con el valor que suma."),
+      left: shuffle(left), right: shuffle(right), answer: ans,
+      hint: _t("Suma cada grupo de la izquierda antes de buscar su pareja."),
+      explain: targets.map(cop).join(", ") + "."
     };
   }
 
-  function fr(k, n) { return k + "/" + n; }
-  function eqFr(a, b) {
-    var x = a.split("/").map(Number), y = b.split("/").map(Number);
-    return x[0] * y[1] === y[0] * x[1];
-  }
-  function validFr(f) { var x = f.split("/").map(Number); return x[0] >= 1 && x[0] < x[1]; }
+  // ═════════════════════════════════════════════════════════════════════════
+  // NIVEL 4 · Razonamiento aplicado
+  // ═════════════════════════════════════════════════════════════════════════
 
-  /** Fracción de una barra dividida en partes iguales. */
-  function retoFraccion(p) {
-    var n = pick(p.parts), k = rnd(1, n - 1), ans = fr(k, n);
-    var cands = [fr(n - k, n), fr(k, n + 1), fr(k + 1, n), fr(k - 1, n), fr(1, n), fr(k, n + 2)]
-      .filter(function (c) { return validFr(c) && !eqFr(c, ans); });
-    var prompt = "La barra está dividida en partes iguales. ¿Qué fracción está sombreada?";
+  function equivalencias(p, s) {
+    var pool = [["1/2", "50 %"], ["1/4", "25 %"], ["3/4", "75 %"], ["1/10", "10 %"], ["1/5", "20 %"], ["2/5", "40 %"], ["3/10", "30 %"], ["1/100", "1 %"]];
+    var set = shuffle(pool.slice(0, grow(5, 8, s))).slice(0, grow(3, 5, s));
+    var left = [], right = [], ans = {};
+    set.forEach(function (pair, i) { left.push({ id: "f" + i, label: pair[0] }); right.push({ id: "p" + i, label: pair[1] }); ans["f" + i] = "p" + i; });
     return {
-      skill: "fracciones", prompt: prompt, speech: prompt, visual: barraSvg(n, k),
-      options: strChoices(ans, cands, 4, function (v) { var x = v.split("/"); return x[0] + " de " + x[1] + " partes"; }),
-      answer: ans, answerLabel: ans,
-      hint: "Abajo va el total de partes iguales; arriba, cuántas están sombreadas.",
-      explain: "Hay " + k + " partes sombreadas de " + n + ": " + ans + "."
+      type: "match", skill: "fraccion_porcentaje",
+      prompt: _t("Une cada fracción con su porcentaje."),
+      left: shuffle(left), right: shuffle(right), answer: ans,
+      hint: _t("Piensa en partes de 100: ¿cuántas de cada 100 representa la fracción?"),
+      explain: set.map(function (x) { return x[0] + " = " + x[1]; }).join(" · ") + "."
     };
   }
 
-  /** Porcentajes básicos y descuentos. */
-  function retoPorcentaje(p) {
-    var pct = pick(p.pcts), price = pick([20, 40, 60, 80, 100, 120, 200]), modo = pick(p.modes);
-    var desc = price * pct / 100, pagar = price - desc;
-    var hint = "El 10 % es la décima parte, el 25 % la cuarta parte y el 50 % la mitad.";
-    if (modo === "parte") {
-      var q1 = "¿Cuánto es el " + pct + " % de " + price + "?";
-      return {
-        skill: "porcentaje", prompt: q1, speech: "¿Cuánto es el " + pct + " por ciento de " + price + "?",
-        visual: '<span class="game-equation">' + pct + " % de " + price + "</span>",
-        options: numChoices(desc, [pagar, pct, desc * 2, Math.max(1, desc - 5), desc + 5], 4, 0, price + 20),
-        answer: desc, answerLabel: desc, hint: hint, explain: "El " + pct + " % de " + price + " es " + desc + "."
+  function convertir(p, s) {
+    var pool = s <= 1 ? [[_t("1 hora"), _t("60 minutos")], [_t("media hora"), _t("30 minutos")], [_t("1 metro"), _t("100 centímetros")], [_t("1 kilo"), _t("1.000 gramos")]] :
+      [[_t("2 horas y media"), _t("150 minutos")], [_t("90 minutos"), _t("1 hora y media")], [_t("3,5 metros"), _t("350 centímetros")], [_t("2 kilos y medio"), _t("2.500 gramos")], [_t("1 litro"), _t("1.000 mililitros")], [_t("un cuarto de hora"), _t("15 minutos")]];
+    var set = shuffle(pool).slice(0, grow(3, 4, s)), left = [], right = [], ans = {};
+    set.forEach(function (pair, i) { left.push({ id: "a" + i, label: pair[0] }); right.push({ id: "b" + i, label: pair[1] }); ans["a" + i] = "b" + i; });
+    return {
+      type: "match", skill: "conversion_medida",
+      prompt: _t("Une las medidas que son iguales."),
+      left: shuffle(left), right: shuffle(right), answer: ans,
+      hint: _t("Recuerda: 1 hora = 60 min, 1 m = 100 cm, 1 kg = 1.000 g."),
+      explain: set.map(function (x) { return x[0] + " = " + x[1]; }).join(" · ") + "."
+    };
+  }
+
+  function leerTabla(p, s) {
+    var meses = [_t("Enero"), _t("Febrero"), _t("Marzo"), _t("Abril")];
+    var rows = meses.map(function (m) { return [m, rnd(8, 30) * 1000]; });
+    var q = s <= 1 ? "max" : s <= 3 ? "diff" : "sum";
+    var max = rows.reduce(function (a, r) { return r[1] > a[1] ? r : a; });
+    var a = rows[0], b = rows[rnd(1, 3)];
+    var html = _t('<table class="dm-table"><tr><th>Mes</th><th>Ahorro</th></tr>') + rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + cop(r[1]) + "</td></tr>"; }).join("") + "</table>";
+    if (q === "max") {
+      return { skill: "lectura_tabla", prompt: _t("¿En qué mes ahorró más?"), visual: html,
+        options: meses.map(function (m) { return { label: m, value: m }; }), answer: max[0],
+        hint: _t("Compara la columna de ahorro fila por fila."), explain: _t("En ") + max[0] + _t(" ahorró ") + cop(max[1]) + _t(", el valor más alto.") };
+    }
+    var total = rows.reduce(function (t, r) { return t + r[1]; }, 0);
+    var ans = q === "diff" ? Math.abs(a[1] - b[1]) : total;
+    return merge(moneyInput(ans), { skill: "lectura_tabla",
+      prompt: q === "diff" ? _t("¿Cuánto más ahorró en ") + (a[1] > b[1] ? a[0] : b[0]) + _t(" que en ") + (a[1] > b[1] ? b[0] : a[0]) + "?" : _t("¿Cuánto ahorró en total en los cuatro meses?"),
+      visual: html,
+      hint: q === "diff" ? _t("Busca los dos valores en la tabla y réstalos.") : _t("Suma los cuatro valores de la columna."),
+      explain: _t("La respuesta es ") + cop(ans) + "." });
+  }
+
+  function presupuesto(p, s) {
+    var total = pick(p.totals), n = grow(2, 4, s), cats = shuffle([_t("transporte"), _t("comida"), _t("datos del celular"), _t("fotocopias"), _t("ahorro"), _t("salidas")]).slice(0, n);
+    var gastos = cats.map(function () { return rnd(2, Math.floor(total / 1000 / (n + 1))) * 1000; });
+    var used = gastos.reduce(function (a, b) { return a + b; }, 0), ans = total - used;
+    var rows = [[_t("Presupuesto"), cop(total)]].concat(cats.map(function (c, i) { return [c.charAt(0).toUpperCase() + c.slice(1), "− " + cop(gastos[i])]; })).concat([[_t("Queda"), "?"]]);
+    return merge(moneyInput(ans), {
+      skill: "presupuesto",
+      prompt: _t("Con este presupuesto y estos gastos, ¿cuánto dinero queda?"),
+      visual: receipt(rows),
+      hint: _t("Suma todos los gastos y réstalos del presupuesto."),
+      explain: _t("Gastos: ") + cop(used) + _t(". Queda ") + cop(total) + " − " + cop(used) + " = " + cop(ans) + "."
+    });
+  }
+
+  function promedio(p, s) {
+    var n = grow(3, 5, s), avg = rnd(p.min, p.max), vals = [], i;
+    for (i = 0; i < n - 1; i++) vals.push(avg + rnd(-p.spread, p.spread));
+    vals.push(avg * n - vals.reduce(function (a, b) { return a + b; }, 0));
+    var top = p.unit === "nota" ? 50 : Infinity, bottom = p.unit === "nota" ? 10 : 0;
+    if (vals.some(function (v) { return v < bottom || v > top; })) return promedio(p, s);
+    var askMissing = p.missing && s >= 2;
+    var label = p.unit === "nota" ? function (v) { return (v / 10).toFixed(1).replace(".", ","); } : p.unit === "cop" ? cop : miles;
+    if (askMissing) {
+      var shownVals = vals.slice(0, n - 1);
+      var r = {
+        skill: "promedio",
+        prompt: _t("Con ") + (n - 1) + _t(" notas de ") + shownVals.map(label).join(", ") + _t(", ¿qué nota necesitas en la última para que el promedio de las ") + n + _t(" sea ") + label(avg) + "?",
+        options: U.choices(vals[n - 1], [avg, vals[n - 1] + 5, vals[n - 1] - 5], 4, function (v) { return { label: label(v), aria: label(v) }; }, 0),
+        answer: vals[n - 1],
+        hint: _t("Multiplica el promedio por la cantidad de notas y réstale lo que ya tienes."),
+        explain: label(avg) + " × " + n + " = " + label(avg * n) + _t(". Te falta ") + label(vals[n - 1]) + "."
       };
-    }
-    var q2 = "Un artículo cuesta $" + price + " y tiene " + pct + " % de descuento. ¿Cuánto pagas?";
-    return {
-      skill: "descuento", prompt: q2, speech: "Un artículo cuesta " + price + " y tiene " + pct + " por ciento de descuento. ¿Cuánto pagas?",
-      visual: '<div class="dm-receipt"><p>Precio: <strong>$' + price + "</strong></p><p>Descuento: <strong>" + pct + " %</strong></p><p>Pagas: <strong>?</strong></p></div>",
-      options: numChoices(pagar, [desc, price - pct, pagar + 10, pagar - 10, price], 4, 0, price + 20, fmtMoney),
-      answer: pagar, answerLabel: "$" + pagar,
-      hint: "Primero calcula cuánto es el descuento y luego réstalo del precio.",
-      explain: "El descuento es $" + desc + ", así que pagas $" + pagar + "."
-    };
-  }
-
-  /** Patrones: suma, resta, doble y alternados. */
-  function retoPatron(p) {
-    var kind = pick(p.kinds), serie, ans, cands, regla, s0, step;
-    if (kind === "suma") {
-      step = pick(p.steps); s0 = rnd(1, 12);
-      serie = [s0, s0 + step, s0 + 2 * step, s0 + 3 * step]; ans = s0 + 4 * step;
-      cands = [ans + 1, ans - 1, ans + step, ans - step]; regla = "sube de " + step + " en " + step;
-    } else if (kind === "resta") {
-      step = pick(p.steps); s0 = rnd(30, 60);
-      serie = [s0, s0 - step, s0 - 2 * step, s0 - 3 * step]; ans = s0 - 4 * step;
-      cands = [ans + 1, ans - 1, ans + step, ans - step]; regla = "baja de " + step + " en " + step;
-    } else if (kind === "doble") {
-      s0 = rnd(1, 5); serie = [s0, 2 * s0, 4 * s0, 8 * s0]; ans = 16 * s0;
-      cands = [12 * s0, ans + s0, ans - 2, 24 * s0]; regla = "se duplica cada vez";
-    } else {
-      var a1 = rnd(2, 5), a2 = rnd(1, 4);
-      while (a2 === a1) a2 = rnd(1, 4);
-      s0 = rnd(1, 8);
-      serie = [s0, s0 + a1, s0 + a1 + a2, s0 + 2 * a1 + a2]; ans = s0 + 2 * a1 + 2 * a2;
-      cands = [s0 + 3 * a1 + a2, ans + 1, ans - 1, serie[3] + 1]; regla = "suma " + a1 + " y luego " + a2 + ", en ese orden";
+      return r;
     }
     return {
-      skill: "patron_" + kind, prompt: "¿Qué número continúa la secuencia?",
-      speech: "¿Qué número continúa la secuencia " + serie.join(", ") + "?",
-      visual: '<span class="game-equation">' + serie.join("  ·  ") + '  ·  <span class="is-blank">?</span></span>',
-      options: numChoices(ans, cands, 4, 0, ans + 30),
-      answer: ans, answerLabel: ans,
-      hint: "Mira cuánto cambia de un número al siguiente. ¿Es siempre igual?",
-      explain: "La secuencia " + regla + "."
+      skill: "promedio",
+      prompt: _t("¿Cuál es el promedio de ") + vals.map(label).join(", ") + "?",
+      options: U.choices(avg, [avg + 1, avg - 1, Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / (n - 1))], 4, function (v) { return { label: label(v), aria: label(v) }; }, 0),
+      answer: avg,
+      hint: _t("Suma todos los valores y divide entre cuántos son (") + n + ").",
+      explain: _t("Suma: ") + label(vals.reduce(function (a, b) { return a + b; }, 0)) + _t(". Entre ") + n + _t(" da ") + label(avg) + "."
     };
   }
 
-  /** Grupos iguales (multiplicación) y reparto (división). */
-  function retoGrupos(p) {
-    var f = pick(FORMAS), modo = pick(p.modes), i;
-    if (modo === "mult") {
-      var g = rnd(2, p.maxG), m = rnd(2, p.maxM), tot = g * m, html = "";
-      for (i = 0; i < g; i++) html += '<div class="game-group">' + tokens(m, f.i) + "</div>";
-      var q = "Hay " + g + " grupos con " + m + " " + f.s + " " + f.i + " cada uno. ¿Cuántas figuras hay en total?";
-      return {
-        skill: "multiplicacion_grupos", prompt: q, speech: q, visual: html,
-        options: numChoices(tot, [g + m, tot + m, tot - m, tot + g, tot - g], 4, 1, tot + 12),
-        answer: tot, answerLabel: tot,
-        hint: "Suma el mismo número varias veces: " + m + " + " + m + "…",
-        explain: g + " grupos de " + m + " son " + tot + "."
-      };
+  function reglaTres(p, s) {
+    var it = pick([[_t("cuadernos"), _t("cuaderno")], [_t("pasajes"), _t("pasaje")], [_t("botellas de agua"), _t("botella")], [_t("fotocopias"), _t("fotocopia")]]);
+    var unit = rnd(grow(3, 8, s), grow(8, 25, s)) * 100, a = rnd(2, 6), b = a + rnd(1, grow(3, 9, s));
+    if (s >= 3) unit = rnd(12, 45) * 50;
+    var pa = a * unit, ans = b * unit;
+    return merge(moneyInput(ans), {
+      skill: "regla_de_tres",
+      prompt: _t("Si ") + a + " " + it[0] + _t(" cuestan ") + cop(pa) + _t(", ¿cuánto cuestan ") + b + " " + it[0] + "?",
+      hint: _t("Calcula primero cuánto cuesta un ") + it[1] + ".",
+      explain: _t("Un ") + it[1] + _t(" cuesta ") + cop(pa) + " ÷ " + a + " = " + cop(unit) + _t(". Por ") + b + ": " + cop(ans) + "."
+    });
+  }
+
+  function interes(p, s) {
+    var cap = pick(s <= 1 ? [100000, 200000, 500000] : [150000, 300000, 450000, 800000, 1200000]);
+    var tasa = pick(s <= 1 ? [1, 2] : [1, 2, 3, 5]), meses = pick(s <= 2 ? [2, 3, 6] : [4, 6, 9, 12]);
+    var porMes = cap * tasa / 100, ans = porMes * meses;
+    return merge(moneyInput(ans), {
+      skill: "interes_simple",
+      prompt: _t("Ahorras ") + cop(cap) + _t(" con ") + tasa + _t(" % de interés simple mensual. ¿Cuánto ganas de interés en ") + meses + _t(" meses?"),
+      hint: _t("Calcula el interés de un mes (") + tasa + _t(" % del ahorro) y multiplícalo por los meses."),
+      explain: _t("Cada mes: ") + cop(porMes) + _t(". En ") + meses + _t(" meses: ") + cop(ans) + "."
+    });
+  }
+
+  function mayorMenorQue(p, s) {
+    var limit = pick([20000, 50000]), n = grow(4, 6, s), items = [], ans = {};
+    for (var i = 0; i < n; i++) {
+      var q, pr, total;
+      do { q = rnd(1, 4); pr = rnd(3, 30) * 1000; total = q * pr; }
+      while (Math.abs(total - limit) < 3000 || items.some(function (x) { return x.label === q + " × " + cop(pr); }));
+      var id = "c" + i;
+      items.push({ id: id, label: q + " × " + cop(pr), total: total });
+      ans[id] = q * pr > limit ? "mas" : "menos";
     }
-    var gr = rnd(2, 5), each = rnd(2, p.maxM), total = gr * each;
-    var q2 = "Hay " + total + " " + f.s + " " + f.i + " y se reparten en partes iguales entre " + gr + " grupos. ¿Cuántos quedan en cada grupo?";
     return {
-      skill: "division_reparto", prompt: q2, speech: q2,
-      visual: '<div class="game-group">' + tokens(total, f.i) + "</div>",
-      options: numChoices(each, [gr, total - gr, each + 1, each - 1, total], 4, 1, total),
-      answer: each, answerLabel: each,
-      hint: "Reparte de a una figura por grupo, en ronda, hasta que no queden.",
-      explain: total + " entre " + gr + " es " + each + " en cada grupo."
+      type: "classify", skill: "estimacion",
+      prompt: _t("Sin calcular exacto, clasifica cada compra: ¿cuesta más o menos de ") + cop(limit) + "?",
+      bins: [{ id: "menos", label: _t("Menos de ") + cop(limit) }, { id: "mas", label: _t("Más de ") + cop(limit) }],
+      items: items.map(function (x) { return { id: x.id, label: x.label }; }),
+      answer: ans,
+      hint: _t("Redondea el precio y multiplica mentalmente por la cantidad."),
+      explain: items.map(function (x) { return x.label + " = " + cop(x.total); }).join(" · ") + "."
     };
   }
 
-  var ARTICULOS = [
-    { n: "cuadernos", g: "cada uno" }, { n: "boletos", g: "cada uno" }, { n: "lápices", g: "cada uno" },
-    { n: "cajas", g: "cada una" }, { n: "bolsas", g: "cada una" }, { n: "tarjetas", g: "cada una" }
-  ];
+  // ═════════════════════════════════════════════════════════════════════════
+  // NIVEL 5 · Integración
+  // ═════════════════════════════════════════════════════════════════════════
 
-  /** Problema de dos pasos: multiplicar y luego calcular el vuelto. */
-  function retoCompra(p) {
-    var it = pick(ARTICULOS), q = rnd(2, 5), price = rnd(3, p.priceMax), total = q * price;
-    var bills = [20, 50, 100, 200].filter(function (b) { return b > total; });
-    var pay = bills.length ? bills[0] : Math.ceil((total + 1) / 50) * 50, change = pay - total;
-    var prompt = "Compras " + q + " " + it.n + " de $" + price + " " + it.g + " y pagas con $" + pay + ". ¿Cuánto te devuelven?";
+  function combinadas(p, s) {
+    var a = rnd(2, 9), b = rnd(2, 9), c = rnd(2, 9), d = rnd(10, 60);
+    var forms = [
+      [a + " + " + b + " × " + c, a + b * c, (a + b) * c, _t("Primero la multiplicación: ") + b + " × " + c + " = " + b * c + _t("; luego suma ") + a + "."],
+      ["(" + a + " + " + b + ") × " + c, (a + b) * c, a + b * c, _t("Primero el paréntesis: ") + (a + b) + _t("; luego × ") + c + "."],
+      [d + " − " + b + " × " + c, d - b * c, (d - b) * c, _t("Primero ") + b + " × " + c + " = " + b * c + _t("; luego ") + d + " − " + b * c + "."],
+      [a + " × " + b + " + " + c + " × " + d, a * b + c * d, (a * b + c) * d, _t("Las dos multiplicaciones primero; luego suma.")]
+    ];
+    var f = forms[Math.min(forms.length - 1, rnd(0, grow(1, 3, s)))];
+    if (f[1] < 0) return combinadas(p, s);
+    return merge(input(f[1]), {
+      skill: "operaciones_combinadas",
+      prompt: _t("Resuelve respetando el orden de las operaciones:"),
+      visual: '<p class="game-equation">' + f[0] + ' = <span class="is-blank">?</span></p>',
+      hint: _t("Primero paréntesis, luego multiplicaciones y divisiones, al final sumas y restas."),
+      explain: f[3] + _t(" Resultado: ") + f[1] + "."
+    });
+  }
+
+  function aumentoDescuento(p, s) {
+    var base = rnd(10, 90) * 1000, pct = pick([10, 20, 25, 50]);
+    var sube = Math.random() < 0.5, after = sube ? base + base * pct / 100 : base - base * pct / 100;
+    var twoStep = s >= 3, pct2 = pick([10, 20]), final = twoStep ? after - after * pct2 / 100 : after;
+    var prompt = _t("Un producto de ") + cop(base) + (sube ? _t(" sube ") : _t(" baja ")) + pct + " %" + (twoStep ? _t(" y luego tiene un descuento adicional de ") + pct2 + " %" : "") + _t(". ¿Cuál es el precio final?");
+    return merge(moneyInput(final), {
+      skill: "porcentaje",
+      prompt: prompt,
+      hint: twoStep ? _t("El segundo porcentaje se calcula sobre el precio nuevo, no sobre el original.") : _t("Calcula el ") + pct + _t(" % y súmalo o réstalo."),
+      explain: _t("Después del primer cambio: ") + cop(after) + (twoStep ? _t(". Con el ") + pct2 + _t(" % menos: ") + cop(final) : "") + "."
+    });
+  }
+
+  function planearHorario(p, s) {
+    var tareas = shuffle([[_t("almorzar"), 30], [_t("hacer la tarea"), 75], [_t("ir al gimnasio"), 60], [_t("ver una serie"), 45], [_t("leer"), 40], [_t("ordenar el cuarto"), 25]]).slice(0, grow(2, 4, s));
+    var start = rnd(13, 16), total = tareas.reduce(function (a, t) { return a + t[1]; }, 0);
+    var fin = sumarMinutos(start, 0, total);
+    return merge(input(total), {
+      skill: "duracion_tiempo",
+      suffix: "min",
+      prompt: _t("Empiezas a las ") + start + _t(":00 y vas a ") + tareas.map(function (t) { return t[0] + " (" + t[1] + " min)"; }).join(", ") + _t(". ¿Cuántos minutos te toma todo?"),
+      hint: _t("Suma todas las duraciones. Si quieres la hora final, conviértelo a horas después."),
+      explain: _t("En total son ") + total + _t(" minutos: terminas a las ") + horaTexto(fin[0], fin[1]) + "."
+    });
+  }
+
+  function compararOfertas(p, s) {
+    var base = rnd(40, 120) * 1000;
+    var oA = { t: _t("20 % de descuento"), v: base * 0.8 };
+    var refund = rnd(12, 26) * 1000;
+    var oB = { t: _t("Pagas ") + cop(base) + _t(" y te devuelven ") + cop(refund) + _t(" en un bono"), v: base - refund };
+    oA.t = _t("Descuento del 20 %");
+    var oC = { t: _t("Lleva 2 y paga solo una y media"), v: base * 0.75 };
+    var opts = s >= 2 ? [oA, oB, oC] : [oA, oB];
+    var best = opts.reduce(function (a, o) { return o.v < a.v ? o : a; });
+    if (opts.filter(function (o) { return o.v === best.v; }).length > 1) return compararOfertas(p, s);
     return {
-      skill: "problema_dos_pasos", prompt: prompt, speech: prompt,
-      visual: '<div class="dm-receipt"><p>' + q + " × $" + price + " = <strong>?</strong></p><p>Pagas: <strong>$" + pay + "</strong></p><p>Vuelto: <strong>?</strong></p></div>",
-      options: numChoices(change, [total, pay - price, change + price, change + 5, change - 5, change + 10], 4, 0, pay, fmtMoney),
-      answer: change, answerLabel: "$" + change,
-      hint: "Paso 1: calcula el total (" + q + " × " + price + "). Paso 2: réstalo de lo que pagaste.",
-      explain: "Total: $" + total + ". Vuelto: $" + pay + " − $" + total + " = $" + change + "."
+      skill: "comparar_ofertas",
+      layout: "list",
+      prompt: _t("Un artículo cuesta ") + cop(base) + _t(". ¿Qué oferta te deja pagar menos por unidad?"),
+      options: opts.map(function (o, i) { return { label: o.t, value: i, aria: o.t }; }),
+      answer: opts.indexOf(best),
+      hint: _t("Calcula cuánto pagarías realmente por una unidad en cada oferta."),
+      explain: opts.map(function (o) { return o.t + ": " + cop(o.v); }).join(" · ") + "."
     };
   }
 
-  /** Estimación: redondear para calcular aproximadamente. */
-  function retoEstimar() {
-    var a, b, ea, eb, est, tries = 0;
-    do {
-      a = rnd(12, 98); b = rnd(12, 98);
-      ea = Math.round(a / 10) * 10; eb = Math.round(b / 10) * 10; est = ea + eb; tries++;
-    } while (Math.abs(a + b - est) > 4 && tries < 200);
-    var prompt = "Sin hacer la cuenta exacta, ¿qué resultado se acerca más a " + a + " + " + b + "?";
-    return {
-      skill: "estimacion", prompt: prompt, speech: prompt,
-      visual: '<span class="game-equation">' + a + " + " + b + " ≈ ?</span>",
-      options: numChoices(est, [est + 10, est - 10, est + 20, est - 20], 4, 10, 300),
-      answer: est, answerLabel: est,
-      hint: "Redondea cada número a la decena más cercana y suma.",
-      explain: a + " es casi " + ea + " y " + b + " es casi " + eb + ". Suman cerca de " + est + "."
-    };
+  function proporciones(p, s) {
+    var r = pick([[_t("Una receta para"), _t("personas usa"), _t("gramos de arroz"), 4, 300], [_t("Un mapa a escala: cada"), _t("centímetros equivalen a"), _t("metros"), 2, 50], [_t("Una moto recorre en"), _t("horas"), _t("kilómetros"), 2, 90]]);
+    var a = r[3], va = r[4] * (s >= 2 ? rnd(1, 3) : 1), b = a * rnd(2, 4) + (s >= 3 ? a / 2 : 0), ans = va / a * b;
+    if (ans % 1 !== 0) return proporciones(p, s);
+    return merge(input(ans), {
+      skill: "regla_de_tres",
+      suffix: r[2].split(" ")[0],
+      prompt: r[0] + " " + a + " " + r[1] + " " + va + " " + r[2] + _t(". ¿Cuántos ") + r[2] + _t(" corresponden a ") + b + "?",
+      hint: _t("Busca cuánto corresponde a 1 y multiplica."),
+      explain: va + " ÷ " + a + " = " + va / a + _t(" por cada uno. × ") + b + " = " + ans + "."
+    });
   }
 
-  // ─── Mecánicas nuevas (Stages 2 a 5 · vida adulta, 15-26 años) ─────────────
-
-  var PRODUCTOS_UNIT = [
-    { n: "paquetes de hojas de examen", u: "hoja" },
-    { n: "botellas de agua", u: "ml" },
-    { n: "planes de datos móviles", u: "GB" },
-    { n: "cajas de lápices", u: "lápiz" },
-    { n: "paquetes de café", u: "gramo" }
-  ];
-
-  var ITEMS_PROPORCION = ["boletos de bus", "entradas de cine", "fotocopias", "recargas de celular", "pasajes de metro"];
-
-  var CATEGORIAS_PRESUPUESTO = ["transporte", "comida", "entretenimiento", "materiales de estudio", "ahorro"];
-
-  var TABLAS_LECTURA = [
-    { tema: "Precios de transporte", filas: [
-      { nombre: "Bus urbano", valor: "$2.500" },
-      { nombre: "Bus intermunicipal", valor: "$8.000" },
-      { nombre: "Taxi (tarifa base)", valor: "$4.200" },
-      { nombre: "Metro", valor: "$2.750" }
-    ] },
-    { tema: "Planes de datos móviles", filas: [
-      { nombre: "Plan Básico (2GB)", valor: "$15.000" },
-      { nombre: "Plan Medio (5GB)", valor: "$25.000" },
-      { nombre: "Plan Alto (10GB)", valor: "$38.000" },
-      { nombre: "Plan Ilimitado", valor: "$55.000" }
-    ] },
-    { tema: "Horarios de un curso", filas: [
-      { nombre: "Grupo A", valor: "7:00 a.m." },
-      { nombre: "Grupo B", valor: "9:30 a.m." },
-      { nombre: "Grupo C", valor: "2:00 p.m." },
-      { nombre: "Grupo D", valor: "4:15 p.m." }
-    ] }
-  ];
-
-  /** Precio por unidad: comparar dos presentaciones del mismo producto. */
-  function retoPrecioUnitario(p) {
-    var prod = pick(p.productos);
-    var qA = rnd(p.min, p.max), qB = rnd(p.min, p.max);
-    while (qB === qA) qB = rnd(p.min, p.max);
-    var priceA = rnd(p.priceMin, p.priceMax), priceB = rnd(p.priceMin, p.priceMax);
-    var upA = priceA / qA, upB = priceB / qB, tries = 0;
-    while (Math.abs(upA - upB) < 0.05 && tries++ < 30) { priceB = rnd(p.priceMin, p.priceMax); upB = priceB / qB; }
-    var ans = upA < upB ? "A" : "B";
-    var prompt = "¿Cuál presentación de " + prod.n + " es más barata por " + prod.u + "?";
-    return {
-      skill: "precio_unitario", prompt: prompt, speech: prompt,
-      visual: '<div class="dm-receipt"><p>Opción A: ' + qA + " " + prod.u + "(s) — <strong>$" + priceA + "</strong></p><p>Opción B: " + qB + " " + prod.u + "(s) — <strong>$" + priceB + "</strong></p></div>",
-      options: [{ label: "Opción A", value: "A", aria: "Opción A" }, { label: "Opción B", value: "B", aria: "Opción B" }],
-      answer: ans, answerLabel: "Opción " + ans,
-      hint: "Divide el precio entre la cantidad para saber cuánto cuesta cada " + prod.u + ".",
-      explain: "Opción A cuesta $" + upA.toFixed(2) + " por " + prod.u + " y Opción B cuesta $" + upB.toFixed(2) + " por " + prod.u + ". La más barata es la Opción " + ans + "."
-    };
+  function presupuestoMensual(p, s) {
+    var sueldo = pick([1300000, 1500000, 1750000, 2000000]);
+    var arriendo = Math.round(sueldo * pick([0.3, 0.35, 0.4]) / 10000) * 10000;
+    var mercado = rnd(25, 40) * 10000, transporte = rnd(10, 18) * 10000, pctAhorro = pick([10, 15, 20]);
+    var ahorro = sueldo * pctAhorro / 100, queda = sueldo - arriendo - mercado - transporte - ahorro;
+    if (queda < 50000) return presupuestoMensual(p, s);
+    return merge(moneyInput(queda), {
+      skill: "presupuesto",
+      prompt: _t("Con un ingreso de ") + cop(sueldo) + _t(" al mes, ¿cuánto queda libre después de estos gastos y de ahorrar el ") + pctAhorro + " %?",
+      visual: receipt([[_t("Ingreso"), cop(sueldo)], [_t("Arriendo"), "− " + cop(arriendo)], [_t("Mercado"), "− " + cop(mercado)], [_t("Transporte"), "− " + cop(transporte)], [_t("Ahorro (") + pctAhorro + " %)", "?"], [_t("Queda libre"), "?"]]),
+      hint: _t("Calcula primero el ahorro (") + pctAhorro + _t(" % del ingreso) y luego resta todo."),
+      explain: _t("Ahorro: ") + cop(ahorro) + _t(". Queda ") + cop(queda) + "."
+    });
   }
 
-  /** Propinas: calcular un porcentaje de recargo sobre una cuenta. */
-  function retoPropina(p) {
-    var cuenta = rnd(p.min, p.max), pct = pick(p.pcts);
-    var propina = Math.round(cuenta * pct / 100);
-    var prompt = "La cuenta es de $" + cuenta + " y quieres dejar " + pct + " % de propina. ¿Cuánto es la propina?";
-    return {
-      skill: "propina", prompt: prompt, speech: prompt,
-      visual: '<div class="dm-receipt"><p>Cuenta: <strong>$' + cuenta + "</strong></p><p>Propina (" + pct + " %): <strong>?</strong></p></div>",
-      options: numChoices(propina, [propina + 5, propina - 5, Math.round(cuenta * (pct + 5) / 100), Math.round(cuenta * (pct - 5) / 100)], 4, 0, cuenta, fmtMoney),
-      answer: propina, answerLabel: "$" + propina,
-      hint: "El 10 % es la décima parte del total; ajusta desde ahí.",
-      explain: "El " + pct + " % de $" + cuenta + " es $" + propina + "."
-    };
+  function ahorroMeta(p, s) {
+    var meta = rnd(30, 150) * 10000, mensual = rnd(5, 25) * 10000, ya = s >= 2 ? rnd(2, 8) * 10000 : 0;
+    var meses = Math.ceil((meta - ya) / mensual);
+    return merge(input(meses), {
+      skill: "planeacion_ahorro",
+      suffix: _t("meses"),
+      prompt: _t("Quieres comprar algo de ") + cop(meta) + "." + (ya ? _t(" Ya tienes ") + cop(ya) + "." : "") + _t(" Si ahorras ") + cop(mensual) + _t(" al mes, ¿cuántos meses necesitas como mínimo?"),
+      hint: _t("Divide lo que te falta entre lo que ahorras cada mes y redondea hacia arriba."),
+      explain: _t("Te faltan ") + cop(meta - ya) + ". ÷ " + cop(mensual) + " = " + ((meta - ya) / mensual).toFixed(1).replace(".", ",") + _t(", así que necesitas ") + meses + _t(" meses.")
+    });
   }
 
-  /** Presupuesto: cuánto queda de un monto fijo tras repartir entre categorías. */
-  function retoPresupuesto(p) {
-    var total = pick(p.totales);
-    var cats = shuffle(p.categorias).slice(0, 2);
-    var a = rnd(p.min, Math.floor(total * 0.35)), b = rnd(p.min, Math.floor(total * 0.35));
-    var resto = total - a - b;
-    var prompt = "Tienes un presupuesto de $" + total + ". Ya destinaste $" + a + " a " + cats[0] + " y $" + b + " a " + cats[1] + ". ¿Cuánto te queda?";
-    return {
-      skill: "presupuesto", prompt: prompt, speech: prompt,
-      visual: '<div class="dm-receipt"><p>Presupuesto: <strong>$' + total + "</strong></p><p>" + cats[0] + ": <strong>$" + a + "</strong></p><p>" + cats[1] + ": <strong>$" + b + "</strong></p><p>Resto: <strong>?</strong></p></div>",
-      options: numChoices(resto, [resto + 10, resto - 10, a + b, total - a], 4, 0, total, fmtMoney),
-      answer: resto, answerLabel: "$" + resto,
-      hint: "Suma lo ya gastado y réstalo del presupuesto total.",
-      explain: "$" + total + " − ($" + a + " + $" + b + ") = $" + resto + "."
-    };
+  function compraCompleta(p, s) {
+    var items = shuffle(PRODUCTOS.slice(4)).slice(0, grow(2, 3, s)), total = 0, rows = [];
+    items.forEach(function (it) { var pr = Math.round(price(it, 1000) / 1000) * 1000; total += pr; rows.push([it.n.charAt(0).toUpperCase() + it.n.slice(1), cop(pr)]); });
+    var pct = pick([10, 20, 25]), conDesc = total - total * pct / 100;
+    var pay = Math.ceil(conDesc / 50000) * 50000;
+    if (pay === conDesc) pay += 50000;
+    var ans = pay - conDesc;
+    rows.push([_t("Descuento"), pct + " %"], [_t("Pagas con"), cop(pay)], [_t("Vueltas"), "?"]);
+    return merge(moneyInput(ans), {
+      skill: "problema_tres_pasos",
+      prompt: _t("Suma la compra, aplica el descuento y calcula las vueltas."),
+      visual: receipt(rows),
+      hint: _t("Tres pasos: total, luego total menos descuento, luego billete menos lo que pagas."),
+      explain: _t("Total ") + cop(total) + _t(", con descuento ") + cop(conDesc) + _t(", vueltas ") + cop(ans) + "."
+    });
   }
 
-  /** Interés simple sobre un ahorro. */
-  function retoInteresSimple(p) {
-    var capital = pick(p.capitales), tasa = pick(p.tasas), meses = pick(p.meses);
-    var interes = Math.round(capital * tasa / 100 * meses);
-    var prompt = "Ahorras $" + capital + " con un interés simple del " + tasa + " % mensual. ¿Cuánto interés ganas en " + meses + " mes(es)?";
-    return {
-      skill: "interes_simple", prompt: prompt, speech: prompt,
-      visual: '<div class="dm-receipt"><p>Capital: <strong>$' + capital + "</strong></p><p>Tasa mensual: <strong>" + tasa + " %</strong></p><p>Tiempo: <strong>" + meses + " mes(es)</strong></p></div>",
-      options: numChoices(interes, [interes + Math.round(capital * tasa / 100), Math.max(1, interes - Math.round(capital * tasa / 100)), Math.round(capital * tasa / 100), interes + 10], 4, 0, capital, fmtMoney),
-      answer: interes, answerLabel: "$" + interes,
-      hint: "Interés simple = capital × tasa × tiempo. Calcula el interés de un mes y multiplícalo por los meses.",
-      explain: "$" + capital + " × " + tasa + " % × " + meses + " = $" + interes + "."
-    };
-  }
+  // ═════════════════════════════════════════════════════════════════════════
+  // Plan: qué se juega en cada actividad
+  // ═════════════════════════════════════════════════════════════════════════
 
-  /** Promedio de varios valores (calificaciones o gastos). */
-  function retoPromedio(p) {
-    var n = pick(p.n), vals = [], i;
-    for (i = 0; i < n; i++) vals.push(rnd(p.min, p.max));
-    var suma = vals.reduce(function (a, b) { return a + b; }, 0);
-    var prom = Math.round(suma / n);
-    var prompt = "Estos son tus valores: " + vals.join(", ") + ". ¿Cuál es el promedio (redondeado)?";
-    return {
-      skill: "promedio", prompt: prompt, speech: prompt,
-      visual: '<span class="game-equation">(' + vals.join(" + ") + ") / " + n + "</span>",
-      options: numChoices(prom, [prom + 1, prom - 1, Math.round(suma / (n - 1)), vals[0]], 4, 0, p.max),
-      answer: prom, answerLabel: prom,
-      hint: "Suma todos los valores y divide entre cuántos son.",
-      explain: "La suma es " + suma + " y hay " + n + " valores: " + suma + " ÷ " + n + " ≈ " + prom + "."
-    };
-  }
+  var COINS = [50, 100, 200, 500, 1000];
 
-  /** Conversión de unidades cotidianas: tiempo o medidas. */
-  function retoConversion(p) {
-    var modo = pick(p.modes);
-    if (modo === "horas_minutos") {
-      var h = rnd(1, 5), extraM = pick([0, 15, 30, 45]), totalMin = h * 60 + extraM;
-      var prompt = "¿Cuántos minutos son " + h + " horas y " + extraM + " minutos?";
-      return {
-        skill: "conversion_tiempo", prompt: prompt, speech: prompt,
-        visual: '<span class="game-equation">' + h + "h " + extraM + "min = ? min</span>",
-        options: numChoices(totalMin, [totalMin + 10, totalMin - 10, h * 60, extraM], 4, 0, 400),
-        answer: totalMin, answerLabel: totalMin,
-        hint: "Cada hora tiene 60 minutos; multiplica y suma el resto.",
-        explain: h + " horas son " + (h * 60) + " minutos, más " + extraM + " = " + totalMin + " minutos."
-      };
-    }
-    var m = rnd(1, 9), cm = pick([0, 25, 50, 75]), totalCm = m * 100 + cm;
-    var prompt2 = "¿Cuántos centímetros son " + m + " metros y " + cm + " centímetros?";
-    return {
-      skill: "conversion_medida", prompt: prompt2, speech: prompt2,
-      visual: '<span class="game-equation">' + m + "m " + cm + "cm = ? cm</span>",
-      options: numChoices(totalCm, [totalCm + 10, totalCm - 10, m * 100, cm], 4, 0, 1000),
-      answer: totalCm, answerLabel: totalCm,
-      hint: "Cada metro tiene 100 centímetros.",
-      explain: m + " metros son " + (m * 100) + " cm, más " + cm + " = " + totalCm + " cm."
-    };
-  }
-
-  /** Regla de tres simple: proporción directa entre cantidad y precio. */
-  function retoReglaDeTres(p) {
-    var it = pick(p.items), a = rnd(2, 6), pa = rnd(p.priceMin, p.priceMax);
-    var b = rnd(a + 1, a + 6), pb = Math.round(pa / a * b);
-    var prompt = "Si " + a + " " + it + " cuestan $" + pa + ", ¿cuánto cuestan " + b + " " + it + " al mismo precio por unidad?";
-    return {
-      skill: "regla_de_tres", prompt: prompt, speech: prompt,
-      visual: '<div class="dm-receipt"><p>' + a + " " + it + ": <strong>$" + pa + "</strong></p><p>" + b + " " + it + ": <strong>?</strong></p></div>",
-      options: numChoices(pb, [pb + Math.round(pa / a), pb - Math.round(pa / a), pa * b, pa + pb], 4, 0, pb + 50, fmtMoney),
-      answer: pb, answerLabel: "$" + pb,
-      hint: "Calcula primero cuánto cuesta uno, y luego multiplica por la cantidad nueva.",
-      explain: "Uno cuesta $" + Math.round(pa / a) + "; " + b + " cuestan $" + pb + "."
-    };
-  }
-
-  /** Lectura de una tabla sencilla de precios u horarios. */
-  function retoTabla(p) {
-    var tabla = pick(p.tablas), elegido = pick(tabla.filas);
-    var prompt = "Según la tabla de \"" + tabla.tema + "\", ¿cuál es el valor de \"" + elegido.nombre + "\"?";
-    var html = '<div class="dm-receipt"><p><strong>' + tabla.tema + "</strong></p>" +
-      tabla.filas.map(function (f) { return "<p>" + f.nombre + ": <strong>" + f.valor + "</strong></p>"; }).join("") + "</div>";
-    var distractores = tabla.filas.filter(function (f) { return f !== elegido; }).map(function (f) { return f.valor; });
-    return {
-      skill: "lectura_tabla", prompt: prompt, speech: prompt, visual: html,
-      options: strChoices(elegido.valor, distractores, Math.min(4, distractores.length + 1), function (v) { return v; }),
-      answer: elegido.valor, answerLabel: elegido.valor,
-      hint: "Busca en la tabla la fila exacta que se pregunta y lee su valor.",
-      explain: elegido.nombre + " tiene un valor de " + elegido.valor + " según la tabla."
-    };
-  }
-
-  // ─── Definición de los niveles (50: 5 Stages de 10 niveles) ───────────────
-  var CONSTRUCTORES = {
-    subitizar: retoSubitizar, comparar: retoComparar, compararNum: retoCompararNum,
-    posicional: retoPosicional, recta: retoRecta, rectaFina: retoRecta,
-    operar: retoOperar, monedas: retoMonedas, cambio: retoCambio,
-    reloj: retoReloj, relojFino: retoReloj, tiempo: retoTiempo,
-    fraccion: retoFraccion, porcentaje: retoPorcentaje, patron: retoPatron,
-    grupos: retoGrupos, compra: retoCompra, estimar: retoEstimar,
-    precioUnitario: retoPrecioUnitario, propina: retoPropina, presupuesto: retoPresupuesto,
-    interesSimple: retoInteresSimple, promedio: retoPromedio, conversion: retoConversion,
-    reglaDeTres: retoReglaDeTres, tabla: retoTabla
+  var PLAN = {
+    1: [
+      [contarVistazo, {}, _t("Vas a decir cuántas figuras hay mirándolas de un vistazo, sin contarlas una por una.")],
+      [dondeHayMas, {}, _t("Vas a comparar dos grupos y decidir dónde hay más.")],
+      [ordenarNumeros, { min: 20, max: 99, desc: true }, _t("Vas a ordenar números de menor a mayor.")],
+      [unidadesDecenas, {}, _t("Vas a leer números a partir de decenas y unidades.")],
+      [rectaUbicar, { max: 20, max2: 50, step: 1, lineStep: 2 }, _t("Vas a leer y ubicar números en la recta numérica.")],
+      [operar, { op: "+", min: 10, max: 50, tokens: true }, _t("Vas a resolver sumas.")],
+      [operar, { op: "−", min: 10, max: 50, tokens: true }, _t("Vas a resolver restas.")],
+      [secuencia, { steps: [2, 5, 10], kinds: ["suma"], start: [1, 20] }, _t("Vas a descubrir la regla de una secuencia y completar el número que falta.")],
+      [contarDinero, { denoms: [50, 100, 200, 500], n: [2, 6] }, _t("Vas a contar cuánto dinero hay en monedas.")],
+      [parImpar, { min: 20, max: 99 }, _t("Vas a clasificar números en pares e impares.")]
+    ],
+    2: [
+      [compararNumeros, { digits: 3 }, _t("Vas a comparar números de tres cifras.")],
+      [valorPosicional, {}, _t("Vas a descubrir cuánto vale una cifra según su posición.")],
+      [ordenarNumeros, { min: 150, max: 999, close: true, desc: true, n: 4 }, _t("Vas a ordenar números de tres cifras.")],
+      [operar, { op: "+", min: 100, max: 800, carry: true }, _t("Vas a resolver sumas llevando.")],
+      [operar, { op: "−", min: 100, max: 900, carry: true, missing: true }, _t("Vas a resolver restas prestando y encontrar números que faltan.")],
+      [gruposIguales, {}, _t("Vas a calcular el total de grupos iguales (multiplicación).")],
+      [repartir, {}, _t("Vas a repartir en partes iguales (división).")],
+      [leerHora, {}, _t("Vas a leer la hora en un reloj de manecillas.")],
+      [fracciones, { parts: [2, 3, 4, 5, 6, 8, 10] }, _t("Vas a reconocer qué fracción de una barra está pintada.")],
+      [encontrarError, {}, _t("Vas a revisar una suma resuelta paso a paso y encontrar el error.")]
+    ],
+    3: [
+      [contarDinero, { denoms: [500, 1000, 2000, 5000, 10000], n: [3, 6] }, _t("Vas a contar billetes y monedas en pesos colombianos.")],
+      [cuantoFalta, {}, _t("Vas a calcular cuánto dinero te falta para una compra.")],
+      [vueltas, {}, _t("Vas a calcular cuánto te devuelven después de pagar.")],
+      [compraVarios, {}, _t("Vas a calcular el total de una compra con varios productos.")],
+      [descuento, {}, _t("Vas a calcular descuentos en pesos.")],
+      [precioUnidad, {}, _t("Vas a comparar ofertas para saber cuál sale más barata por unidad.")],
+      [leerHora, { fine: true }, _t("Vas a leer la hora exacta, de cinco en cinco minutos.")],
+      [horaTermina, {}, _t("Vas a calcular a qué hora termina una actividad.")],
+      [estimar, {}, _t("Vas a estimar resultados redondeando, sin hacer la cuenta exacta.")],
+      [emparejarDinero, {}, _t("Vas a unir grupos de billetes y monedas con el valor que suman.")]
+    ],
+    4: [
+      [rectaUbicar, { max: 1000, step: 50, fine: 10, lineStep: 100 }, _t("Vas a leer y ubicar números en una recta del 0 al 1.000.")],
+      [secuencia, { steps: [3, 4, 6, 8], kinds: ["doble", "alterna", "resta"], start: [3, 60] }, _t("Vas a completar secuencias con reglas más complejas.")],
+      [equivalencias, {}, _t("Vas a unir fracciones con su porcentaje.")],
+      [convertir, {}, _t("Vas a unir medidas que son iguales: tiempo, longitud y peso.")],
+      [leerTabla, {}, _t("Vas a leer una tabla de ahorros y responder con sus datos.")],
+      [presupuesto, { totals: [50000, 80000, 100000, 150000] }, _t("Vas a calcular cuánto queda de un presupuesto.")],
+      [promedio, { min: 30, max: 45, spread: 8, unit: "nota", missing: true }, _t("Vas a calcular promedios de notas.")],
+      [reglaTres, {}, _t("Vas a calcular precios con proporciones (regla de tres).")],
+      [interes, {}, _t("Vas a calcular cuánto gana un ahorro con interés simple.")],
+      [mayorMenorQue, {}, _t("Vas a estimar si una compra cuesta más o menos que un valor.")]
+    ],
+    5: [
+      [combinadas, {}, _t("Vas a resolver operaciones combinadas respetando el orden.")],
+      [aumentoDescuento, {}, _t("Vas a calcular aumentos y descuentos encadenados.")],
+      [planearHorario, {}, _t("Vas a planear tu tarde sumando duraciones.")],
+      [compararOfertas, {}, _t("Vas a decidir qué oferta te conviene más.")],
+      [proporciones, {}, _t("Vas a resolver proporciones en recetas, mapas y recorridos.")],
+      [promedio, { min: 32, max: 42, spread: 6, unit: "nota", missing: true }, _t("Vas a calcular la nota que necesitas para alcanzar un promedio.")],
+      [presupuestoMensual, {}, _t("Vas a organizar un presupuesto mensual con ahorro.")],
+      [ahorroMeta, {}, _t("Vas a calcular cuántos meses necesitas para ahorrar una meta.")],
+      [encontrarError, { money: true }, _t("Vas a revisar una compra resuelta en tres pasos y encontrar el error.")],
+      [compraCompleta, {}, _t("Vas a resolver una compra completa: total, descuento y vueltas.")]
+    ]
   };
 
-  var NIVELES = {
-    // ══ Stage 1 · Base (1-10): mismo contenido, 10 retos parejos ═════════════
-    1: { rounds: 10, mechanics: ["subitizar"], params: { subitizar: { min: 2, max: 6, kinds: 1 } },
-         intro: "Stage 1 · Nivel 1 · Ver la cantidad de un vistazo. Aparecen grupos de figuras: elige cuántas hay, sin contarlas una por una." },
-    2: { rounds: 10, mechanics: ["subitizar", "comparar"],
-         params: { subitizar: { min: 4, max: 9, kinds: 2 }, comparar: { min: 3, max: 9 } },
-         intro: "Stage 1 · Nivel 2 · Ahora hay figuras mezcladas: cuenta solo el tipo que se pide. También comparas dos grupos: más, menos o igual." },
-    3: { rounds: 10, mechanics: ["compararNum", "posicional"],
-         params: { compararNum: { digits: 2 }, posicional: { modes: ["bloques"], hundreds: false } },
-         intro: "Stage 1 · Nivel 3 · Números de dos cifras. Compara números con los mismos dígitos y aprende a leer decenas y unidades con bloques." },
-    4: { rounds: 10, mechanics: ["recta", "rectaFina"],
-         params: { recta: { max: 20, step: 1 }, rectaFina: { max: 100, step: 10 } },
-         intro: "Stage 1 · Nivel 4 · La recta numérica. Lee qué número señala la flecha, primero de 0 a 20 y luego de 0 a 100." },
-    5: { rounds: 10, mechanics: ["operar", "patron"],
-         params: { operar: { ops: ["suma", "resta", "falta"], max: 30, carry: true }, patron: { kinds: ["suma", "resta"], steps: [2, 3, 4, 5] } },
-         intro: "Stage 1 · Nivel 5 · Cálculo. Sumas y restas con llevada, el número que falta y secuencias." },
-    6: { rounds: 10, mechanics: ["monedas", "cambio"],
-         params: { monedas: { coins: [1, 2, 5, 10, 20], n: [3, 5] }, cambio: { priceMax: 90 } },
-         intro: "Stage 1 · Nivel 6 · Dinero. Suma monedas y billetes y calcula el vuelto de una compra." },
-    7: { rounds: 10, mechanics: ["reloj", "relojFino", "tiempo"],
-         params: { reloj: { minutes: [0, 30] }, relojFino: { minutes: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55] }, tiempo: { durations: [30, 45, 60, 90] } },
-         intro: "Stage 1 · Nivel 7 · El tiempo. Lee la hora en un reloj de agujas y calcula cuándo termina una actividad." },
-    8: { rounds: 10, mechanics: ["fraccion", "porcentaje"],
-         params: { fraccion: { parts: [2, 3, 4, 5, 6, 8] }, porcentaje: { pcts: [10, 25, 50], modes: ["parte", "descuento"] } },
-         intro: "Stage 1 · Nivel 8 · Fracciones y porcentajes. Lee fracciones en una barra y calcula descuentos sencillos." },
-    9: { rounds: 10, mechanics: ["patron", "grupos", "posicional"],
-         params: {
-           patron: { kinds: ["suma", "resta", "doble", "alterna"], steps: [3, 4, 6, 7] },
-           grupos: { modes: ["mult", "reparto"], maxG: 6, maxM: 7 },
-           posicional: { modes: ["bloques", "digito"], hundreds: true }
-         },
-         intro: "Stage 1 · Nivel 9 · Patrones más complejos, grupos iguales, reparto y números de tres cifras." },
-    10: { rounds: 10,
-          mechanics: ["compararNum", "posicional", "recta", "operar", "monedas", "reloj", "fraccion", "porcentaje", "compra", "estimar"],
-          params: {
-            compararNum: { digits: 3 }, posicional: { modes: ["bloques", "digito"], hundreds: true },
-            recta: { max: 100, step: 5 }, operar: { ops: ["suma", "resta", "falta"], max: 50, carry: true },
-            monedas: { coins: [1, 5, 10, 20, 50], n: [4, 6] }, reloj: { minutes: [0, 15, 30, 45] },
-            fraccion: { parts: [2, 3, 4, 5, 6, 8] }, porcentaje: { pcts: [10, 25, 50], modes: ["parte", "descuento"] },
-            compra: { priceMax: 25 }, estimar: {}
-          },
-          intro: "Stage 1 · Nivel 10 · Reto final de la base. Aparece una muestra de todo lo practicado, incluidos problemas de dos pasos y estimación." },
-
-    // ══ Stage 2 · Media (11-20): matemática financiera cotidiana ════════════
-    11: { rounds: 10, mechanics: ["operar", "monedas"],
-          params: { operar: { ops: ["suma", "resta", "falta"], max: 60, carry: true }, monedas: { coins: [1, 2, 5, 10, 20, 50], n: [4, 6] } },
-          intro: "Stage 2 · Nivel 11 · Cálculo con llevada hasta 60 y suma de monedas y billetes." },
-    12: { rounds: 10, mechanics: ["precioUnitario", "compararNum"],
-          params: { precioUnitario: { productos: PRODUCTOS_UNIT, min: 2, max: 8, priceMin: 4, priceMax: 60 }, compararNum: { digits: 3 } },
-          intro: "Stage 2 · Nivel 12 · ¿Cuál presentación conviene más? Compara precio por unidad entre dos opciones." },
-    13: { rounds: 10, mechanics: ["cambio", "compra"],
-          params: { cambio: { priceMax: 120 }, compra: { priceMax: 20 } },
-          intro: "Stage 2 · Nivel 13 · Vueltos en compras cotidianas: calcula cuánto te devuelven." },
-    14: { rounds: 10, mechanics: ["propina", "porcentaje"],
-          params: { propina: { min: 15, max: 90, pcts: [10, 15, 20] }, porcentaje: { pcts: [10, 25, 50], modes: ["parte", "descuento"] } },
-          intro: "Stage 2 · Nivel 14 · Propinas y porcentajes: calcula cuánto dejar según el total de la cuenta." },
-    15: { rounds: 10, mechanics: ["recta", "operar"],
-          params: { recta: { max: 150, step: 10 }, operar: { ops: ["suma", "resta", "falta"], max: 80, carry: true } },
-          intro: "Stage 2 · Nivel 15 · Recta numérica hasta 150 y cálculo con números más grandes." },
-    16: { rounds: 10, mechanics: ["presupuesto", "operar"],
-          params: { presupuesto: { totales: [80, 100, 150, 200], categorias: CATEGORIAS_PRESUPUESTO, min: 5 }, operar: { ops: ["suma", "resta"], max: 100, carry: true } },
-          intro: "Stage 2 · Nivel 16 · Presupuesto: reparte un monto fijo entre gastos sin pasarte." },
-    17: { rounds: 10, mechanics: ["fraccion", "grupos"],
-          params: { fraccion: { parts: [3, 4, 5, 6, 8] }, grupos: { modes: ["mult", "reparto"], maxG: 7, maxM: 8 } },
-          intro: "Stage 2 · Nivel 17 · Fracciones en porciones y reparto en grupos." },
-    18: { rounds: 10, mechanics: ["porcentaje", "cambio"],
-          params: { porcentaje: { pcts: [10, 15, 20, 25], modes: ["descuento"] }, cambio: { priceMax: 150 } },
-          intro: "Stage 2 · Nivel 18 · Descuentos y vueltos combinados." },
-    19: { rounds: 10, mechanics: ["reloj", "tiempo"],
-          params: { reloj: { minutes: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55] }, tiempo: { durations: [45, 60, 90, 120] } },
-          intro: "Stage 2 · Nivel 19 · Horarios y turnos: calcula cuándo termina una actividad." },
-    20: { rounds: 10,
-          mechanics: ["operar", "precioUnitario", "propina", "presupuesto", "fraccion", "porcentaje", "reloj", "cambio"],
-          params: {
-            operar: { ops: ["suma", "resta", "falta"], max: 90, carry: true },
-            precioUnitario: { productos: PRODUCTOS_UNIT, min: 2, max: 8, priceMin: 4, priceMax: 60 },
-            propina: { min: 15, max: 90, pcts: [10, 15, 20] },
-            presupuesto: { totales: [80, 100, 150, 200], categorias: CATEGORIAS_PRESUPUESTO, min: 5 },
-            fraccion: { parts: [3, 4, 5, 6, 8] }, porcentaje: { pcts: [10, 15, 20, 25], modes: ["parte", "descuento"] },
-            reloj: { minutes: [0, 15, 30, 45] }, cambio: { priceMax: 150 }
-          },
-          intro: "Stage 2 · Nivel 20 · Reto integrador de la etapa Media: mezcla todo lo practicado." },
-
-    // ══ Stage 3 · Alta (21-30): finanzas personales y datos ═════════════════
-    21: { rounds: 10, mechanics: ["compararNum", "posicional"],
-          params: { compararNum: { digits: 3 }, posicional: { modes: ["bloques", "digito"], hundreds: true } },
-          intro: "Stage 3 · Nivel 21 · Números de tres cifras: comparación y valor posicional." },
-    22: { rounds: 10, mechanics: ["interesSimple", "monedas"],
-          params: { interesSimple: { capitales: [50, 100, 150, 200], tasas: [1, 2, 3], meses: [1] }, monedas: { coins: [1, 2, 5, 10, 20, 50], n: [4, 6] } },
-          intro: "Stage 3 · Nivel 22 · Interés simple: cuánto ganas ahorrando durante un mes." },
-    23: { rounds: 10, mechanics: ["promedio", "operar"],
-          params: { promedio: { n: [3, 4], min: 40, max: 100 }, operar: { ops: ["suma", "resta", "falta"], max: 120, carry: true } },
-          intro: "Stage 3 · Nivel 23 · Promedios: calcula el valor medio de varias calificaciones o gastos." },
-    24: { rounds: 10, mechanics: ["conversion", "recta"],
-          params: { conversion: { modes: ["horas_minutos", "metros_cm"] }, recta: { max: 200, step: 20 } },
-          intro: "Stage 3 · Nivel 24 · Conversión de unidades: horas a minutos y metros a centímetros." },
-    25: { rounds: 10, mechanics: ["presupuesto", "porcentaje"],
-          params: { presupuesto: { totales: [150, 200, 300, 400], categorias: CATEGORIAS_PRESUPUESTO, min: 10 }, porcentaje: { pcts: [10, 15, 20, 25, 50], modes: ["parte", "descuento"] } },
-          intro: "Stage 3 · Nivel 25 · Presupuesto con montos más grandes y varias categorías." },
-    26: { rounds: 10, mechanics: ["porcentaje", "cambio"],
-          params: { porcentaje: { pcts: [10, 15, 20, 25], modes: ["descuento"] }, cambio: { priceMax: 200 } },
-          intro: "Stage 3 · Nivel 26 · Descuentos y recargos combinados sobre precios más altos." },
-    27: { rounds: 10, mechanics: ["fraccion", "compararNum"],
-          params: { fraccion: { parts: [4, 5, 6, 8, 10] }, compararNum: { digits: 3 } },
-          intro: "Stage 3 · Nivel 27 · Fracciones con más partes y comparación de números de tres cifras." },
-    28: { rounds: 10, mechanics: ["patron", "operar"],
-          params: { patron: { kinds: ["suma", "resta", "doble", "alterna"], steps: [4, 5, 6, 7] }, operar: { ops: ["suma", "resta", "falta"], max: 150, carry: true } },
-          intro: "Stage 3 · Nivel 28 · Patrones más exigentes y cálculo con números grandes." },
-    29: { rounds: 10, mechanics: ["compra", "presupuesto"],
-          params: { compra: { priceMax: 30 }, presupuesto: { totales: [150, 200, 300], categorias: CATEGORIAS_PRESUPUESTO, min: 10 } },
-          intro: "Stage 3 · Nivel 29 · Problemas de dos pasos con dinero y presupuesto." },
-    30: { rounds: 10,
-          mechanics: ["interesSimple", "promedio", "conversion", "presupuesto", "porcentaje", "fraccion", "patron"],
-          params: {
-            interesSimple: { capitales: [50, 100, 150, 200], tasas: [1, 2, 3], meses: [1, 2] },
-            promedio: { n: [3, 4], min: 40, max: 100 },
-            conversion: { modes: ["horas_minutos", "metros_cm"] },
-            presupuesto: { totales: [150, 200, 300, 400], categorias: CATEGORIAS_PRESUPUESTO, min: 10 },
-            porcentaje: { pcts: [10, 15, 20, 25, 50], modes: ["parte", "descuento"] },
-            fraccion: { parts: [4, 5, 6, 8, 10] }, patron: { kinds: ["suma", "resta", "doble", "alterna"], steps: [4, 5, 6, 7] }
-          },
-          intro: "Stage 3 · Nivel 30 · Reto integrador de la etapa Alta: mezcla todo lo practicado." },
-
-    // ══ Stage 4 · Muy Alta (31-40): proporciones y planificación ════════════
-    31: { rounds: 10, mechanics: ["reglaDeTres", "precioUnitario"],
-          params: { reglaDeTres: { items: ITEMS_PROPORCION, priceMin: 5, priceMax: 40 }, precioUnitario: { productos: PRODUCTOS_UNIT, min: 3, max: 10, priceMin: 6, priceMax: 80 } },
-          intro: "Stage 4 · Nivel 31 · Regla de tres simple: si una cantidad cuesta X, ¿cuánto cuesta otra cantidad?" },
-    32: { rounds: 10, mechanics: ["interesSimple", "monedas"],
-          params: { interesSimple: { capitales: [100, 200, 300, 500], tasas: [1, 2, 3, 4], meses: [2, 3, 4] }, monedas: { coins: [1, 2, 5, 10, 20, 50, 100], n: [5, 7] } },
-          intro: "Stage 4 · Nivel 32 · Interés simple a varios meses." },
-    33: { rounds: 10, mechanics: ["tabla", "reglaDeTres"],
-          params: { tabla: { tablas: TABLAS_LECTURA }, reglaDeTres: { items: ITEMS_PROPORCION, priceMin: 5, priceMax: 40 } },
-          intro: "Stage 4 · Nivel 33 · Lectura de tablas de precios y horarios." },
-    34: { rounds: 10, mechanics: ["promedio", "conversion"],
-          params: { promedio: { n: [4, 5], min: 30, max: 100 }, conversion: { modes: ["horas_minutos", "metros_cm"] } },
-          intro: "Stage 4 · Nivel 34 · Promedios con más datos y conversión de unidades." },
-    35: { rounds: 10, mechanics: ["recta", "posicional"],
-          params: { recta: { max: 1000, step: 50 }, posicional: { modes: ["bloques", "digito"], hundreds: true } },
-          intro: "Stage 4 · Nivel 35 · Recta numérica y valor posicional hasta 1000." },
-    36: { rounds: 10, mechanics: ["presupuesto", "interesSimple"],
-          params: { presupuesto: { totales: [200, 300, 400, 500], categorias: CATEGORIAS_PRESUPUESTO, min: 15 }, interesSimple: { capitales: [100, 200, 300], tasas: [1, 2, 3], meses: [1, 2] } },
-          intro: "Stage 4 · Nivel 36 · Presupuesto con una meta de ahorro definida." },
-    37: { rounds: 10, mechanics: ["fraccion", "porcentaje"],
-          params: { fraccion: { parts: [5, 6, 7, 8, 10] }, porcentaje: { pcts: [10, 15, 20, 25, 50, 75], modes: ["parte", "descuento"] } },
-          intro: "Stage 4 · Nivel 37 · Fracciones y porcentajes combinados." },
-    38: { rounds: 10, mechanics: ["compra", "cambio", "porcentaje"],
-          params: { compra: { priceMax: 35 }, cambio: { priceMax: 250 }, porcentaje: { pcts: [10, 15, 20], modes: ["descuento"] } },
-          intro: "Stage 4 · Nivel 38 · Problemas de varios pasos: compra, descuento y vuelto." },
-    39: { rounds: 10, mechanics: ["patron", "grupos"],
-          params: { patron: { kinds: ["suma", "resta", "doble", "alterna"], steps: [5, 6, 7, 8] }, grupos: { modes: ["mult", "reparto"], maxG: 9, maxM: 9 } },
-          intro: "Stage 4 · Nivel 39 · Patrones y secuencias avanzadas." },
-    40: { rounds: 10,
-          mechanics: ["reglaDeTres", "interesSimple", "tabla", "promedio", "conversion", "presupuesto", "porcentaje", "compra"],
-          params: {
-            reglaDeTres: { items: ITEMS_PROPORCION, priceMin: 5, priceMax: 40 },
-            interesSimple: { capitales: [100, 200, 300, 500], tasas: [1, 2, 3, 4], meses: [2, 3, 4] },
-            tabla: { tablas: TABLAS_LECTURA }, promedio: { n: [4, 5], min: 30, max: 100 },
-            conversion: { modes: ["horas_minutos", "metros_cm"] },
-            presupuesto: { totales: [200, 300, 400, 500], categorias: CATEGORIAS_PRESUPUESTO, min: 15 },
-            porcentaje: { pcts: [10, 15, 20, 25, 50, 75], modes: ["parte", "descuento"] }, compra: { priceMax: 35 }
-          },
-          intro: "Stage 4 · Nivel 40 · Reto integrador de la etapa Muy Alta: mezcla todo lo practicado." },
-
-    // ══ Stage 5 · Súper Difícil (41-50): integración total, mínimo apoyo ════
-    41: { rounds: 10, mechanics: ["operar", "precioUnitario", "reglaDeTres"],
-          params: { operar: { ops: ["suma", "resta", "falta"], max: 300, carry: true }, precioUnitario: { productos: PRODUCTOS_UNIT, min: 3, max: 12, priceMin: 8, priceMax: 100 }, reglaDeTres: { items: ITEMS_PROPORCION, priceMin: 8, priceMax: 60 } },
-          intro: "Stage 5 · Nivel 41 · Cálculo exigente, precio por unidad y proporciones." },
-    42: { rounds: 10, mechanics: ["interesSimple", "promedio"],
-          params: { interesSimple: { capitales: [200, 400, 600, 800], tasas: [2, 3, 4, 5], meses: [2, 3, 4, 6] }, promedio: { n: [4, 5, 6], min: 30, max: 120 } },
-          intro: "Stage 5 · Nivel 42 · Interés simple con montos altos y promedios con más datos." },
-    43: { rounds: 10, mechanics: ["presupuesto", "conversion", "tabla"],
-          params: { presupuesto: { totales: [300, 400, 500, 600], categorias: CATEGORIAS_PRESUPUESTO, min: 20 }, conversion: { modes: ["horas_minutos", "metros_cm"] }, tabla: { tablas: TABLAS_LECTURA } },
-          intro: "Stage 5 · Nivel 43 · Presupuesto, conversión de unidades y lectura de tablas." },
-    44: { rounds: 10, mechanics: ["porcentaje", "cambio", "compra"],
-          params: { porcentaje: { pcts: [10, 15, 20, 25, 50, 75], modes: ["parte", "descuento"] }, cambio: { priceMax: 300 }, compra: { priceMax: 40 } },
-          intro: "Stage 5 · Nivel 44 · Descuentos, vueltos y compras de varios pasos, con precios altos." },
-    45: { rounds: 10, mechanics: ["recta", "posicional", "compararNum"],
-          params: { recta: { max: 1000, step: 50 }, posicional: { modes: ["bloques", "digito"], hundreds: true }, compararNum: { digits: 3 } },
-          intro: "Stage 5 · Nivel 45 · Recta numérica, valor posicional y comparación con números grandes." },
-    46: { rounds: 10, mechanics: ["fraccion", "patron", "grupos"],
-          params: { fraccion: { parts: [6, 7, 8, 9, 10] }, patron: { kinds: ["suma", "resta", "doble", "alterna"], steps: [6, 7, 8, 9] }, grupos: { modes: ["mult", "reparto"], maxG: 9, maxM: 9 } },
-          intro: "Stage 5 · Nivel 46 · Fracciones con más partes, patrones avanzados y grupos." },
-    47: { rounds: 10, mechanics: ["reglaDeTres", "propina", "presupuesto"],
-          params: { reglaDeTres: { items: ITEMS_PROPORCION, priceMin: 10, priceMax: 70 }, propina: { min: 20, max: 150, pcts: [10, 15, 20] }, presupuesto: { totales: [300, 400, 500, 600], categorias: CATEGORIAS_PRESUPUESTO, min: 20 } },
-          intro: "Stage 5 · Nivel 47 · Proporciones, propinas y presupuesto combinados." },
-    48: { rounds: 10, mechanics: ["interesSimple", "tabla", "conversion"],
-          params: { interesSimple: { capitales: [300, 500, 700, 900], tasas: [2, 3, 4, 5], meses: [3, 4, 6] }, tabla: { tablas: TABLAS_LECTURA }, conversion: { modes: ["horas_minutos", "metros_cm"] } },
-          intro: "Stage 5 · Nivel 48 · Interés simple a más plazo, tablas y conversión de unidades." },
-    49: { rounds: 10,
-          mechanics: ["operar", "porcentaje", "precioUnitario", "reglaDeTres", "promedio", "presupuesto", "conversion", "tabla"],
-          params: {
-            operar: { ops: ["suma", "resta", "falta"], max: 350, carry: true },
-            porcentaje: { pcts: [10, 15, 20, 25, 50, 75], modes: ["parte", "descuento"] },
-            precioUnitario: { productos: PRODUCTOS_UNIT, min: 3, max: 12, priceMin: 8, priceMax: 100 },
-            reglaDeTres: { items: ITEMS_PROPORCION, priceMin: 10, priceMax: 70 },
-            promedio: { n: [4, 5, 6], min: 30, max: 120 },
-            presupuesto: { totales: [300, 400, 500, 600], categorias: CATEGORIAS_PRESUPUESTO, min: 20 },
-            conversion: { modes: ["horas_minutos", "metros_cm"] }, tabla: { tablas: TABLAS_LECTURA }
-          },
-          intro: "Stage 5 · Nivel 49 · Mezcla exigente de todas las habilidades financieras practicadas." },
-    50: { rounds: 10,
-          mechanics: ["compararNum", "posicional", "recta", "operar", "monedas", "cambio", "reloj", "fraccion", "porcentaje", "patron", "grupos", "compra", "estimar", "precioUnitario", "propina", "presupuesto", "interesSimple", "promedio", "conversion", "reglaDeTres", "tabla"],
-          params: {
-            compararNum: { digits: 3 }, posicional: { modes: ["bloques", "digito"], hundreds: true },
-            recta: { max: 1000, step: 50 }, operar: { ops: ["suma", "resta", "falta"], max: 400, carry: true },
-            monedas: { coins: [1, 2, 5, 10, 20, 50, 100, 200], n: [6, 8] }, cambio: { priceMax: 300 },
-            reloj: { minutes: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55] },
-            fraccion: { parts: [3, 4, 5, 6, 7, 8, 9, 10] },
-            porcentaje: { pcts: [10, 20, 25, 50, 75], modes: ["parte", "descuento"] },
-            patron: { kinds: ["suma", "resta", "doble", "alterna"], steps: [5, 6, 7, 8, 9] },
-            grupos: { modes: ["mult", "reparto"], maxG: 9, maxM: 9 }, compra: { priceMax: 40 }, estimar: {},
-            precioUnitario: { productos: PRODUCTOS_UNIT, min: 3, max: 12, priceMin: 8, priceMax: 100 },
-            propina: { min: 20, max: 150, pcts: [10, 15, 20] },
-            presupuesto: { totales: [300, 400, 500, 600], categorias: CATEGORIAS_PRESUPUESTO, min: 20 },
-            interesSimple: { capitales: [300, 500, 700, 900], tasas: [2, 3, 4, 5], meses: [3, 4, 6] },
-            promedio: { n: [4, 5, 6], min: 30, max: 120 }, conversion: { modes: ["horas_minutos", "metros_cm"] },
-            reglaDeTres: { items: ITEMS_PROPORCION, priceMin: 10, priceMax: 70 }, tabla: { tablas: TABLAS_LECTURA }
-          },
-          intro: "Stage 5 · Nivel 50 · Reto final del Mercado Espacial: todas las habilidades practicadas, al máximo nivel de exigencia." }
+  var HABILIDADES = {
+    subitizacion: _t("Reconocer cantidades de un vistazo"),
+    comparacion_magnitud: _t("Comparar cantidades"),
+    comparacion_numeros: _t("Comparar números"),
+    orden_numeros: _t("Ordenar números"),
+    valor_posicional: _t("Valor de una cifra según su posición"),
+    valor_posicional_bloques: _t("Leer números con bloques"),
+    recta_numerica: _t("Ubicar números en la recta"),
+    aritmetica_suma: _t("Sumar"),
+    aritmetica_resta: _t("Restar"),
+    aritmetica_falta: _t("Encontrar el número que falta"),
+    patron_suma: _t("Secuencias que suman"),
+    patron_resta: _t("Secuencias que restan"),
+    patron_doble: _t("Secuencias que se duplican"),
+    patron_alterna: _t("Secuencias alternas"),
+    dinero_monedas: _t("Contar monedas"),
+    dinero_billetes: _t("Contar billetes y monedas"),
+    dinero_faltante: _t("Calcular cuánto falta"),
+    dinero_cambio: _t("Calcular las vueltas"),
+    dinero_suma: _t("Sumar una compra"),
+    equivalencia_dinero: _t("Equivalencias de dinero"),
+    par_impar: _t("Pares e impares"),
+    multiplicacion_grupos: _t("Grupos iguales (multiplicación)"),
+    division_reparto: _t("Repartir en partes iguales (división)"),
+    lectura_reloj: _t("Leer la hora"),
+    duracion_tiempo: _t("Calcular duraciones"),
+    fracciones: _t("Fracciones"),
+    fraccion_porcentaje: _t("Fracciones y porcentajes"),
+    revision_suma: _t("Revisar una suma paso a paso"),
+    descuento: _t("Descuentos"),
+    porcentaje: _t("Porcentajes"),
+    precio_unitario: _t("Precio por unidad"),
+    estimacion: _t("Estimar resultados"),
+    conversion_medida: _t("Convertir medidas"),
+    lectura_tabla: _t("Leer tablas"),
+    presupuesto: _t("Presupuesto"),
+    promedio: _t("Promedio"),
+    regla_de_tres: _t("Proporciones (regla de tres)"),
+    interes_simple: _t("Interés simple"),
+    operaciones_combinadas: _t("Orden de las operaciones"),
+    comparar_ofertas: _t("Comparar ofertas"),
+    planeacion_ahorro: _t("Planear un ahorro"),
+    problema_tres_pasos: _t("Problemas de varios pasos")
   };
 
   global.IndecapGame.register({
     slug: "discalculia_mercado",
+    skillLabels: HABILIDADES,
+    plan: PLAN,
 
-    getLevel: function (level) {
-      var base = NIVELES[level] || NIVELES[1];
-      // Se copia la configuración para que un nivel nunca mute a otro.
-      return { rounds: base.rounds, mechanics: base.mechanics.slice(), params: base.params, intro: base.intro };
-    },
-
-    buildRound: function (cfg, index) {
-      var m = cfg.mechanics[index % cfg.mechanics.length];
-      return CONSTRUCTORES[m](cfg.params[m] || {});
+    getActivity: function (index) {
+      var nivel = Math.min(5, Math.max(1, Math.ceil(index / 10)));
+      var act = PLAN[nivel][(index - 1) % 10];
+      return {
+        intro: act[2] + _t(" Son ") + RETOS + _t(" retos que suben de dificultad."),
+        rounds: RETOS,
+        build: function (step) { return act[0](act[1], step); }
+      };
     }
   });
 })(window);

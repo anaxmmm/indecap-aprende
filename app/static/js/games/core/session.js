@@ -1,19 +1,22 @@
 /**
  * Envío de métricas con cola offline.
  *
- * Las sedes del instituto tienen señal intermitente. Si el envío falla, la
- * partida se guarda en localStorage y se reintenta al recuperar conexión, para
- * no perder el trabajo real del estudiante.
+ * Las sedes del instituto tienen señal intermitente. Si el envío falla por
+ * conexión, la partida se guarda en localStorage y se reintenta al reconectar,
+ * para no perder el trabajo real del estudiante.
+ *
+ * La cola es propia de cada cuenta: en un computador compartido, lo pendiente
+ * de un estudiante nunca se envía con la sesión de otro.
  */
 (function (global) {
   "use strict";
 
-  var QUEUE_KEY = "indecap.games.queue";
+  var QUEUE_PREFIX = "indecap.games.queue.";
   var MAX_QUEUE = 50;
 
-  function readQueue() {
+  function readQueue(key) {
     try {
-      var raw = global.localStorage.getItem(QUEUE_KEY);
+      var raw = global.localStorage.getItem(key);
       var parsed = raw ? JSON.parse(raw) : [];
       return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
@@ -21,9 +24,10 @@
     }
   }
 
-  function writeQueue(items) {
+  function writeQueue(key, items) {
     try {
-      global.localStorage.setItem(QUEUE_KEY, JSON.stringify(items.slice(-MAX_QUEUE)));
+      if (!items.length) { global.localStorage.removeItem(key); return; }
+      global.localStorage.setItem(key, JSON.stringify(items.slice(-MAX_QUEUE)));
     } catch (e) {
       /* Modo privado o cuota llena: se pierde la cola, no el juego. */
     }
@@ -33,6 +37,7 @@
     this.url = config.url;
     this.csrfToken = config.csrfToken || null;
     this.preview = !!config.preview;
+    this.key = QUEUE_PREFIX + (config.owner || "anon");
     var self = this;
     global.addEventListener("online", function () { self.flush(); });
   }
@@ -47,6 +52,11 @@
       credentials: "same-origin",
       body: JSON.stringify(payload)
     }).then(function (response) {
+      // 4xx: el servidor rechazó la partida (sin asignación, sesión vencida…).
+      // Reintentarla no la arreglaría, así que no se encola.
+      if (response.status >= 400 && response.status < 500) {
+        return { ok: false, rejected: true, status: response.status };
+      }
       if (!response.ok) throw new Error("HTTP " + response.status);
       return response.json();
     });
@@ -64,16 +74,16 @@
         return data;
       })
       .catch(function () {
-        var queue = readQueue();
+        var queue = readQueue(self.key);
         queue.push(payload);
-        writeQueue(queue);
+        writeQueue(self.key, queue);
         return { ok: false, queued: true };
       });
   };
 
   /** Reintenta enviar lo pendiente. Se llama al reconectar y tras cada envío. */
   Session.prototype.flush = function () {
-    var queue = readQueue();
+    var queue = readQueue(this.key);
     if (!queue.length || this.preview) return Promise.resolve(0);
 
     var self = this;
@@ -87,13 +97,13 @@
           .catch(function () { pendientes.push(payload); });
       });
     }, Promise.resolve()).then(function () {
-      writeQueue(pendientes);
+      writeQueue(self.key, pendientes);
       return enviados;
     });
   };
 
   Session.prototype.pendingCount = function () {
-    return readQueue().length;
+    return readQueue(this.key).length;
   };
 
   global.IndecapSession = Session;

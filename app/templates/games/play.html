@@ -1,124 +1,213 @@
+{% extends "dashboard/student/base_student.html" if current_user.is_student else "dashboard/teacher/base_teacher.html" %}
+{% block title %}{{ activity_title }} · {{ game.name }} — indecap-aprende{% endblock %}
 
-{% extends "dashboard/student/base_student.html" %}
-{% block title %}{{ game.name }} — indecap-aprende{% endblock %}
+{% block student_content %}{{ self.game_body() }}{% endblock %}
+{% block teacher_content %}{{ self.game_body() }}{% endblock %}
 
-{% block student_content %}
+{% block game_body %}
+{% from "games/_personaje.html" import personaje, cara %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
 
-{% set exit_url = url_for('games.stages', slug=game.slug, trastorno_id=trastorno.id if trastorno else '') if game.has_stage_map else url_for('dashboard.student_juegos') %}
+{% if current_user.is_student %}
+  {% set exit_url = url_for('games.stages', slug=game.slug, trastorno_id=trastorno.id if trastorno else '') if game.has_stage_map else url_for('dashboard.student_juegos') %}
+{% else %}
+  {% set exit_url = url_for('dashboard.sesiones_sistema') ~ '#juego-' ~ game.slug ~ '.' ~ nivel %}
+{% endif %}
+
+{% set game_strings = {
+  'ok': [_('¡Correcto!'), _('¡Muy bien!'), _('¡Eso es!'), _('¡Bien pensado!')],
+  'retry': [_('Todavía no. Revisa con calma y prueba otra vez.'), _('Casi. Mira de nuevo el planteamiento.'), _('Prueba otra opción, no pasa nada.')],
+  'reveal': _('Mira cómo se resuelve:'),
+  'check': _('Comprobar'),
+  'erase': _('Borrar el último dígito'),
+  'yourAnswer': _('Tu respuesta'),
+  'yourOrder': _('Tu orden'),
+  'available': _('Elementos disponibles'),
+  'chooseItem': _('Primero elige un elemento'),
+  'placedIn': _('colocado en'),
+  'pairWith': _('emparejado con'),
+  'round': _('Reto'),
+  'of': _('de'),
+  'review': _('Repaso'),
+  'reviewIntroOne': _('Antes de terminar, repasemos un reto parecido al que te costó.'),
+  'reviewIntroMany': _('Antes de terminar, repasemos {n} retos parecidos a los que te costaron.'),
+  'reviewPrefix': _('Repasemos: '),
+  'end3': _('¡Actividad dominada! Todo bien al primer intento.'),
+  'end2': _('¡Muy bien! Superaste la actividad.'),
+  'end1': _('Actividad superada. Si la repites puedes ganar más estrellas.'),
+  'end0': _('Todavía no la superas. Repítela con calma: cada intento te acerca.'),
+  'praiseRetry': _('Revisaste y corregiste tus respuestas: así se aprende.'),
+  'praiseHint': _('Usaste las pistas para avanzar: pedir ayuda también es una estrategia.'),
+  'praiseFocus': _('Te mantuviste concentrado hasta el final.'),
+  'firstTry': _('Al primer intento'),
+  'withHelp': _('Con ayuda'),
+  'time': _('Tiempo'),
+  'nothingToImprove': _('Nada pendiente en esta actividad.'),
+  'saving': _('Guardando tu progreso…'),
+  'saved': _('Progreso guardado.'),
+  'queued': _('Sin conexión. Tu progreso quedó guardado en este dispositivo y se enviará al reconectar.'),
+  'preview': _('Vista previa: no se guarda progreso.'),
+  'rejected': _('No se pudo guardar esta partida. Pídele a tu docente que revise tu asignación.'),
+  'example': _('Ejemplo resuelto'),
+  'answer': _('Respuesta'),
+  'starsOf': _('{n} de 3 estrellas'),
+  'done': _('¡Reto completado!'),
+  'finished': _('Actividad terminada'),
+  'listen': _('Escuchar de nuevo'),
+  'feelingThanks': _('Gracias. Tu docente verá cómo te sentiste.'),
+  'feelingError': _('No se pudo guardar tu respuesta. Puedes intentarlo de nuevo.')
+} %}
+<script type="application/json" id="gameStrings">{{ game_strings | tojson }}</script>
 
 <div class="game-shell"
      data-game-slug="{{ game.slug }}"
-     data-game-name="{{ game.name }}"
      data-level="{{ level }}"
      data-max-level="{{ game.levels }}"
      data-trastorno-id="{{ trastorno.id if trastorno else '' }}"
      data-preview="{{ '1' if preview else '0' }}"
+     data-user-id="{{ current_user.id }}"
      data-submit-url="{{ url_for('games.submit_session') }}"
+     data-feeling-url="{{ url_for('games.submit_feeling', session_id=0) }}"
      data-a11y='{{ a11y | tojson }}'>
 
-  <div class="game-page-viewport">
-    {% if preview %}
-    <p class="game-preview-flag" role="status">
-      {{ _('Modo vista previa: puedes jugar para conocer la actividad, pero no se guarda progreso.') }}
-    </p>
-    {% endif %}
+  {% if preview %}
+  <p class="game-preview-flag" role="status">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+    {{ _('Vista previa del docente: puedes jugar y proyectar la actividad, pero no se guarda progreso.') }}
+  </p>
+  {% endif %}
 
-    <!-- ══ Barra de accesibilidad: siempre visible, nunca escondida en un menú ══ -->
-    <div class="game-a11y-bar" role="region" aria-label="{{ _('Ajustes de accesibilidad') }}">
-      <button type="button" class="game-a11y-btn" data-a11y-action="speak"
-              aria-pressed="false">🔊 {{ _('Leer en voz alta') }}</button>
-      <button type="button" class="game-a11y-btn" data-a11y-action="contrast"
-              aria-pressed="false">◐ {{ _('Alto contraste') }}</button>
-      <button type="button" class="game-a11y-btn" data-a11y-action="text-bigger">A+ {{ _('Texto') }}</button>
-      <button type="button" class="game-a11y-btn" data-a11y-action="text-smaller">A− {{ _('Texto') }}</button>
-      <button type="button" class="game-a11y-btn" data-a11y-action="motion"
-              aria-pressed="false">✦ {{ _('Reducir movimiento') }}</button>
-      <button type="button" class="game-a11y-btn game-a11y-btn--hint" data-a11y-action="hint">
-        💡 {{ _('Necesito una pista') }}
-      </button>
-    </div>
-
-    <!-- ══ Marco de consola ══ -->
-    <div class="game-frame">
-      <header class="game-frame__header">
-        <div>
-          <p class="game-frame__condition">{{ game.condition }}</p>
-          <h1 class="game-frame__title">{{ game.name }}</h1>
-        </div>
-        <a href="{{ exit_url }}"
-           class="game-frame__exit" aria-label="{{ _('Salir del juego') }}">✕</a>
-      </header>
-
-      <!-- HUD -->
-      <div class="game-hud" role="status" aria-live="polite" aria-atomic="true">
-        <span class="game-hud__item">{{ _('Nivel') }} <strong id="hudLevel">{{ level }}</strong>/{{ game.levels }}</span>
-        <span class="game-hud__item">{{ _('Reto') }} <strong id="hudRound">1</strong></span>
-        <span class="game-hud__item">{{ _('Estrellas') }} <strong id="hudStars">0</strong></span>
-        <span class="game-hud__item" id="hudTimer">⏱ 0:00</span>
-      </div>
-
-      <div class="game-progress" aria-hidden="true">
-        <div class="game-progress__bar" id="progressBar" style="width:0%"></div>
-      </div>
-
-      <!-- Escenario -->
-      <main class="game-stage" id="gameStage" tabindex="-1">
-        <!-- Pantalla de intro -->
-        <section class="game-screen is-active" id="screenIntro">
-          <div class="game-guide">
-            <div class="game-guide__avatar" aria-hidden="true">🛰️</div>
-            <div class="game-guide__bubble">
-              <p class="game-guide__name">NOVA, {{ _('tu guía') }}</p>
-              <p id="introText">{{ _('Cargando la misión…') }}</p>
-            </div>
-          </div>
-          <button type="button" class="game-btn game-btn--primary" id="btnStart">
-            {{ _('Comenzar la misión') }}
-          </button>
-        </section>
-
-        <!-- Pantalla de juego -->
-        <section class="game-screen" id="screenPlay" aria-live="polite">
-          <p class="game-prompt" id="prompt"></p>
-          <div class="game-visual" id="visual" aria-hidden="true"></div>
-          <p class="game-hint" id="hintText" role="status" hidden></p>
-          <div class="game-options" id="options" role="group" aria-label="{{ _('Opciones de respuesta') }}"></div>
-          <p class="game-feedback" id="feedback" role="status" aria-live="assertive"></p>
-        </section>
-
-        <!-- Pantalla de cierre -->
-        <section class="game-screen" id="screenEnd">
-          <div class="game-guide">
-            <div class="game-guide__avatar" aria-hidden="true">🌟</div>
-            <div class="game-guide__bubble">
-              <p class="game-guide__name">NOVA, {{ _('tu guía') }}</p>
-              <p id="endText"></p>
-            </div>
-          </div>
-          <p class="game-save-state" id="saveState" role="status"></p>
-          <div class="game-end-actions">
-            <button type="button" class="game-btn game-btn--ghost" id="btnRetry">{{ _('Repetir nivel') }}</button>
-            <button type="button" class="game-btn game-btn--primary" id="btnNext">{{ _('Siguiente nivel') }}</button>
-            <a href="{{ exit_url }}" class="game-btn game-btn--ghost">{{ _('Salir') }}</a>
-          </div>
-        </section>
-      </main>
-
-      <!-- Personaje guía en la esquina -->
-      <div class="game-companion" aria-hidden="true">🐢</div>
-    </div>
+  <div class="game-a11y-bar game-toolbar" role="toolbar" aria-label="{{ _('Ajustes de accesibilidad') }}">
+    <button type="button" class="game-a11y-btn" data-a11y-action="speak" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+      {{ _('Leer en voz alta') }}
+    </button>
+    <button type="button" class="game-a11y-btn" data-a11y-action="sound" aria-pressed="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>
+      {{ _('Sonidos') }}
+    </button>
+    <span class="game-toolbar__sep" aria-hidden="true"></span>
+    <button type="button" class="game-a11y-btn" data-a11y-action="contrast" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg>
+      {{ _('Alto contraste') }}
+    </button>
+    <button type="button" class="game-a11y-btn game-a11y-btn--icon" data-a11y-action="text-smaller" aria-label="{{ _('Texto más pequeño') }}">A−</button>
+    <button type="button" class="game-a11y-btn game-a11y-btn--icon" data-a11y-action="text-bigger" aria-label="{{ _('Texto más grande') }}">A+</button>
+    <button type="button" class="game-a11y-btn" data-a11y-action="motion" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h4l2-5 4 10 2-5h4"/></svg>
+      {{ _('Reducir movimiento') }}
+    </button>
+    <span class="game-toolbar__spacer" aria-hidden="true"></span>
+    <button type="button" class="game-a11y-btn game-a11y-btn--hint" data-a11y-action="hint">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>
+      {{ _('Necesito una pista') }}
+    </button>
   </div>
 
+  <article class="game-card">
+    <header class="game-card__head">
+      <div class="game-card__titles">
+        <p class="game-card__eyebrow">{{ game.name }} · {{ game.condition }}</p>
+        <h1 class="game-card__title">{{ activity_title }}</h1>
+        <p class="game-card__meta">
+          <span class="game-level-badge">{{ _('Nivel %(n)s', n=nivel) }} · {{ nivel_name }}</span>
+          {{ _('Actividad %(a)s de %(total)s', a=actividad, total=game.stage_size) }}
+        </p>
+      </div>
+      <a href="{{ exit_url }}" class="game-card__exit" aria-label="{{ _('Salir de la actividad') }}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </a>
+      <div class="game-hud" role="status" aria-live="polite">
+        <span class="game-hud__round" id="hudRound">{{ _('Reto') }} 1</span>
+        <span class="game-dots" id="roundDots" aria-hidden="true"></span>
+        <span class="game-hud__timer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>
+          <span id="hudTimer">0:00</span>
+        </span>
+      </div>
+    </header>
+
+    <main class="game-stage" id="gameStage" tabindex="-1">
+      <section class="game-screen game-intro is-active" id="screenIntro" aria-labelledby="introTitle">
+        <div class="game-intro__main">
+          <div class="game-mascota game-mascota--intro">{{ personaje(game.slug) }}</div>
+          <h2 class="game-intro__title" id="introTitle">{{ _('¿Qué vas a hacer?') }}</h2>
+          <p class="game-intro__text" id="introText">{{ _('Cargando la actividad…') }}</p>
+          <ul class="game-intro__facts">
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg>
+              {{ _('Retos cortos que suben de dificultad') }}
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/></svg>
+              {{ _('Sin límite de tiempo: ve a tu ritmo') }}
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>
+              {{ _('Puedes pedir una pista cuando la necesites') }}
+            </li>
+          </ul>
+          <button type="button" class="game-btn game-btn--primary game-btn--lg" id="btnStart">
+            {{ _('Empezar') }}
+          </button>
+        </div>
+        <aside class="game-example" id="introExample" hidden></aside>
+      </section>
+
+      <section class="game-screen game-play" id="screenPlay">
+        <p class="game-prompt" id="prompt" aria-live="polite"></p>
+        <div class="game-visual" id="visual" aria-hidden="true"></div>
+        <p class="game-hint" id="hintText" role="status" hidden></p>
+        <div class="game-options" id="options" role="group" aria-label="{{ _('Responde aquí') }}"></div>
+        <div class="game-feedback-row">
+          <div class="game-mascota game-mascota--juego">{{ personaje(game.slug) }}</div>
+          <p class="game-feedback" id="feedback" role="status" aria-live="assertive"></p>
+        </div>
+      </section>
+
+      <section class="game-screen game-end" id="screenEnd" aria-labelledby="endTitle">
+        <div class="game-mascota game-mascota--final">{{ personaje(game.slug) }}</div>
+        <div class="game-end__stars" id="endStars" role="img"></div>
+        <h2 class="game-end__title" id="endTitle"></h2>
+        <p class="game-end__praise" id="endPraise" hidden></p>
+        <div class="game-end__stats" id="endStats"></div>
+        <div class="game-end__lists">
+          <section class="game-end__list game-end__list--ok" id="endMastered" hidden>
+            <h3>{{ _('Lo que dominaste') }}</h3>
+            <ul></ul>
+          </section>
+          <section class="game-end__list game-end__list--improve" id="endImprove">
+            <h3>{{ _('Para reforzar') }}</h3>
+            <ul></ul>
+          </section>
+        </div>
+        <p class="game-save-state" id="saveState" role="status"></p>
+        <section class="game-feeling" id="endFeeling" aria-labelledby="feelingTitle" hidden>
+          <h3 class="game-feeling__title" id="feelingTitle">{{ _('¿Cómo te sentiste en esta actividad?') }}</h3>
+          <div class="game-feeling__options" role="group" aria-labelledby="feelingTitle">
+            <button type="button" class="game-feeling__btn" data-feeling="bien" aria-pressed="false"><span class="game-feeling__face">{{ cara('bien') }}</span>{{ _('Bien') }}</button>
+            <button type="button" class="game-feeling__btn" data-feeling="regular" aria-pressed="false"><span class="game-feeling__face">{{ cara('regular') }}</span>{{ _('Regular') }}</button>
+            <button type="button" class="game-feeling__btn" data-feeling="dificil" aria-pressed="false"><span class="game-feeling__face">{{ cara('dificil') }}</span>{{ _('Me costó') }}</button>
+          </div>
+          <p class="game-feeling__state" id="feelingState" role="status"></p>
+        </section>
+        <div class="game-end__actions">
+          <button type="button" class="game-btn game-btn--ghost" id="btnRetry">{{ _('Repetir actividad') }}</button>
+          <a href="{{ exit_url }}" class="game-btn game-btn--ghost">{{ _('Volver a las actividades') if current_user.is_student else _('Volver al Modo maestro') }}</a>
+          <button type="button" class="game-btn game-btn--primary" id="btnNext">{{ _('Siguiente actividad') }}</button>
+        </div>
+      </section>
+    </main>
+  </article>
+
   {% if not current_user.is_student %}
-  <!-- ══ Ficha pedagógica: solo para docentes y administración ══ -->
   <details class="game-sheet">
     <summary>{{ _('Qué trabaja esta actividad') }}</summary>
     <div class="game-sheet__body">
-      <p><strong>{{ _('Habilidad núcleo:') }}</strong> {{ game.core_skill }}</p>
-      <p><strong>{{ _('Regiones cerebrales implicadas:') }}</strong></p>
+      <p><strong>{{ _('Habilidad central:') }}</strong> {{ game.core_skill }}</p>
+      <p><strong>{{ _('Habilidades que se practican:') }}</strong></p>
       <ul>
-        {% for region in game.brain_regions %}<li>{{ region }}</li>{% endfor %}
+        {% for skill in game.skills %}<li>{{ skill }}</li>{% endfor %}
       </ul>
       <p><strong>{{ _('Representación:') }}</strong> {{ game.dua.representacion }}</p>
       <p><strong>{{ _('Acción y expresión:') }}</strong> {{ game.dua.accion_expresion }}</p>
@@ -131,8 +220,10 @@
   {% endif %}
 </div>
 
+<script src="{{ url_for('static', filename='js/games/core/pictos.js') }}"></script>
 <script src="{{ url_for('static', filename='js/games/core/a11y.js') }}"></script>
 <script src="{{ url_for('static', filename='js/games/core/session.js') }}"></script>
+<script type="application/json" id="gameDict">{{ game_dictionary(game) | tojson }}</script>
 <script src="{{ url_for('static', filename='js/games/core/engine.js') }}"></script>
 <script src="{{ url_for('static', filename=game.asset_path) }}"></script>
 {% endblock %}
