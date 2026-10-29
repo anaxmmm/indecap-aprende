@@ -1,20 +1,22 @@
-{% extends "base.html" %}
-{% block title %}{{ _('Editar actividad') if mode == "edit" else _('Nueva actividad') }} — Admin{% endblock %}
-{% block content %}
-<h1 class="h3 mb-4">{{ _('Editar actividad') if mode == "edit" else _('Nueva actividad') }} — {{ trastorno.name }}</h1>
-<form method="post" novalidate style="max-width:640px;">
+{% extends "dashboard/teacher/base_teacher.html" %}
+{% block title %}{{ _('Editar actividad') if mode == "edit" else _('Nueva actividad') }} — indecap-aprende{% endblock %}
+{% block teacher_content %}
+<div class="dx-page-head"><h1 class="dx-page-title">{{ _('Editar actividad') if mode == "edit" else _('Nueva actividad') }} — {{ trastorno.name }}</h1></div>
+<form method="post" novalidate class="dx-card dx-form">
+  <div class="dx-form__grid">
   {{ form.hidden_tag() }}
   {% for field in [form.trastorno_id, form.title, form.content_body, form.order_index, form.estimated_minutes, form.support_image_url, form.lsc_video_url, form.interactive_widget] %}
-  <div class="mb-3">
-    {{ field.label(class_="form-label") }}
+  <div class="dx-field{{ ' dx-field--wide' if field.type == 'TextAreaField' else '' }}">
+    {{ field.label(class_="dx-field__label") }}
     {% if field.type == "TextAreaField" %}
       {{ field(class_="form-control", rows=6) }}
     {% else %}
       {{ field(class_="form-control") }}
     {% endif %}
-    {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    {% for error in field.errors %}<div class="dx-field__error">{{ error }}</div>{% endfor %}
   </div>
   {% endfor %}
-  {{ form.submit(class_="btn btn-primary") }}
+  </div>
+  <div class="dx-form__foot"><span></span>{{ form.submit(class_="dx-action") }}</div>
 </form>
 {% endblock %}

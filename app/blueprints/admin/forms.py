@@ -1,7 +1,7 @@
 from flask_babel import lazy_gettext as _l
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, IntegerField, SelectField, SubmitField
-from wtforms.validators import DataRequired, Length, NumberRange, Optional, URL
+from wtforms import BooleanField, StringField, TextAreaField, IntegerField, SelectField, SubmitField, PasswordField
+from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, URL
 
 from app.models.content import InteractiveWidgetType
 
@@ -38,3 +38,19 @@ class ActividadForm(FlaskForm):
         validators=[DataRequired()],
     )
     submit = SubmitField(_l("Guardar"))
+
+
+class AccountForm(FlaskForm):
+    full_name = StringField(_l("Nombre completo"), validators=[DataRequired(), Length(min=3, max=150)])
+    email = StringField(_l("Correo electrónico"), validators=[DataRequired(), Email(), Length(max=150)],
+                        filters=[lambda v: v.strip() if v else v])
+    role = SelectField(_l("Tipo de cuenta"), validators=[DataRequired()])
+    group_id = SelectField(_l("Grupo (solo estudiantes)"), coerce=int, validators=[Optional()])
+    password = PasswordField(
+        _l("Contraseña temporal"),
+        validators=[DataRequired(), Length(min=8, message=_l("Usa al menos 8 caracteres."))],
+    )
+    data_consent = BooleanField(
+        _l("El estudiante, o su acudiente si es menor de edad, autorizó el tratamiento de sus datos según la política de tratamiento de datos.")
+    )
+    submit = SubmitField(_l("Crear cuenta"))

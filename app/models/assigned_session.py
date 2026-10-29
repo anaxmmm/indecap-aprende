@@ -4,9 +4,9 @@ Atenxia. Un estudiante puede tener varios trastornos asignados a la vez,
 así que esto asigna la actividad puntual, no el trastorno completo.
 """
 import enum
-from datetime import datetime
 
 from app.extensions import db
+from app.utils.fechas import utc_now
 
 
 class EstadoSesion(str, enum.Enum):
@@ -27,7 +27,7 @@ class SesionAsignada(db.Model):
     status = db.Column(db.Enum(EstadoSesion), default=EstadoSesion.PENDIENTE)
     clinical_notes = db.Column(db.Text, nullable=True)
 
-    assigned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    assigned_at = db.Column(db.DateTime, default=utc_now)
     # Se registra la primera vez que el estudiante abre la actividad desde
     # "Mis actividades". Permite mostrar "Actividades iniciadas" en su panel
     # sin necesitar todavía el motor de juego real.

@@ -1,11 +1,13 @@
-from flask import render_template, redirect, url_for, flash, abort
-from flask_babel import gettext as _
+import json
+
+from flask import render_template, redirect, url_for, flash, abort, request, make_response
+from flask_babel import gettext as _, lazy_gettext as _l
 from flask_login import current_user
+from werkzeug.utils import secure_filename
 
 from app.blueprints.admin import bp
 from app.blueprints.admin import services
-from app.blueprints.admin.forms import TrastornoForm, ActividadForm
-from app.blueprints.dashboard.services import count_unread_notifications, get_recent_notifications
+from app.blueprints.admin.forms import TrastornoForm, ActividadForm, AccountForm
 from app.models.content import Trastorno
 from app.extensions import login_manager
 
@@ -18,10 +20,18 @@ def require_admin():
         abort(403)
 
 
+@bp.context_processor
+def inject_notifications():
+    from app.blueprints.dashboard.services import count_unread_notifications, get_recent_notifications
+    return {
+        "unread_notifications_count": count_unread_notifications(current_user),
+        "recent_notifications": get_recent_notifications(current_user, limit=5),
+    }
+
+
 @bp.route("/")
 def index():
-    stats = services.get_dashboard_stats()
-    return render_template("admin/index.html", stats=stats)
+    return redirect(url_for("admin.usuarios_list"))
 
 
 # --- Trastornos ---
@@ -147,23 +157,102 @@ def actividad_delete(actividad_id):
 
 # --- Usuarios ---
 
-@bp.route("/usuarios")
+ROLE_LABELS = {
+    "administrador": _l("Administrador"),
+    "docente": _l("Docente"),
+    "estudiante": _l("Estudiante"),
+}
+
+
+def _account_form():
+    form = AccountForm()
+    form.role.choices = [(r.value, ROLE_LABELS[r.value]) for r in current_user.creatable_roles()]
+    form.group_id.choices = [(0, _l("Sin grupo"))] + [
+        (g.id, "%s · %s" % (g.name, g.teacher.full_name)) for g in services.list_all_groups()
+    ]
+    return form
+
+
+@bp.route("/usuarios", methods=["GET", "POST"])
 def usuarios_list():
-    usuarios = services.list_all_users()
+    vista = request.args.get("vista", "activas")
+    rol = request.args.get("rol", "")
+    form = _account_form()
+
+    if request.method == "POST":
+        if form.validate_on_submit():
+            try:
+                services.create_account(
+                    current_user,
+                    full_name=form.full_name.data,
+                    email=form.email.data,
+                    password=form.password.data,
+                    role=form.role.data,
+                    group_id=form.group_id.data or None,
+                    data_consent=form.data_consent.data,
+                )
+                flash(_("Cuenta creada. Comparte la contraseña temporal con la persona de forma segura."), "success")
+                return redirect(url_for("admin.usuarios_list"))
+            except ValueError as exc:
+                flash(str(exc), "danger")
+        else:
+            for errors in form.errors.values():
+                for error in errors:
+                    flash(str(error), "danger")
+
     return render_template(
         "admin/usuarios_list.html",
-        usuarios=usuarios,
+        usuarios=services.list_accounts(archived=(vista == "archivadas"), role=rol),
+        vista=vista,
+        rol=rol,
+        form=form,
+        groups=services.list_all_groups(),
+        role_labels=ROLE_LABELS,
+        open_form=request.method == "POST",
         active_nav="usuarios",
-        unread_notifications_count=count_unread_notifications(current_user),
-        recent_notifications=get_recent_notifications(current_user, limit=5),
     )
 
 
 @bp.route("/usuarios/<int:user_id>/eliminar", methods=["POST"])
 def usuario_delete(user_id):
     try:
-        services.delete_student_account(user_id)
-        flash(_("Cuenta eliminada correctamente."), "info")
+        user = services.archive_account(current_user, user_id)
+        flash(_("La cuenta de %(name)s se eliminó del acceso. Su información queda guardada en «Archivadas».", name=user.full_name), "info")
     except ValueError as exc:
         flash(str(exc), "danger")
     return redirect(url_for("admin.usuarios_list"))
+
+
+@bp.route("/usuarios/<int:user_id>/datos.json")
+def usuario_export(user_id):
+    """Descarga todo lo que la plataforma guarda de un estudiante."""
+    try:
+        data = services.export_student_data(current_user, user_id)
+    except ValueError as exc:
+        flash(str(exc), "danger")
+        return redirect(url_for("admin.usuarios_list"))
+    nombre = secure_filename(data["cuenta"]["correo"].split("@")[0]) or "estudiante"
+    response = make_response(json.dumps(data, ensure_ascii=False, indent=2))
+    response.headers["Content-Type"] = "application/json; charset=utf-8"
+    response.headers["Content-Disposition"] = 'attachment; filename="datos-%s.json"' % nombre
+    return response
+
+
+@bp.route("/usuarios/<int:user_id>/borrar-definitivo", methods=["POST"])
+def usuario_purge(user_id):
+    try:
+        nombre = services.purge_student(current_user, user_id, request.form.get("confirmacion", ""))
+        flash(_("Se borraron definitivamente la cuenta y toda la información de %(name)s.", name=nombre), "info")
+    except ValueError as exc:
+        flash(str(exc), "danger")
+    return redirect(url_for("admin.usuarios_list", vista="archivadas"))
+
+
+@bp.route("/usuarios/<int:user_id>/restaurar", methods=["POST"])
+def usuario_restore(user_id):
+    try:
+        user = services.restore_account(current_user, user_id, request.form.get("group_id", type=int))
+        flash(_("La cuenta de %(name)s se restauró.", name=user.full_name), "success")
+    except ValueError as exc:
+        flash(str(exc), "danger")
+    return redirect(url_for("admin.usuarios_list", vista="archivadas"))

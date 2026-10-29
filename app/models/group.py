@@ -6,9 +6,9 @@ ya existente. La regla de negocio "un estudiante pertenece a un solo
 grupo a la vez" se aplica en app/blueprints/dashboard/services.py, no
 a nivel de base de datos.
 """
-from datetime import datetime
 
 from app.extensions import db
+from app.utils.fechas import utc_now
 
 grupo_estudiantes = db.Table(
     "grupo_estudiantes",
@@ -23,7 +23,7 @@ class Grupo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     teacher_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
 
     teacher = db.relationship(
         "User", foreign_keys=[teacher_id], backref="grupos_a_cargo"

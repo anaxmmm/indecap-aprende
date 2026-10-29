@@ -1,6 +1,7 @@
-from datetime import date, datetime
+from datetime import date
 
 from app.extensions import db
+from app.utils.fechas import utc_now
 
 
 class Progress(db.Model):
@@ -15,7 +16,7 @@ class Progress(db.Model):
     activity_date = db.Column(db.Date, default=date.today, nullable=False)
     minutes_spent = db.Column(db.Integer, default=0)
     points_earned = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
 
     __table_args__ = (
         db.UniqueConstraint("user_id", "activity_date", name="uq_user_activity_date"),

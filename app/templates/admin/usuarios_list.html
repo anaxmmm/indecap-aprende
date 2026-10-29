@@ -1,42 +1,159 @@
 {% extends "dashboard/teacher/base_teacher.html" %}
 {% block title %}{{ _('Usuarios') }} — indecap-aprende{% endblock %}
 {% block teacher_content %}
-{% set roles = {
-  'estudiante': _('estudiante'),
-  'docente': _('docente'),
-  'administrador': _('administrador')
-} %}
-<h1 class="h4 mb-3">{{ _('Usuarios') }}</h1>
-<div class="teacher-card">
-  <table class="table teacher-table">
-    <thead><tr><th>{{ _('Nombre') }}</th><th>{{ _('Correo') }}</th><th>{{ _('Rol') }}</th><th>{{ _('Estado') }}</th><th></th></tr></thead>
-    <tbody>
-      {% for usuario in usuarios %}
-      <tr>
-        <td>{{ usuario.full_name }}</td>
-        <td>{{ usuario.email }}</td>
-        <td>{{ roles.get(usuario.role.value, usuario.role.value) }}</td>
-        <td>{{ _("Activo") if usuario.is_active_account else _("Inactivo") }}</td>
-        <td>
-          {% if usuario.is_student %}
-          <form
-            method="post"
-            action="{{ url_for('admin.usuario_delete', user_id=usuario.id) }}"
-            style="display:inline"
-            data-confirm="{{ _("¿Eliminar definitivamente a %(name)s? Esta acción no se puede deshacer.", name=usuario.full_name)|e }}"
-            onsubmit="return confirm(this.dataset.confirm);"
-          >
-            <button type="submit" class="btn btn-sm btn-outline-danger">{{ _('Eliminar') }}</button>
-          </form>
-          {% else %}
-          <span class="text-muted small">—</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% else %}
-      <tr><td colspan="5" class="text-muted">{{ _('No hay usuarios registrados.') }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<h1 class="visually-hidden">{{ _('Usuarios') }}</h1>
+<div class="dx-page-head rg-head">
+  <button type="button" class="dx-action" data-bs-toggle="collapse" data-bs-target="#nueva-cuenta"
+          aria-expanded="{{ 'true' if open_form else 'false' }}" aria-controls="nueva-cuenta">
+    + {{ _('Nueva cuenta') }}
+  </button>
 </div>
+
+<form method="post" id="nueva-cuenta" class="dx-card dx-form collapse {{ 'show' if open_form else '' }}" novalidate>
+  {{ form.hidden_tag() }}
+  <div class="dx-form__grid">
+    <div class="dx-field">
+      {{ form.full_name.label(class_="dx-field__label") }}
+      {{ form.full_name(class_="form-control", autocomplete="off") }}
+    </div>
+    <div class="dx-field">
+      {{ form.email.label(class_="dx-field__label") }}
+      {{ form.email(class_="form-control", autocomplete="off") }}
+    </div>
+    <div class="dx-field">
+      {{ form.role.label(class_="dx-field__label") }}
+      {{ form.role(class_="form-select", id="cuenta-rol") }}
+    </div>
+    <div class="dx-field" id="cuenta-grupo">
+      {{ form.group_id.label(class_="dx-field__label") }}
+      {{ form.group_id(class_="form-select") }}
+    </div>
+    <div class="dx-field">
+      {{ form.password.label(class_="dx-field__label") }}
+      {{ form.password(class_="form-control", autocomplete="new-password") }}
+    </div>
+    <label class="dx-check dx-field--wide rg-consent" for="cuenta-consent" id="cuenta-consent-box">
+      {{ form.data_consent(id="cuenta-consent") }}
+      <span>{{ form.data_consent.label.text }}
+        <a href="{{ url_for('politica_datos') }}" target="_blank" rel="noopener">{{ _('Ver la política') }}</a></span>
+    </label>
+  </div>
+  <div class="dx-form__foot">
+    <p class="dx-card__sub mb-0">{{ _('La persona puede cambiar su contraseña desde «¿Olvidaste tu contraseña?».') }}</p>
+    {{ form.submit(class_="dx-action") }}
+  </div>
+</form>
+
+<div class="dx-card">
+  <div class="dx-toolbar">
+    <nav class="dx-segment" aria-label="{{ _('Estado de las cuentas') }}">
+      <a href="{{ url_for('admin.usuarios_list', rol=rol) }}" class="{{ 'is-active' if vista != 'archivadas' else '' }}"
+         {% if vista != 'archivadas' %}aria-current="page"{% endif %}>{{ _('Activas') }}</a>
+      <a href="{{ url_for('admin.usuarios_list', vista='archivadas', rol=rol) }}" class="{{ 'is-active' if vista == 'archivadas' else '' }}"
+         {% if vista == 'archivadas' %}aria-current="page"{% endif %}>{{ _('Archivadas') }}</a>
+    </nav>
+    <nav class="dx-segment" aria-label="{{ _('Filtrar por rol') }}">
+      <a href="{{ url_for('admin.usuarios_list', vista=vista) }}" class="{{ 'is-active' if not rol else '' }}">{{ _('Todos') }}</a>
+      {% for value, label in role_labels.items() %}
+      <a href="{{ url_for('admin.usuarios_list', vista=vista, rol=value) }}" class="{{ 'is-active' if rol == value else '' }}">{{ label }}</a>
+      {% endfor %}
+    </nav>
+  </div>
+
+  {% if vista == 'archivadas' %}
+  <p class="dx-card__sub mb-3">{{ _('Estas cuentas no pueden ingresar. Sus partidas, avisos y asignaciones siguen guardados.') }}</p>
+  {% endif %}
+
+  <div class="dx-table-wrap">
+    <table class="dx-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ _('Nombre') }}</th>
+          <th scope="col">{{ _('Correo') }}</th>
+          <th scope="col">{{ _('Rol') }}</th>
+          <th scope="col">{% if vista == 'archivadas' %}{{ _('Eliminada el') }}{% else %}{{ _('Estado') }}{% endif %}</th>
+          <th scope="col"><span class="visually-hidden">{{ _('Acciones') }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for usuario in usuarios %}
+        <tr>
+          <td class="dx-table__name">
+            {{ usuario.full_name }}
+            {% if usuario.is_principal %}<span class="dx-tag dx-tag--gold">{{ _('Principal') }}</span>{% endif %}
+            {% if usuario.id == current_user.id %}<span class="dx-tag">{{ _('Tú') }}</span>{% endif %}
+          </td>
+          <td>{{ usuario.email }}</td>
+          <td>{{ role_labels.get(usuario.role.value, usuario.role.value) }}</td>
+          <td>
+            {% if vista == 'archivadas' %}
+              {{ usuario.archived_at|local('%d/%m/%Y') }}
+            {% elif usuario.is_active_account %}
+              <span class="dx-tag dx-tag--ok">{{ _('Activa') }}</span>
+            {% else %}
+              <span class="dx-tag">{{ _('Desvinculada') }}</span>
+            {% endif %}
+          </td>
+          <td class="dx-table__actions{% if vista == 'archivadas' %} dx-table__actions--wrap{% endif %}">
+            {% if current_user.can_manage(usuario) %}
+              {% if vista == 'archivadas' %}
+              <form method="post" action="{{ url_for('admin.usuario_restore', user_id=usuario.id) }}" class="dx-inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if usuario.is_student and not usuario.grupos %}
+                <label class="visually-hidden" for="grupo-{{ usuario.id }}">{{ _('Grupo') }}</label>
+                <select name="group_id" id="grupo-{{ usuario.id }}" class="form-select form-select-sm" required>
+                  <option value="">{{ _('Elige un grupo') }}</option>
+                  {% for g in groups %}<option value="{{ g.id }}">{{ g.name }} · {{ g.teacher.full_name }}</option>{% endfor %}
+                </select>
+                {% endif %}
+                <button type="submit" class="dx-mini">{{ _('Restaurar') }}</button>
+              </form>
+              {% if usuario.is_student %}
+              <a class="dx-mini" href="{{ url_for('admin.usuario_export', user_id=usuario.id) }}">{{ _('Exportar datos') }}</a>
+              <form method="post" action="{{ url_for('admin.usuario_purge', user_id=usuario.id) }}" class="dx-inline-form"
+                    data-ask="{{ _('Esto borra para siempre la cuenta de %(name)s y todas sus partidas, avisos y asignaciones. No se puede deshacer. Para confirmar, escribe su correo:', name=usuario.full_name)|e }}"
+                    onsubmit="var v = prompt(this.dataset.ask); if (!v) return false; this.confirmacion.value = v; return true;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="confirmacion" value="">
+                <button type="submit" class="dx-mini dx-mini--danger">{{ _('Borrar definitivamente') }}</button>
+              </form>
+              {% endif %}
+              {% else %}
+              {% if usuario.is_student %}
+              <a class="dx-mini" href="{{ url_for('admin.usuario_export', user_id=usuario.id) }}">{{ _('Exportar datos') }}</a>
+              {% endif %}
+              <form method="post" action="{{ url_for('admin.usuario_delete', user_id=usuario.id) }}" class="dx-inline-form"
+                    data-confirm="{{ _('¿Eliminar la cuenta de %(name)s? Ya no podrá ingresar, pero su información queda guardada y se puede restaurar.', name=usuario.full_name)|e }}"
+                    onsubmit="return confirm(this.dataset.confirm);">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="dx-mini dx-mini--danger">{{ _('Eliminar') }}</button>
+              </form>
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="dx-empty">{{ _('No hay cuentas en esta vista.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var rol = document.getElementById('cuenta-rol');
+    var grupo = document.getElementById('cuenta-grupo');
+    var consent = document.getElementById('cuenta-consent-box');
+    var check = document.getElementById('cuenta-consent');
+    if (!rol || !grupo) return;
+    function sync() {
+      var estudiante = rol.value === 'estudiante';
+      grupo.hidden = !estudiante;
+      if (consent) { consent.hidden = !estudiante; check.required = estudiante; }
+    }
+    rol.addEventListener('change', sync);
+    sync();
+  })();
+</script>
 {% endblock %}
