@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="{{ current_lang }}">
+<body style="margin:0;padding:24px;background:#f4f6fb;font-family:Arial,Helvetica,sans-serif;color:#1d2433">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;padding:28px;border:1px solid #e3e7ef">
+    <p style="margin:0 0 16px;font-size:13px;font-weight:bold;letter-spacing:.04em;color:#B8860B">INDECAP-APRENDE</p>
+    <p style="margin:0 0 12px;font-size:16px">{{ _('Hola, %(name)s.', name=user.full_name) }}</p>
+    <p style="margin:0 0 12px;font-size:15px;line-height:1.5">{{ _('Recibimos una solicitud para cambiar la contraseña de tu cuenta en indecap-aprende.') }}</p>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.5">{{ _('Para elegir una contraseña nueva, abre este enlace. Funciona una sola vez y durante una hora:') }}</p>
+    <p style="margin:0 0 24px"><a href="{{ url }}" style="display:inline-block;background:#1A3A6B;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:bold">{{ _('Cambiar mi contraseña') }}</a></p>
+    <p style="margin:0 0 8px;font-size:13px;color:#5b6475;line-height:1.5">{{ _('Si el botón no funciona, copia esta dirección en tu navegador:') }}<br><span style="word-break:break-all">{{ url }}</span></p>
+    <p style="margin:16px 0 0;font-size:13px;color:#5b6475">{{ _('Si no fuiste tú, ignora este correo: tu contraseña no cambia.') }}</p>
+  </div>
+</body>
+</html>

@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}indecap-aprende{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -35,5 +36,15 @@
 
     {% block content %}{% endblock %}
   </main>
+  {% if idle_timeout %}
+  <script src="{{ url_for('static', filename='js/inactividad.js') }}"
+          data-timeout="{{ idle_timeout }}" data-warning="{{ idle_warning }}"
+          data-keepalive="{{ url_for('auth.keepalive') }}"
+          data-logout="{{ url_for('auth.logout', motivo='inactividad') }}"
+          data-title="{{ _('¿Sigues ahí?') }}"
+          data-text="{{ _('Por seguridad, tu sesión se cerrará en {t} por inactividad.') }}"
+          data-stay="{{ _('Seguir conectado') }}"
+          data-leave="{{ _('Cerrar sesión') }}"></script>
+  {% endif %}
 </body>
 </html>

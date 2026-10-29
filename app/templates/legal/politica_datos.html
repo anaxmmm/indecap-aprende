@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ _('Política de tratamiento de datos personales') }} — indecap-aprende</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <style>
+    body { margin: 0; background: var(--indecap-bg); color: var(--indecap-text); font-family: 'Montserrat', sans-serif; }
+    .lg-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.5rem; background: #fff; border-bottom: 1px solid #DCE4EA; }
+    .lg-top img { height: 44px; width: auto; }
+    .lg-top nav { display: flex; gap: 1rem; font-size: 0.9rem; }
+    .lg-top a { color: var(--indecap-navy); font-weight: 600; text-decoration: none; }
+    .lg-top a:hover, .lg-top a:focus-visible { text-decoration: underline; }
+    .lg-main { max-width: 760px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; line-height: 1.65; }
+    .lg-main h1, .lg-main h2 { font-family: 'Montserrat', sans-serif; font-weight: 700; }
+    .lg-main h1 { margin: 0 0 0.25rem; font-size: 1.7rem; color: var(--indecap-navy); }
+    .lg-main .lg-date { margin: 0 0 2rem; color: var(--indecap-text-muted); font-size: 0.9rem; }
+    .lg-main h2 { margin: 2rem 0 0.5rem; font-size: 1.1rem; color: var(--indecap-navy); }
+    .lg-main p, .lg-main li { font-size: 0.97rem; }
+    .lg-main ul { padding-left: 1.25rem; }
+    .lg-note { margin-top: 2rem; padding: 1rem 1.25rem; border-left: 4px solid var(--indecap-gold); background: #fff; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <header class="lg-top">
+    <a href="{{ url_for('index') }}" aria-label="{{ _('Ir al inicio') }}">
+      <img src="{{ url_for('static', filename='images/logo-indecap-aprende.png') }}" alt="INDECAP — indecap-aprende">
+    </a>
+    <nav aria-label="{{ _('Cambiar idioma') }}">
+      <a href="{{ url_for('set_language', code='es') }}" lang="es" {% if current_lang == 'es' %}aria-current="true"{% endif %}>ES</a>
+      <a href="{{ url_for('set_language', code='en') }}" lang="en" {% if current_lang == 'en' %}aria-current="true"{% endif %}>EN</a>
+    </nav>
+  </header>
+
+  <main class="lg-main">
+    <h1>{{ _('Política de tratamiento de datos personales') }}</h1>
+    <p class="lg-date">{{ _('Plataforma indecap-aprende · Vigente desde el 29 de octubre de 2026') }}</p>
+
+    <p>{{ _('Esta política explica qué datos personales recoge la plataforma indecap-aprende, para qué se usan, quién los cuida y cómo puedes ejercer tus derechos, de acuerdo con la Ley 1581 de 2012 y el Decreto 1377 de 2013 de Colombia.') }}</p>
+
+    <h2>{{ _('1. Responsable del tratamiento') }}</h2>
+    <p>{{ _('Corporación Educativa INDECAP — Instituto de Ciencias Aplicadas, sede Envigado.') }}<br>
+      {{ _('Correo de contacto:') }} <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> · {{ _('Teléfono:') }} (604) 448 4794</p>
+
+    <h2>{{ _('2. Datos que se recogen') }}</h2>
+    <ul>
+      <li>{{ _('De todas las cuentas: nombre, correo electrónico, rol y contraseña. La contraseña se guarda cifrada y nadie puede leerla.') }}</li>
+      <li>{{ _('De los estudiantes: nombres, apellidos, fecha de nacimiento, género, correo del acudiente y grupo.') }}</li>
+      <li>{{ _('Datos sensibles: las condiciones de aprendizaje o la discapacidad que el docente asigna para elegir los juegos adecuados.') }}</li>
+      <li>{{ _('Actividad en los juegos: puntajes, tiempos, errores, ayudas de accesibilidad usadas y la respuesta a «¿Cómo te sentiste?».') }}</li>
+    </ul>
+
+    <h2>{{ _('3. Para qué se usan') }}</h2>
+    <ul>
+      <li>{{ _('Dar acceso a la plataforma y adaptar las actividades a cada estudiante.') }}</li>
+      <li>{{ _('Permitir que el docente haga seguimiento pedagógico del avance y de lo que hay que reforzar.') }}</li>
+      <li>{{ _('Mejorar las actividades a partir de resultados agregados.') }}</li>
+    </ul>
+    <p>{{ _('Los datos no se venden, no se usan con fines publicitarios y no se entregan a terceros, salvo por orden de una autoridad competente. La plataforma es una herramienta de apoyo pedagógico: no hace diagnósticos.') }}</p>
+
+    <h2>{{ _('4. Datos sensibles y menores de edad') }}</h2>
+    <p>{{ _('Las condiciones de aprendizaje son datos sensibles. Solo se registran con autorización previa y expresa. Cuando el estudiante es menor de edad, la autorización la da su padre, madre o acudiente, y siempre se respeta su interés superior. Responder preguntas sobre datos sensibles es voluntario.') }}</p>
+
+    <h2>{{ _('5. Quién puede ver los datos') }}</h2>
+    <p>{{ _('El docente del grupo del estudiante y los administradores de la plataforma designados por INDECAP. Cada persona ve solo lo necesario para su función.') }}</p>
+
+    <h2>{{ _('6. Tus derechos') }}</h2>
+    <ul>
+      <li>{{ _('Conocer, actualizar y rectificar tus datos.') }}</li>
+      <li>{{ _('Pedir prueba de la autorización que diste.') }}</li>
+      <li>{{ _('Saber cómo se han usado tus datos.') }}</li>
+      <li>{{ _('Revocar la autorización y pedir que tus datos se borren, cuando no exista un deber legal de conservarlos.') }}</li>
+      <li>{{ _('Presentar quejas ante la Superintendencia de Industria y Comercio.') }}</li>
+      <li>{{ _('Acceder a tus datos de forma gratuita.') }}</li>
+    </ul>
+
+    <h2>{{ _('7. Cómo ejercerlos') }}</h2>
+    <p>{{ _('Escribe a %(email)s indicando tu nombre, el del estudiante si eres acudiente y lo que solicitas. Las consultas se responden en máximo 10 días hábiles y los reclamos en máximo 15 días hábiles.', email=contact_email) }}</p>
+
+    <h2>{{ _('8. Seguridad') }}</h2>
+    <p>{{ _('Las contraseñas se guardan cifradas, el acceso depende del rol de cada persona, la sesión se cierra sola por inactividad en computadores compartidos y se hacen copias de seguridad de la base de datos.') }}</p>
+
+    <h2>{{ _('9. Conservación') }}</h2>
+    <p>{{ _('Los datos se conservan mientras el estudiante esté vinculado al instituto. Cuando una cuenta se archiva deja de tener acceso. Si se solicita la supresión, un administrador borra definitivamente la cuenta y toda su actividad.') }}</p>
+
+    <h2>{{ _('10. Cambios a esta política') }}</h2>
+    <p>{{ _('Si esta política cambia, se publicará la nueva versión en esta misma página con su fecha de vigencia.') }}</p>
+
+    <p class="lg-note">{{ _('Al registrar a un estudiante, el docente o administrador confirma que el estudiante, o su acudiente si es menor de edad, autorizó el tratamiento de sus datos según esta política.') }}</p>
+  </main>
+</body>
+</html>

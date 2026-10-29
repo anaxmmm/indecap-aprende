@@ -43,14 +43,6 @@ a {
   background-color: var(--indecap-navy);
   padding: 14px 0;
 }
-.app-navbar__brand {
-  display: flex;
-  align-items: center;
-}
-.app-navbar__logo {
-  height: 34px;
-  width: auto;
-}
 .app-navbar__links {
   display: flex;
   gap: 20px;
@@ -91,7 +83,7 @@ a {
   border-radius: 8px;
 }
 
-/* --- Tarjetas / estadísticas (usadas en admin/index.html) --- */
+/* --- Tarjetas con borde redondeado --- */
 .border.rounded.p-3 {
   border-color: var(--indecap-border) !important;
   border-radius: 12px !important;
@@ -339,12 +331,6 @@ code {
   font-size: 13px;
   margin: 2px 0;
 }
-.home-footer__brand {
-  font-family: 'Playfair Display', serif;
-  color: #FFFFFF !important;
-  font-weight: 700;
-  font-size: 15px !important;
-}
 .home-footer__heading {
   color: #FFFFFF !important;
   font-weight: 600;
@@ -384,12 +370,6 @@ code {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-}
-.login-panel__brand {
-  font-family: 'Playfair Display', serif;
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--indecap-navy);
 }
 .login-panel__close {
   background: none;
@@ -555,56 +535,9 @@ code {
   line-height: 1.5;
 }
 
-.home-steps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 32px;
-  margin-top: 32px;
-}
-.home-steps__item {
-  padding: 20px;
-  border-radius: 12px;
-  transition: background 0.2s ease;
-}
-.home-steps__item:hover {
-  background: #FFFFFF;
-}
-.home-steps__number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--indecap-navy);
-  color: #FFFFFF;
-  font-weight: 700;
-  font-size: 14px;
-  margin-bottom: 14px;
-}
-.home-steps__title {
-  font-weight: 600;
-  color: var(--indecap-text);
-  margin: 0 0 8px;
-}
-.home-steps__text {
-  font-size: 13px;
-  color: var(--indecap-text-muted);
-  margin: 0;
-  line-height: 1.6;
-}
-
 .home-about {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 32px;
   margin-top: 24px;
-}
-.home-about__heading {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--indecap-navy);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin: 0 0 10px;
 }

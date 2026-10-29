@@ -1,0 +1,10 @@
+{{ _('Hola, %(name)s.', name=user.full_name) }}
+
+{{ _('Recibimos una solicitud para cambiar la contraseña de tu cuenta en indecap-aprende.') }}
+
+{{ _('Para elegir una contraseña nueva, abre este enlace. Funciona una sola vez y durante una hora:') }}
+{{ url }}
+
+{{ _('Si no fuiste tú, ignora este correo: tu contraseña no cambia.') }}
+
+indecap-aprende · Corporación Educativa INDECAP

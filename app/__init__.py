@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from flask import Flask, session
 
 from app.config import config_by_name
-from app.extensions import db, migrate, login_manager, babel
+from app.extensions import db, migrate, login_manager, babel, csrf
 
 
 def create_app(config_name: str = None) -> Flask:
@@ -17,6 +17,7 @@ def create_app(config_name: str = None) -> Flask:
     config_name = config_name or os.environ.get("FLASK_ENV", "development")
     app = Flask(__name__)
     app.config.from_object(config_by_name[config_name])
+    _check_production_settings(app, config_name)
 
     _init_extensions(app)
     _register_blueprints(app)
@@ -24,8 +25,97 @@ def create_app(config_name: str = None) -> Flask:
     _register_cli(app)
     _register_root_route(app)
     _register_i18n(app)
+    _register_security(app)
 
     return app
+
+
+def _check_production_settings(app: Flask, config_name: str) -> None:
+    """En producción la aplicación no arranca con la clave de ejemplo: con
+    ella cualquiera podría falsificar sesiones y enlaces de recuperación."""
+    if config_name != "production":
+        return
+    from app.config import DEFAULT_SECRET_KEY
+
+    key = app.config.get("SECRET_KEY") or ""
+    if key == DEFAULT_SECRET_KEY or len(key) < 32:
+        raise RuntimeError(
+            "Falta SECRET_KEY en el servidor. Define una clave propia de al menos "
+            "32 caracteres en la variable de entorno SECRET_KEY (ver README)."
+        )
+
+
+def _register_security(app: Flask) -> None:
+    """
+    - Detrás de un servidor intermedio (nginx), lee la IP y el protocolo
+      reales de cada visita.
+    - Encabezados de seguridad en todas las respuestas.
+    - Cierre de sesión por inactividad cuando no se marcó «Recordarme».
+    """
+    import time
+
+    from flask import flash, jsonify, redirect, request, url_for
+    from flask_babel import gettext as _
+    from flask_login import current_user, logout_user
+
+    proxies = app.config.get("TRUSTED_PROXIES") or 0
+    if proxies:
+        from werkzeug.middleware.proxy_fix import ProxyFix
+
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=proxies, x_proto=proxies, x_host=proxies)
+
+    @app.after_request
+    def security_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        if app.config.get("SESSION_COOKIE_SECURE"):
+            response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+        return response
+
+    @app.before_request
+    def idle_logout():
+        if request.endpoint in (None, "static"):
+            return None
+        if not current_user.is_authenticated:
+            # Una consulta automática sin sesión no debe tocar la cookie: si
+            # coincide con un cierre de sesión, borraría el aviso que se
+            # acaba de guardar para mostrar en la pantalla de ingreso.
+            if request.headers.get("X-Background"):
+                return jsonify({"error": "sesion_vencida"}), 401
+            return None
+        if "remember" not in session:
+            # Sesión recuperada con la cookie de «Recordarme».
+            session["remember"] = session.get("_fresh") is False
+        if session.get("remember"):
+            return None
+        now = time.time()
+        limit = app.config["IDLE_TIMEOUT_MINUTES"] * 60
+        last = session.get("last_seen")
+        if last and now - last > limit:
+            lang = session.get("lang")
+            logout_user()
+            session.clear()
+            if lang:
+                session["lang"] = lang
+            if request.headers.get("X-Background") or request.accept_mimetypes.best == "application/json":
+                return jsonify({"error": "sesion_vencida"}), 401
+            flash(_("Tu sesión se cerró por inactividad. Ingresa de nuevo para continuar."), "info")
+            return redirect(url_for("index", panel="login"))
+        # Las consultas automáticas (campana, actualización del panel) no
+        # cuentan como actividad.
+        if not request.headers.get("X-Background"):
+            session["last_seen"] = now
+        return None
+
+    @app.context_processor
+    def inject_idle_settings():
+        if current_user.is_authenticated and not session.get("remember"):
+            return {
+                "idle_timeout": app.config["IDLE_TIMEOUT_MINUTES"] * 60,
+                "idle_warning": app.config["IDLE_WARNING_MINUTES"] * 60,
+            }
+        return {"idle_timeout": 0, "idle_warning": 0}
 
 
 def _select_locale() -> str:
@@ -46,6 +136,7 @@ def _init_extensions(app: Flask) -> None:
     migrate.init_app(app, db)
     login_manager.init_app(app)
     babel.init_app(app, locale_selector=_select_locale)
+    csrf.init_app(app)
 
 
 def _register_blueprints(app: Flask) -> None:
@@ -69,7 +160,7 @@ def _register_user_loader() -> None:
 
     @login_manager.user_loader
     def load_user(user_id):
-        user = User.query.get(int(user_id))
+        user = db.session.get(User, int(user_id))
         # Si la cuenta fue desactivada (p. ej. estudiante desvinculado de su
         # grupo), Flask-Login debe dejar de reconocer la sesión existente en
         # cada request siguiente — devolver None aquí cierra esa sesión de
@@ -103,7 +194,6 @@ def _register_root_route(app: Flask) -> None:
 
         from app.blueprints.auth.forms import (
             LoginForm,
-            RegistrationForm,
             ForgotPasswordForm,
         )
 
@@ -112,10 +202,16 @@ def _register_root_route(app: Flask) -> None:
         return render_template(
             "home.html",
             form=LoginForm(),
-            register_form=RegistrationForm(),
             forgot_form=ForgotPasswordForm(),
             next=next_page,
             auto_open_login=auto_open_login,
+        )
+
+    @app.route("/politica-de-datos")
+    def politica_datos():
+        return render_template(
+            "legal/politica_datos.html",
+            contact_email=app.config.get("DATA_CONTACT_EMAIL"),
         )
 
 
@@ -125,6 +221,7 @@ def _register_i18n(app: Flask) -> None:
     - 'current_lang' queda disponible en todas las plantillas ("es" o "en").
     - /lang/<code> guarda el idioma elegido en la sesión y devuelve al
       usuario a la página donde estaba.
+    - Filtro 'notif_text': muestra un aviso en el idioma activo.
     """
     from flask import redirect, request, url_for
     from flask_babel import get_locale
@@ -132,6 +229,20 @@ def _register_i18n(app: Flask) -> None:
     @app.context_processor
     def inject_current_lang():
         return {"current_lang": str(get_locale() or "es")}
+
+    @app.template_filter("local")
+    def local_datetime(value, pattern="%d/%m/%Y %H:%M"):
+        from app.utils.fechas import format_local
+        return format_local(value, pattern)
+
+    @app.template_filter("condicion")
+    def condicion(trastorno):
+        from app.blueprints.games.registry import condition_label
+        return condition_label(trastorno)
+
+    @app.template_filter("notif_text")
+    def notif_text(notification):
+        return notification.text() if notification else ""
 
     @app.route("/lang/<code>")
     def set_language(code):

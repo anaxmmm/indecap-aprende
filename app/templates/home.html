@@ -1,9 +1,9 @@
 <!doctype html>
-<!-- FASE 1 (cambio A): el idioma del documento ahora es dinámico -->
 <html lang="{{ current_lang }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ _('indecap-aprende · Aprende de una forma que se adapte a ti') }}</title>
   <meta name="description" content="{{ _('Plataforma educativa inclusiva que adapta actividades, accesibilidad y apoyos a diferentes formas de aprender. Proyecto de INDECAP.') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,7 +28,6 @@
       <a href="#quienes-somos" data-section="quienes-somos">{{ _('Quiénes somos') }}</a>
     </div>
     <div class="home-nav__access">
-      <!-- FASE 1 (cambio B): botón de idioma ahora funcional -->
       <button type="button" id="btn-lang-toggle" class="home-nav__lang-btn" aria-label="{{ _('Cambiar idioma') }}" data-url="{{ url_for('set_language', code='en' if current_lang == 'es' else 'es') }}">
         <span id="lang-toggle-label">{{ current_lang|upper }}</span>
       </button>
@@ -66,6 +65,9 @@
         {{ _('El contenido se adapta a cada estudiante, teniendo en cuenta las barreras de acceso, es inclusivo en su interacción y diseño para el correcto acompañamiento de sus procesos.') }}
       </p>
       <p class="home-section__highlight">{{ _('La constancia es la clave del éxito.') }}</p>
+    </div>
+    <div class="home-section__next">
+      <a href="#necesidades" aria-label="{{ _('Ir a la siguiente sección') }}"><span aria-hidden="true">↓</span></a>
     </div>
   </section>
 
@@ -117,6 +119,9 @@
         </div>
       </div>
     </div>
+    <div class="home-section__next">
+      <a href="#como-funciona" aria-label="{{ _('Ir a la siguiente sección') }}"><span aria-hidden="true">↓</span></a>
+    </div>
   </section>
 
   <section id="como-funciona" class="home-section">
@@ -152,6 +157,9 @@
         </li>
       </ol>
     </div>
+    <div class="home-section__next">
+      <a href="#dua" aria-label="{{ _('Ir a la siguiente sección') }}"><span aria-hidden="true">↓</span></a>
+    </div>
   </section>
 
   <section id="dua" class="home-section home-section--alt">
@@ -180,6 +188,9 @@
           <p class="dua__text">{{ _('Opciones de apoyo, estructura, autonomía y motivación.') }}</p>
         </article>
       </div>
+    </div>
+    <div class="home-section__next">
+      <a href="#quienes-somos" aria-label="{{ _('Ir a la siguiente sección') }}"><span aria-hidden="true">↓</span></a>
     </div>
   </section>
 
@@ -232,6 +243,9 @@
         </article>
       </div>
     </div>
+    <div class="home-section__next home-section__next--up">
+      <a href="#inicio" aria-label="{{ _('Ir al inicio') }}"><span aria-hidden="true">↑</span></a>
+    </div>
   </section>
 
   <footer class="home-footer">
@@ -247,10 +261,10 @@
         <p>(604) 448 4794</p>
       </div>
     </div>
-    <p class="home-footer__copyright">© 2026 indecap-aprende · {{ _('Proyecto de grado') }} — INDECAP · {{ _('Desarrollado por Ana Melo') }}</p>
+    <p class="home-footer__copyright">© 2026 indecap-aprende · {{ _('Proyecto de grado') }} — INDECAP · {{ _('Desarrollado por Ana Melo') }} · <a href="{{ url_for('politica_datos') }}">{{ _('Política de tratamiento de datos') }}</a></p>
   </footer>
 
-  <!-- Panel de ingreso con superposición: login / registro / olvidé contraseña -->
+  <!-- Panel de ingreso con superposición: login / olvidé contraseña -->
   <div id="login-overlay" class="login-overlay" hidden>
     <div class="login-panel" role="dialog" aria-modal="true" aria-label="{{ _('Acceso a indecap-aprende') }}">
       <div class="login-panel__header">
@@ -279,7 +293,7 @@
         </div>
 
         <form method="post" action="{{ url_for('auth.login') }}">
-          {{ form.hidden_tag() }}
+          {{ form.csrf_token }}
           <input type="hidden" name="next" value="{{ next }}">
           {{ form.portal_role(id="portal-role-input") }}
           <div class="mb-3">
@@ -299,52 +313,8 @@
 
         <div class="login-panel__links mt-3">
           <a href="#" data-panel="forgot">{{ _('¿Olvidaste tu contraseña?') }}</a>
-          <a href="#" data-panel="register">{{ _('Regístrate') }}</a>
         </div>
         <p class="login-panel__help">{{ _('¿Problemas para ingresar? Contacta a tu docente o al administrador.') }}</p>
-      </div>
-
-      <!-- Vista: registrarse -->
-      <div id="view-register" class="login-panel__view" hidden>
-        <p class="login-panel__title">{{ _('Crea tu cuenta') }}</p>
-        <p class="login-panel__subtitle">Corporación Educativa INDECAP</p>
-
-        <form method="post" action="{{ url_for('auth.register') }}">
-          {{ register_form.hidden_tag() }}
-          <input type="hidden" name="next" value="{{ next }}">
-          <div class="mb-3">
-            {{ register_form.full_name.label(class_="login-panel__label") }}
-            {{ register_form.full_name(class_="form-control", placeholder=_("Nombre y apellidos")) }}
-          </div>
-          <div class="mb-3">
-            {{ register_form.email.label(class_="login-panel__label") }}
-            {{ register_form.email(class_="form-control", placeholder="nombre@indecap.edu.co") }}
-          </div>
-          <div class="mb-3">
-            <span class="login-panel__label">{{ register_form.role.label.text }}</span>
-            <div class="d-flex gap-3 mt-1">
-              {% for subfield in register_form.role %}
-                <div class="form-check">
-                  {{ subfield(class_="form-check-input") }}
-                  {{ subfield.label(class_="form-check-label") }}
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-          <div class="mb-3">
-            {{ register_form.password.label(class_="login-panel__label") }}
-            {{ register_form.password(class_="form-control", placeholder=_("Mínimo 8 caracteres")) }}
-          </div>
-          <div class="mb-3">
-            {{ register_form.confirm_password.label(class_="login-panel__label") }}
-            {{ register_form.confirm_password(class_="form-control", placeholder=_("Repite tu contraseña")) }}
-          </div>
-          {{ register_form.submit(class_="btn btn-primary w-100", value=_("Crear cuenta")) }}
-        </form>
-
-        <div class="login-panel__links mt-3">
-          <a href="#" data-panel="login">{{ _('¿Ya tienes cuenta? Inicia sesión') }}</a>
-        </div>
       </div>
 
       <!-- Vista: olvidé mi contraseña -->
@@ -371,7 +341,7 @@
   <script>
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // FASE 2: textos del menú móvil traducidos desde Flask-Babel
+    // Textos del menú móvil traducidos desde Flask-Babel
     const LABEL_OPEN_MENU = document.body.dataset.labelOpenMenu || "Abrir menú";
     const LABEL_CLOSE_MENU = document.body.dataset.labelCloseMenu || "Cerrar menú";
 
@@ -379,7 +349,6 @@
     const overlay = document.getElementById("login-overlay");
     const views = {
       login: document.getElementById("view-login"),
-      register: document.getElementById("view-register"),
       forgot: document.getElementById("view-forgot"),
     };
     const portalRoleInput = document.getElementById("portal-role-input");
@@ -442,8 +411,11 @@
     const autoOpenLogin = autoOpenLoginData ? JSON.parse(autoOpenLoginData.textContent) : false;
     const openPanel = (() => {
       const panel = new URLSearchParams(window.location.search).get("panel");
-      return panel && ["login", "register", "forgot"].includes(panel) ? panel : null;
+      return panel && ["login", "forgot"].includes(panel) ? panel : null;
     })();
+
+    const portalParam = new URLSearchParams(window.location.search).get("portal");
+    if (portalParam === "docente" || portalParam === "estudiante") setPortalRole(portalParam);
 
     if (autoOpenLogin) openLogin();
     if (openPanel) {
@@ -451,7 +423,7 @@
       showPanel(openPanel);
     }
 
-    // ---------- FASE 1 (cambio C): idioma ES/EN ----------
+    // ---------- Idioma ES/EN ----------
     const langBtn = document.getElementById("btn-lang-toggle");
     if (langBtn) {
       langBtn.addEventListener("click", () => {
