@@ -1,7 +1,7 @@
 """sync esquema existente y agrega grupos
 
 Revision ID: 8697875beed6
-Revises: 
+Revises: 1a7c40222b1e
 Create Date: 2026-09-07 15:41:38.977369
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '8697875beed6'
-down_revision = None
+down_revision = '1a7c40222b1e'
 branch_labels = None
 depends_on = None
 
