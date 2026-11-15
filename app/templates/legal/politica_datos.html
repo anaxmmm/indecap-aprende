@@ -37,57 +37,25 @@
 
   <main class="lg-main">
     <h1>{{ _('Política de tratamiento de datos personales') }}</h1>
-    <p class="lg-date">{{ _('Plataforma indecap-aprende · Vigente desde el 29 de octubre de 2026') }}</p>
+    <p class="lg-date">{{ _('Plataforma indecap-aprende · Vigente desde el 5 de noviembre de 2026') }}</p>
 
-    <p>{{ _('Esta política explica qué datos personales recoge la plataforma indecap-aprende, para qué se usan, quién los cuida y cómo puedes ejercer tus derechos, de acuerdo con la Ley 1581 de 2012 y el Decreto 1377 de 2013 de Colombia.') }}</p>
+    <p>{{ _('Así cuidamos tus datos personales, según la Ley 1581 de 2012 y el Decreto 1377 de 2013.') }}</p>
 
-    <h2>{{ _('1. Responsable del tratamiento') }}</h2>
+    <h2>{{ _('1. Responsable') }}</h2>
     <p>{{ _('Corporación Educativa INDECAP — Instituto de Ciencias Aplicadas, sede Envigado.') }}<br>
-      {{ _('Correo de contacto:') }} <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> · {{ _('Teléfono:') }} (604) 448 4794</p>
+      <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> · (604) 448 4794</p>
 
-    <h2>{{ _('2. Datos que se recogen') }}</h2>
-    <ul>
-      <li>{{ _('De todas las cuentas: nombre, correo electrónico, rol y contraseña. La contraseña se guarda cifrada y nadie puede leerla.') }}</li>
-      <li>{{ _('De los estudiantes: nombres, apellidos, fecha de nacimiento, género, correo del acudiente y grupo.') }}</li>
-      <li>{{ _('Datos sensibles: las condiciones de aprendizaje o la discapacidad que el docente asigna para elegir los juegos adecuados.') }}</li>
-      <li>{{ _('Actividad en los juegos: puntajes, tiempos, errores, ayudas de accesibilidad usadas y la respuesta a «¿Cómo te sentiste?».') }}</li>
-    </ul>
+    <h2>{{ _('2. Qué datos recogemos y para qué') }}</h2>
+    <p>{{ _('Nombre, correo, rol y contraseña cifrada de cada cuenta; del estudiante, además, fecha de nacimiento, género, correo del acudiente, grupo, condición de aprendizaje asignada y su actividad en los juegos. Los usamos solo para dar acceso, adaptar los juegos a cada estudiante y que el docente haga seguimiento pedagógico. No se venden ni se entregan a terceros, salvo orden de autoridad, y la plataforma no hace diagnósticos.') }}</p>
 
-    <h2>{{ _('3. Para qué se usan') }}</h2>
-    <ul>
-      <li>{{ _('Dar acceso a la plataforma y adaptar las actividades a cada estudiante.') }}</li>
-      <li>{{ _('Permitir que el docente haga seguimiento pedagógico del avance y de lo que hay que reforzar.') }}</li>
-      <li>{{ _('Mejorar las actividades a partir de resultados agregados.') }}</li>
-    </ul>
-    <p>{{ _('Los datos no se venden, no se usan con fines publicitarios y no se entregan a terceros, salvo por orden de una autoridad competente. La plataforma es una herramienta de apoyo pedagógico: no hace diagnósticos.') }}</p>
+    <h2>{{ _('3. Datos sensibles y menores de edad') }}</h2>
+    <p>{{ _('La condición de aprendizaje es un dato sensible: solo se registra con autorización expresa, que da el acudiente cuando el estudiante es menor de edad. Responder sobre datos sensibles es voluntario.') }}</p>
 
-    <h2>{{ _('4. Datos sensibles y menores de edad') }}</h2>
-    <p>{{ _('Las condiciones de aprendizaje son datos sensibles. Solo se registran con autorización previa y expresa. Cuando el estudiante es menor de edad, la autorización la da su padre, madre o acudiente, y siempre se respeta su interés superior. Responder preguntas sobre datos sensibles es voluntario.') }}</p>
+    <h2>{{ _('4. Tus derechos') }}</h2>
+    <p>{{ _('Conocer, actualizar, rectificar y pedir que se borren tus datos, revocar la autorización y quejarte ante la Superintendencia de Industria y Comercio. Escribe a %(email)s: respondemos consultas en máximo 10 días hábiles y reclamos en máximo 15.', email=contact_email) }}</p>
 
-    <h2>{{ _('5. Quién puede ver los datos') }}</h2>
-    <p>{{ _('El docente del grupo del estudiante y los administradores de la plataforma designados por INDECAP. Cada persona ve solo lo necesario para su función.') }}</p>
-
-    <h2>{{ _('6. Tus derechos') }}</h2>
-    <ul>
-      <li>{{ _('Conocer, actualizar y rectificar tus datos.') }}</li>
-      <li>{{ _('Pedir prueba de la autorización que diste.') }}</li>
-      <li>{{ _('Saber cómo se han usado tus datos.') }}</li>
-      <li>{{ _('Revocar la autorización y pedir que tus datos se borren, cuando no exista un deber legal de conservarlos.') }}</li>
-      <li>{{ _('Presentar quejas ante la Superintendencia de Industria y Comercio.') }}</li>
-      <li>{{ _('Acceder a tus datos de forma gratuita.') }}</li>
-    </ul>
-
-    <h2>{{ _('7. Cómo ejercerlos') }}</h2>
-    <p>{{ _('Escribe a %(email)s indicando tu nombre, el del estudiante si eres acudiente y lo que solicitas. Las consultas se responden en máximo 10 días hábiles y los reclamos en máximo 15 días hábiles.', email=contact_email) }}</p>
-
-    <h2>{{ _('8. Seguridad') }}</h2>
-    <p>{{ _('Las contraseñas se guardan cifradas, el acceso depende del rol de cada persona, la sesión se cierra sola por inactividad en computadores compartidos y se hacen copias de seguridad de la base de datos.') }}</p>
-
-    <h2>{{ _('9. Conservación') }}</h2>
-    <p>{{ _('Los datos se conservan mientras el estudiante esté vinculado al instituto. Cuando una cuenta se archiva deja de tener acceso. Si se solicita la supresión, un administrador borra definitivamente la cuenta y toda su actividad.') }}</p>
-
-    <h2>{{ _('10. Cambios a esta política') }}</h2>
-    <p>{{ _('Si esta política cambia, se publicará la nueva versión en esta misma página con su fecha de vigencia.') }}</p>
+    <h2>{{ _('5. Seguridad y conservación') }}</h2>
+    <p>{{ _('Solo el docente del grupo y los administradores ven los datos, según su rol. Los guardamos mientras el estudiante esté vinculado al instituto; si pides la supresión, se borra la cuenta con toda su actividad. Cualquier cambio a esta política se publicará aquí con su fecha.') }}</p>
 
     <p class="lg-note">{{ _('Al registrar a un estudiante, el docente o administrador confirma que el estudiante, o su acudiente si es menor de edad, autorizó el tratamiento de sus datos según esta política.') }}</p>
   </main>

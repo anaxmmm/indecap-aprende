@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-29 12:57-0500\n"
+"POT-Creation-Date: 2026-11-15 17:57-0500\n"
 "PO-Revision-Date: 2026-10-06 19:05-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -81,7 +81,7 @@ msgstr "Interactive component"
 #: app/blueprints/admin/forms.py:44 app/blueprints/dashboard/forms.py:74
 #: app/blueprints/dashboard/forms.py:104
 #: app/templates/dashboard/student/perfil.html:7
-#: app/templates/dashboard/teacher/registro_estudiantes.html:155
+#: app/templates/dashboard/teacher/registro_estudiantes.html:156
 msgid "Nombre completo"
 msgstr "Full name"
 
@@ -89,7 +89,7 @@ msgstr "Full name"
 #: app/blueprints/auth/forms.py:36 app/blueprints/dashboard/forms.py:47
 #: app/blueprints/dashboard/forms.py:77 app/blueprints/dashboard/forms.py:107
 #: app/templates/dashboard/student/perfil.html:10
-#: app/templates/dashboard/teacher/registro_estudiantes.html:159
+#: app/templates/dashboard/teacher/registro_estudiantes.html:160
 msgid "Correo electrónico"
 msgstr "Email"
 
@@ -111,7 +111,7 @@ msgid "Usa al menos 8 caracteres."
 msgstr "Use at least 8 characters."
 
 #: app/blueprints/admin/forms.py:54 app/blueprints/dashboard/forms.py:62
-#: app/templates/dashboard/teacher/registro_estudiantes.html:184
+#: app/templates/dashboard/teacher/registro_estudiantes.html:185
 msgid ""
 "El estudiante, o su acudiente si es menor de edad, autorizó el "
 "tratamiento de sus datos según la política de tratamiento de datos."
@@ -381,18 +381,18 @@ msgid "Grupo"
 msgstr "Group"
 
 #: app/blueprints/dashboard/forms.py:53 app/blueprints/dashboard/forms.py:79
-#: app/templates/dashboard/teacher/registro_estudiantes.html:163
+#: app/templates/dashboard/teacher/registro_estudiantes.html:164
 msgid "Género"
 msgstr "Gender"
 
 #: app/blueprints/dashboard/forms.py:55 app/blueprints/dashboard/forms.py:81
 #: app/templates/dashboard/teacher/informe_estudiante.html:79
-#: app/templates/dashboard/teacher/registro_estudiantes.html:171
+#: app/templates/dashboard/teacher/registro_estudiantes.html:172
 msgid "Fecha de nacimiento"
 msgstr "Date of birth"
 
 #: app/blueprints/dashboard/forms.py:57 app/blueprints/dashboard/forms.py:83
-#: app/templates/dashboard/teacher/registro_estudiantes.html:176
+#: app/templates/dashboard/teacher/registro_estudiantes.html:177
 msgid "Presenta dificultades de aprendizaje"
 msgstr "Has learning difficulties"
 
@@ -414,7 +414,7 @@ msgid "Registrar la autorización de tratamiento de datos"
 msgstr "Record the data processing authorization"
 
 #: app/blueprints/dashboard/forms.py:88 app/blueprints/dashboard/forms.py:117
-#: app/templates/dashboard/teacher/registro_estudiantes.html:191
+#: app/templates/dashboard/teacher/registro_estudiantes.html:192
 msgid "Guardar cambios"
 msgstr "Save changes"
 
@@ -466,19 +466,23 @@ msgstr "Student details updated."
 msgid "Grupo eliminado correctamente."
 msgstr "Group deleted successfully."
 
-#: app/blueprints/dashboard/routes.py:301
+#: app/blueprints/dashboard/routes.py:299
+msgid "Elige el grupo al que quieres mover al estudiante."
+msgstr "Choose the group you want to move the student to."
+
+#: app/blueprints/dashboard/routes.py:303
 msgid "Estudiante movido de grupo."
 msgstr "Student moved to another group."
 
-#: app/blueprints/dashboard/routes.py:313
+#: app/blueprints/dashboard/routes.py:315
 msgid "Estudiante desvinculado. Quedó en «Estudiantes inactivos» de este grupo."
 msgstr "Student unlinked. They are now under \"Inactive students\" in this group."
 
-#: app/blueprints/dashboard/routes.py:323
+#: app/blueprints/dashboard/routes.py:325
 msgid "Estudiante reactivado."
 msgstr "Student reactivated."
 
-#: app/blueprints/dashboard/routes.py:334
+#: app/blueprints/dashboard/routes.py:336
 msgid ""
 "Cuenta eliminada. Su progreso queda guardado y un administrador puede "
 "restaurarla."
@@ -486,30 +490,30 @@ msgstr ""
 "Account deleted. Their progress is kept and an administrator can restore "
 "it."
 
-#: app/blueprints/dashboard/routes.py:348
-#: app/blueprints/dashboard/routes.py:383
+#: app/blueprints/dashboard/routes.py:350
+#: app/blueprints/dashboard/routes.py:385
 #: app/blueprints/dashboard/services.py:211
 msgid "Ese estudiante no existe o no pertenece a tus grupos."
 msgstr "That student does not exist or does not belong to your groups."
 
-#: app/blueprints/dashboard/routes.py:358
+#: app/blueprints/dashboard/routes.py:360
 msgid "Trastornos asignados actualizados."
 msgstr "Assigned conditions updated."
 
-#: app/blueprints/dashboard/routes.py:466
+#: app/blueprints/dashboard/routes.py:468
 msgid "Sesión asignada correctamente."
 msgstr "Session assigned successfully."
 
-#: app/blueprints/dashboard/routes.py:491
+#: app/blueprints/dashboard/routes.py:493
 msgid "Notas guardadas."
 msgstr "Notes saved."
 
-#: app/blueprints/dashboard/routes.py:512
+#: app/blueprints/dashboard/routes.py:514
 #, python-format
 msgid "El grupo %(grupo)s quedó a cargo de %(docente)s."
 msgstr "The group %(grupo)s is now in charge of %(docente)s."
 
-#: app/blueprints/dashboard/routes.py:561
+#: app/blueprints/dashboard/routes.py:563
 msgid "Perfil actualizado correctamente."
 msgstr "Profile updated successfully."
 
@@ -538,27 +542,27 @@ msgstr ""
 "This group still has students (active or inactive). Move them to another "
 "group or delete them before deleting the group."
 
-#: app/blueprints/dashboard/services.py:244
+#: app/blueprints/dashboard/services.py:245
 msgid "El grupo destino no existe o no pertenece a este docente."
 msgstr "The destination group does not exist or does not belong to this teacher."
 
-#: app/blueprints/dashboard/services.py:248
+#: app/blueprints/dashboard/services.py:249
 msgid "El estudiante no existe."
 msgstr "The student does not exist."
 
-#: app/blueprints/dashboard/services.py:369
+#: app/blueprints/dashboard/services.py:370
 msgid "Ese estudiante no pertenece a tus grupos."
 msgstr "That student does not belong to your groups."
 
-#: app/blueprints/dashboard/services.py:372
+#: app/blueprints/dashboard/services.py:373
 msgid "La fecha de fin no puede ser anterior a la de inicio."
 msgstr "The end date cannot be earlier than the start date."
 
-#: app/blueprints/dashboard/services.py:405
+#: app/blueprints/dashboard/services.py:406
 msgid "Esa sesión asignada no existe o no te pertenece."
 msgstr "That assigned session does not exist or does not belong to you."
 
-#: app/blueprints/dashboard/services.py:560
+#: app/blueprints/dashboard/services.py:562
 msgid "Esa actividad no existe o no te pertenece."
 msgstr "That activity does not exist or does not belong to you."
 
@@ -3200,6 +3204,7 @@ msgid "Nombre"
 msgstr "Name"
 
 #: app/templates/admin/trastornos_list.html:9
+#: app/templates/dashboard/student/index.html:99
 msgid "Actividades"
 msgstr "Activities"
 
@@ -3234,7 +3239,7 @@ msgstr "New account"
 
 #: app/templates/admin/usuarios_list.html:38
 #: app/templates/dashboard/teacher/registro_estudiantes.html:104
-#: app/templates/dashboard/teacher/registro_estudiantes.html:185
+#: app/templates/dashboard/teacher/registro_estudiantes.html:186
 msgid "Ver la política"
 msgstr "See the policy"
 
@@ -3358,7 +3363,6 @@ msgstr "Repeat your password"
 
 #: app/templates/dashboard/_topbar_tools.html:9
 #: app/templates/dashboard/_topbar_tools.html:15
-#: app/templates/dashboard/student/index.html:114
 msgid "Notificaciones"
 msgstr "Notifications"
 
@@ -3397,14 +3401,14 @@ msgid "Pendiente"
 msgstr "Pending"
 
 #: app/templates/dashboard/student/actividades.html:41
-#: app/templates/dashboard/student/index.html:71
+#: app/templates/dashboard/student/index.html:70
 #: app/templates/dashboard/student/juego_detail.html:20
-#: app/templates/dashboard/student/juegos.html:37
+#: app/templates/dashboard/student/juegos.html:35
 msgid "Continuar"
 msgstr "Continue"
 
 #: app/templates/dashboard/student/actividades.html:41
-#: app/templates/dashboard/student/index.html:104
+#: app/templates/dashboard/student/index.html:103
 #: app/templates/dashboard/teacher/sesiones_sistema.html:62
 #: app/templates/games/stages.html:68
 msgid "Jugar"
@@ -3417,8 +3421,6 @@ msgstr "My space"
 
 #: app/templates/dashboard/student/base_student.html:35
 #: app/templates/dashboard/student/base_student.html:84
-#: app/templates/dashboard/student/index.html:116
-#: app/templates/dashboard/student/index.html:118
 msgid ""
 "Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te "
 "asigne algo nuevo."
@@ -3442,7 +3444,7 @@ msgstr "My dashboard"
 #: app/templates/dashboard/student/base_student.html:63
 #: app/templates/dashboard/student/juego_detail.html:10
 #: app/templates/dashboard/student/juegos.html:2
-#: app/templates/dashboard/student/juegos.html:10
+#: app/templates/dashboard/student/juegos.html:9
 msgid "Juegos"
 msgstr "Games"
 
@@ -3496,33 +3498,26 @@ msgstr "Keep going"
 msgid "Sigue donde quedaste"
 msgstr "Pick up where you left off"
 
-#: app/templates/dashboard/student/index.html:80
+#: app/templates/dashboard/student/index.html:79
 msgid "Tu plan"
 msgstr "Your plan"
 
-#: app/templates/dashboard/student/index.html:81
-msgid "Mis trastornos asignados"
-msgstr "My assigned conditions"
+#: app/templates/dashboard/student/index.html:80
+msgid "Mis juegos"
+msgstr "My games"
 
-#: app/templates/dashboard/student/index.html:83
-msgid "Todavía no tienes trastornos asignados. Tu docente los configurará pronto."
-msgstr ""
-"You don't have any conditions assigned yet. Your teacher will set them up"
-" soon."
+#: app/templates/dashboard/student/index.html:82
+msgid "Todavía no tienes juegos asignados. Tu docente los configurará pronto."
+msgstr "You have no games assigned yet. Your teacher will set them up soon."
 
-#: app/templates/dashboard/student/index.html:90
+#: app/templates/dashboard/student/index.html:89
 msgid "completado"
 msgstr "completed"
 
-#: app/templates/dashboard/student/index.html:102
+#: app/templates/dashboard/student/index.html:101
 #, python-format
 msgid "%(done)s de %(total)s actividades completadas"
 msgstr "%(done)s of %(total)s activities completed"
-
-#: app/templates/dashboard/student/index.html:113
-#: app/templates/dashboard/teacher/guias_uso.html:60
-msgid "Avisos"
-msgstr "Alerts"
 
 #: app/templates/dashboard/student/juego_detail.html:15
 #, python-format
@@ -3530,13 +3525,13 @@ msgid "Actividad asignada por tu docente el %(fecha)s."
 msgstr "Activity assigned by your teacher on %(fecha)s."
 
 #: app/templates/dashboard/student/juego_detail.html:18
-#: app/templates/dashboard/student/juegos.html:35
+#: app/templates/dashboard/student/juegos.html:33
 #, python-format
 msgid "%(n)s de %(total)s actividades"
 msgstr "%(n)s of %(total)s activities"
 
 #: app/templates/dashboard/student/juego_detail.html:20
-#: app/templates/dashboard/student/juegos.html:37
+#: app/templates/dashboard/student/juegos.html:35
 #: app/templates/games/play.html:151
 msgid "Empezar"
 msgstr "Start"
@@ -3549,32 +3544,33 @@ msgstr "Activity in preparation"
 msgid "Estamos preparando la actividad interactiva para esta área."
 msgstr "We are preparing the interactive activity for this area."
 
-#: app/templates/dashboard/student/juegos.html:11
-msgid ""
-"Cada juego tiene 5 niveles de 10 actividades. Supera una actividad para "
-"abrir la siguiente."
-msgstr ""
-"Each game has 5 levels of 10 activities. Pass an activity to unlock the "
-"next one."
-
-#: app/templates/dashboard/student/juegos.html:17
+#: app/templates/dashboard/student/juegos.html:13
 #: app/templates/dashboard/teacher/sesiones_sistema.html:11
 msgid "Todavía no hay juegos configurados en el sistema."
 msgstr "There are no games set up in the system yet."
 
-#: app/templates/dashboard/student/juegos.html:43
+#: app/templates/dashboard/student/juegos.html:29
+#, python-format
+msgid "Juega con %(nombre)s"
+msgstr "Play with %(nombre)s"
+
+#: app/templates/dashboard/student/juegos.html:41
 msgid "Tu docente todavía no te ha asignado juegos."
 msgstr "Your teacher has not assigned you any games yet."
 
-#: app/templates/dashboard/student/juegos.html:48
+#: app/templates/dashboard/student/juegos.html:46
 msgid "Otros juegos de la plataforma"
 msgstr "Other games on the platform"
 
-#: app/templates/dashboard/student/juegos.html:54
+#: app/templates/dashboard/student/juegos.html:51
+msgid "Nuevo juego"
+msgstr "New game"
+
+#: app/templates/dashboard/student/juegos.html:52
 msgid "Sin asignar"
 msgstr "Not assigned"
 
-#: app/templates/dashboard/student/juegos.html:54
+#: app/templates/dashboard/student/juegos.html:52
 msgid "En preparación"
 msgstr "Coming soon"
 
@@ -3853,6 +3849,10 @@ msgstr ""
 "In the list on the right, tap a student to see only their activity in the"
 " chart; tap again to see everyone. \"View profile\" opens their history."
 
+#: app/templates/dashboard/teacher/guias_uso.html:60
+msgid "Avisos"
+msgstr "Alerts"
+
 #: app/templates/dashboard/teacher/guias_uso.html:61
 msgid ""
 "La campana avisa cuando un estudiante supera una actividad. El punto rojo"
@@ -3905,7 +3905,7 @@ msgid "Cambia sus datos y los trastornos asignados."
 msgstr "Changes their details and assigned conditions."
 
 #: app/templates/dashboard/teacher/guias_uso.html:75
-#: app/templates/dashboard/teacher/registro_estudiantes.html:140
+#: app/templates/dashboard/teacher/registro_estudiantes.html:141
 msgid "Mover"
 msgstr "Move"
 
@@ -3916,7 +3916,7 @@ msgstr ""
 "one group."
 
 #: app/templates/dashboard/teacher/guias_uso.html:77
-#: app/templates/dashboard/teacher/registro_estudiantes.html:145
+#: app/templates/dashboard/teacher/registro_estudiantes.html:146
 msgid "Desvincular"
 msgstr "Unlink"
 
@@ -3929,7 +3929,7 @@ msgstr ""
 "under \"Inactive students\", where you can reactivate them."
 
 #: app/templates/dashboard/teacher/guias_uso.html:79
-#: app/templates/dashboard/teacher/registro_estudiantes.html:223
+#: app/templates/dashboard/teacher/registro_estudiantes.html:224
 msgid "Eliminar cuenta"
 msgstr "Delete account"
 
@@ -4709,28 +4709,32 @@ msgstr ""
 msgid "Mover a otro grupo"
 msgstr "Move to another group"
 
-#: app/templates/dashboard/teacher/registro_estudiantes.html:152
+#: app/templates/dashboard/teacher/registro_estudiantes.html:136
+msgid "Mover a…"
+msgstr "Move to…"
+
+#: app/templates/dashboard/teacher/registro_estudiantes.html:153
 msgid "Editar estudiante"
 msgstr "Edit student"
 
-#: app/templates/dashboard/teacher/registro_estudiantes.html:180
+#: app/templates/dashboard/teacher/registro_estudiantes.html:181
 #, python-format
 msgid "Autorización de tratamiento de datos registrada el %(date)s."
 msgstr "Data processing authorization recorded on %(date)s."
 
-#: app/templates/dashboard/teacher/registro_estudiantes.html:198
+#: app/templates/dashboard/teacher/registro_estudiantes.html:199
 msgid "Sin estudiantes asignados todavía."
 msgstr "No students assigned yet."
 
-#: app/templates/dashboard/teacher/registro_estudiantes.html:204
+#: app/templates/dashboard/teacher/registro_estudiantes.html:205
 msgid "Estudiantes inactivos"
 msgstr "Inactive students"
 
-#: app/templates/dashboard/teacher/registro_estudiantes.html:217
+#: app/templates/dashboard/teacher/registro_estudiantes.html:218
 msgid "Reactivar"
 msgstr "Reactivate"
 
-#: app/templates/dashboard/teacher/registro_estudiantes.html:220
+#: app/templates/dashboard/teacher/registro_estudiantes.html:221
 #, python-format
 msgid ""
 "¿Eliminar la cuenta de %(name)s? Ya no podrá ingresar, pero su progreso "
@@ -5289,6 +5293,10 @@ msgstr "Back to Teacher Mode"
 msgid "Siguiente actividad"
 msgstr "Next activity"
 
+#: app/templates/games/stages.html:18
+msgid "Mapa de actividades"
+msgstr "Activity map"
+
 #: app/templates/games/stages.html:20
 msgid ""
 "5 niveles con 10 actividades cada uno. Supera una actividad para abrir la"
@@ -5331,23 +5339,19 @@ msgid "Política de tratamiento de datos personales"
 msgstr "Personal data processing policy"
 
 #: app/templates/legal/politica_datos.html:40
-msgid "Plataforma indecap-aprende · Vigente desde el 29 de octubre de 2026"
-msgstr "indecap-aprende platform · In effect since October 29, 2026"
+msgid "Plataforma indecap-aprende · Vigente desde el 5 de noviembre de 2026"
+msgstr "indecap-aprende platform · Effective November 5, 2026"
 
 #: app/templates/legal/politica_datos.html:42
 msgid ""
-"Esta política explica qué datos personales recoge la plataforma indecap-"
-"aprende, para qué se usan, quién los cuida y cómo puedes ejercer tus "
-"derechos, de acuerdo con la Ley 1581 de 2012 y el Decreto 1377 de 2013 de"
-" Colombia."
+"Así cuidamos tus datos personales, según la Ley 1581 de 2012 y el Decreto"
+" 1377 de 2013."
 msgstr ""
-"This policy explains what personal data the indecap-aprende platform "
-"collects, what it is used for, who looks after it and how you can "
-"exercise your rights, in accordance with Colombian Law 1581 of 2012 and "
-"Decree 1377 of 2013."
+"This is how we protect your personal data, under Colombian Law 1581 of "
+"2012 and Decree 1377 of 2013."
 
 #: app/templates/legal/politica_datos.html:44
-msgid "1. Responsable del tratamiento"
+msgid "1. Responsable"
 msgstr "1. Data controller"
 
 #: app/templates/legal/politica_datos.html:45
@@ -5358,198 +5362,74 @@ msgstr ""
 "Corporación Educativa INDECAP — Instituto de Ciencias Aplicadas, Envigado"
 " campus."
 
-#: app/templates/legal/politica_datos.html:46
-msgid "Correo de contacto:"
-msgstr "Contact email:"
-
-#: app/templates/legal/politica_datos.html:46
-msgid "Teléfono:"
-msgstr "Phone:"
-
 #: app/templates/legal/politica_datos.html:48
-msgid "2. Datos que se recogen"
-msgstr "2. Data collected"
+msgid "2. Qué datos recogemos y para qué"
+msgstr "2. What data we collect and why"
 
-#: app/templates/legal/politica_datos.html:50
+#: app/templates/legal/politica_datos.html:49
 msgid ""
-"De todas las cuentas: nombre, correo electrónico, rol y contraseña. La "
-"contraseña se guarda cifrada y nadie puede leerla."
+"Nombre, correo, rol y contraseña cifrada de cada cuenta; del estudiante, "
+"además, fecha de nacimiento, género, correo del acudiente, grupo, "
+"condición de aprendizaje asignada y su actividad en los juegos. Los "
+"usamos solo para dar acceso, adaptar los juegos a cada estudiante y que "
+"el docente haga seguimiento pedagógico. No se venden ni se entregan a "
+"terceros, salvo orden de autoridad, y la plataforma no hace diagnósticos."
 msgstr ""
-"From every account: name, email, role and password. The password is "
-"stored encrypted and nobody can read it."
+"Name, email, role and encrypted password for every account; for students,"
+" also date of birth, gender, guardian email, group, assigned learning "
+"condition and their activity in the games. We use them only to give "
+"access, adapt the games to each student and let the teacher follow their "
+"learning. They are not sold or shared with third parties, except by order"
+" of an authority, and the platform does not make diagnoses."
 
 #: app/templates/legal/politica_datos.html:51
-msgid ""
-"De los estudiantes: nombres, apellidos, fecha de nacimiento, género, "
-"correo del acudiente y grupo."
-msgstr ""
-"From students: first names, last names, date of birth, gender, guardian's"
-" email and group."
+msgid "3. Datos sensibles y menores de edad"
+msgstr "3. Sensitive data and minors"
 
 #: app/templates/legal/politica_datos.html:52
 msgid ""
-"Datos sensibles: las condiciones de aprendizaje o la discapacidad que el "
-"docente asigna para elegir los juegos adecuados."
+"La condición de aprendizaje es un dato sensible: solo se registra con "
+"autorización expresa, que da el acudiente cuando el estudiante es menor "
+"de edad. Responder sobre datos sensibles es voluntario."
 msgstr ""
-"Sensitive data: the learning conditions or disability the teacher assigns"
-" to choose the right games."
+"The learning condition is sensitive data: it is only recorded with "
+"express authorization, given by the guardian when the student is a minor."
+" Answering questions about sensitive data is optional."
 
-#: app/templates/legal/politica_datos.html:53
-msgid ""
-"Actividad en los juegos: puntajes, tiempos, errores, ayudas de "
-"accesibilidad usadas y la respuesta a «¿Cómo te sentiste?»."
-msgstr ""
-"Game activity: scores, times, mistakes, accessibility aids used and the "
-"answer to \"How did you feel?\"."
+#: app/templates/legal/politica_datos.html:54
+msgid "4. Tus derechos"
+msgstr "4. Your rights"
 
-#: app/templates/legal/politica_datos.html:56
-msgid "3. Para qué se usan"
-msgstr "3. What it is used for"
-
-#: app/templates/legal/politica_datos.html:58
-msgid "Dar acceso a la plataforma y adaptar las actividades a cada estudiante."
-msgstr "Giving access to the platform and adapting activities to each student."
-
-#: app/templates/legal/politica_datos.html:59
-msgid ""
-"Permitir que el docente haga seguimiento pedagógico del avance y de lo "
-"que hay que reforzar."
-msgstr "Letting the teacher follow progress and what needs reinforcing."
-
-#: app/templates/legal/politica_datos.html:60
-msgid "Mejorar las actividades a partir de resultados agregados."
-msgstr "Improving the activities based on aggregated results."
-
-#: app/templates/legal/politica_datos.html:62
-msgid ""
-"Los datos no se venden, no se usan con fines publicitarios y no se "
-"entregan a terceros, salvo por orden de una autoridad competente. La "
-"plataforma es una herramienta de apoyo pedagógico: no hace diagnósticos."
-msgstr ""
-"The data is not sold, not used for advertising and not given to third "
-"parties, except by order of a competent authority. The platform is a "
-"teaching aid: it does not make diagnoses."
-
-#: app/templates/legal/politica_datos.html:64
-msgid "4. Datos sensibles y menores de edad"
-msgstr "4. Sensitive data and minors"
-
-#: app/templates/legal/politica_datos.html:65
-msgid ""
-"Las condiciones de aprendizaje son datos sensibles. Solo se registran con"
-" autorización previa y expresa. Cuando el estudiante es menor de edad, la"
-" autorización la da su padre, madre o acudiente, y siempre se respeta su "
-"interés superior. Responder preguntas sobre datos sensibles es "
-"voluntario."
-msgstr ""
-"Learning conditions are sensitive data. They are only recorded with "
-"prior, express authorization. When the student is a minor, the "
-"authorization is given by their parent or guardian, and their best "
-"interests are always respected. Answering questions about sensitive data "
-"is optional."
-
-#: app/templates/legal/politica_datos.html:67
-msgid "5. Quién puede ver los datos"
-msgstr "5. Who can see the data"
-
-#: app/templates/legal/politica_datos.html:68
-msgid ""
-"El docente del grupo del estudiante y los administradores de la "
-"plataforma designados por INDECAP. Cada persona ve solo lo necesario para"
-" su función."
-msgstr ""
-"The teacher of the student's group and the platform administrators "
-"appointed by INDECAP. Each person sees only what their role requires."
-
-#: app/templates/legal/politica_datos.html:70
-msgid "6. Tus derechos"
-msgstr "6. Your rights"
-
-#: app/templates/legal/politica_datos.html:72
-msgid "Conocer, actualizar y rectificar tus datos."
-msgstr "Know, update and correct your data."
-
-#: app/templates/legal/politica_datos.html:73
-msgid "Pedir prueba de la autorización que diste."
-msgstr "Ask for proof of the authorization you gave."
-
-#: app/templates/legal/politica_datos.html:74
-msgid "Saber cómo se han usado tus datos."
-msgstr "Know how your data has been used."
-
-#: app/templates/legal/politica_datos.html:75
-msgid ""
-"Revocar la autorización y pedir que tus datos se borren, cuando no exista"
-" un deber legal de conservarlos."
-msgstr ""
-"Revoke the authorization and ask for your data to be deleted, when there "
-"is no legal duty to keep it."
-
-#: app/templates/legal/politica_datos.html:76
-msgid "Presentar quejas ante la Superintendencia de Industria y Comercio."
-msgstr "File complaints with the Superintendency of Industry and Commerce (SIC)."
-
-#: app/templates/legal/politica_datos.html:77
-msgid "Acceder a tus datos de forma gratuita."
-msgstr "Access your data free of charge."
-
-#: app/templates/legal/politica_datos.html:80
-msgid "7. Cómo ejercerlos"
-msgstr "7. How to exercise them"
-
-#: app/templates/legal/politica_datos.html:81
+#: app/templates/legal/politica_datos.html:55
 #, python-format
 msgid ""
-"Escribe a %(email)s indicando tu nombre, el del estudiante si eres "
-"acudiente y lo que solicitas. Las consultas se responden en máximo 10 "
-"días hábiles y los reclamos en máximo 15 días hábiles."
+"Conocer, actualizar, rectificar y pedir que se borren tus datos, revocar "
+"la autorización y quejarte ante la Superintendencia de Industria y "
+"Comercio. Escribe a %(email)s: respondemos consultas en máximo 10 días "
+"hábiles y reclamos en máximo 15."
 msgstr ""
-"Write to %(email)s with your name, the student's name if you are a "
-"guardian, and your request. Inquiries are answered within 10 business "
-"days and claims within 15 business days."
+"To know, update, correct and request deletion of your data, revoke your "
+"authorization and file a complaint with the Superintendence of Industry "
+"and Commerce. Write to %(email)s: we answer requests within 10 business "
+"days and claims within 15."
 
-#: app/templates/legal/politica_datos.html:83
-msgid "8. Seguridad"
-msgstr "8. Security"
+#: app/templates/legal/politica_datos.html:57
+msgid "5. Seguridad y conservación"
+msgstr "5. Security and retention"
 
-#: app/templates/legal/politica_datos.html:84
+#: app/templates/legal/politica_datos.html:58
 msgid ""
-"Las contraseñas se guardan cifradas, el acceso depende del rol de cada "
-"persona, la sesión se cierra sola por inactividad en computadores "
-"compartidos y se hacen copias de seguridad de la base de datos."
+"Solo el docente del grupo y los administradores ven los datos, según su "
+"rol. Los guardamos mientras el estudiante esté vinculado al instituto; si"
+" pides la supresión, se borra la cuenta con toda su actividad. Cualquier "
+"cambio a esta política se publicará aquí con su fecha."
 msgstr ""
-"Passwords are stored encrypted, access depends on each person's role, "
-"sessions close automatically after inactivity on shared computers, and "
-"the database is backed up."
+"Only the group's teacher and the administrators see the data, according "
+"to their role. We keep it while the student is enrolled at the institute;"
+" if you request deletion, the account and all its activity are erased. "
+"Any change to this policy will be published here with its date."
 
-#: app/templates/legal/politica_datos.html:86
-msgid "9. Conservación"
-msgstr "9. Retention"
-
-#: app/templates/legal/politica_datos.html:87
-msgid ""
-"Los datos se conservan mientras el estudiante esté vinculado al "
-"instituto. Cuando una cuenta se archiva deja de tener acceso. Si se "
-"solicita la supresión, un administrador borra definitivamente la cuenta y"
-" toda su actividad."
-msgstr ""
-"Data is kept while the student is enrolled at the institute. When an "
-"account is archived it loses access. If deletion is requested, an "
-"administrator permanently deletes the account and all its activity."
-
-#: app/templates/legal/politica_datos.html:89
-msgid "10. Cambios a esta política"
-msgstr "10. Changes to this policy"
-
-#: app/templates/legal/politica_datos.html:90
-msgid ""
-"Si esta política cambia, se publicará la nueva versión en esta misma "
-"página con su fecha de vigencia."
-msgstr ""
-"If this policy changes, the new version will be published on this page "
-"with its effective date."
-
-#: app/templates/legal/politica_datos.html:92
+#: app/templates/legal/politica_datos.html:60
 msgid ""
 "Al registrar a un estudiante, el docente o administrador confirma que el "
 "estudiante, o su acudiente si es menor de edad, autorizó el tratamiento "
