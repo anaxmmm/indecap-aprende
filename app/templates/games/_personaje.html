@@ -110,6 +110,11 @@
 </svg>
 {%- endmacro %}
 
+{% macro nombre_personaje(slug) -%}
+{{ {'discalculia_mercado': 'Nova', 'auditiva_enigma': 'Lía', 'cognitiva_rutinas': 'Tico', 'visual_eco': 'Oli',
+    'dislexia_letras': 'Lupe', 'tdah_ritmo': 'Rayo', 'tod_arquitecto': 'Bloque', 'tea_senales': 'Sol'}.get(slug, '') }}
+{%- endmacro %}
+
 {% macro cara(tipo, size=none) -%}
 <svg class="cara" viewBox="0 0 80 80"{% if size %} width="{{ size }}" height="{{ size }}" style="vertical-align:-0.25em"{% endif %} aria-hidden="true" focusable="false">
 {%- if tipo == 'bien' %}

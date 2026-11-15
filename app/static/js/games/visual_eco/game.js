@@ -230,7 +230,7 @@
   /** Dictado numérico: números de teléfono, direcciones y códigos, dígito a
       dígito para que la voz sintética los pronuncie con claridad. */
   var NUMEROS_CORTOS = ["314", "605", "782", "930", "417"];
-  var NUMEROS_TELEFONO = ["3145567890", "3009874521", "3187766554", "3201234567", "3112345698"];
+  var NUMEROS_TELEFONO = ["3005550148", "3105550173", "3205550126", "3155550190", "3015550164"];
   var NUMEROS_DIRECCION = ["Calle 45 # 12-30", "Carrera 8 # 20-15", "Avenida 30 # 5-42", "Calle 10 # 44-21", "Carrera 15 # 33-08"];
   var NUMEROS_CODIGO = ["482915", "739064", "156482", "902317", "648023"];
 

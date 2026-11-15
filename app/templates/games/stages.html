@@ -15,7 +15,7 @@
 <div class="map">
   <header class="map-hero">
     <div>
-      <p class="map-hero__eyebrow">{{ game.condition }}</p>
+      <p class="map-hero__eyebrow">{{ game.condition if not current_user.is_student else _('Mapa de actividades') }}</p>
       <h1 class="map-hero__title">{{ game.name }}</h1>
       <p class="map-hero__sub">{{ _('5 niveles con 10 actividades cada uno. Supera una actividad para abrir la siguiente.') }}</p>
     </div>

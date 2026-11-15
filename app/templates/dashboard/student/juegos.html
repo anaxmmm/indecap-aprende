@@ -4,13 +4,9 @@
 {%- if acceso.game.has_stage_map -%}{{ url_for('games.stages', slug=acceso.game.slug, trastorno_id=trastorno.id) }}
 {%- else -%}{{ url_for('games.play', slug=acceso.game.slug, level=acceso.start_level, trastorno_id=trastorno.id) }}{%- endif -%}
 {%- endmacro %}
+{% from "games/_personaje.html" import personaje, nombre_personaje %}
 {% block student_content %}
-<div class="dx-page-head">
-  <div>
-    <h1 class="dx-page-title">{{ _('Juegos') }}</h1>
-    <p class="dx-card__sub mb-0">{{ _('Cada juego tiene 5 niveles de 10 actividades. Supera una actividad para abrir la siguiente.') }}</p>
-  </div>
-</div>
+<h1 class="visually-hidden">{{ _('Juegos') }}</h1>
 
 {% if not trastornos %}
 <div class="dx-card">
@@ -27,8 +23,10 @@
 <div class="gx-grid">
   {% for trastorno, acceso in ns.asignados %}
   {% set total = acceso.game.levels %}
-  <a class="gx-card" href="{{ play_url(acceso, trastorno) }}">
-    <span class="gx-card__eyebrow">{{ trastorno|condicion }}</span>
+  {% set pj = nombre_personaje(acceso.game.slug) %}
+  <a class="gx-card gx-card--pj" href="{{ play_url(acceso, trastorno) }}">
+    <span class="gx-card__pj">{{ personaje(acceso.game.slug) }}</span>
+    {% if pj %}<span class="gx-card__eyebrow">{{ _('Juega con %(nombre)s', nombre=pj) }}</span>{% endif %}
     <span class="gx-card__name">{{ acceso.game.name }}</span>
     <span class="gx-card__progress">
       <span class="hx-bar" aria-hidden="true"><span style="width: {{ (acceso.passed * 100 / total) | round | int }}%"></span></span>
@@ -48,9 +46,9 @@
 <h2 class="gx-subtitle">{{ _('Otros juegos de la plataforma') }}</h2>
 <div class="gx-grid">
   {% for trastorno, acceso in ns.otros %}
-  <div class="gx-card is-locked">
-    <span class="gx-card__eyebrow">{{ trastorno|condicion }}</span>
-    <span class="gx-card__name">{{ acceso.game.name if acceso.game else trastorno|condicion }}</span>
+  <div class="gx-card gx-card--pj is-locked">
+    {% if acceso.game %}<span class="gx-card__pj">{{ personaje(acceso.game.slug) }}</span>{% endif %}
+    <span class="gx-card__name">{{ acceso.game.name if acceso.game else _('Nuevo juego') }}</span>
     <span class="dx-tag">{{ _('Sin asignar') if acceso.game else _('En preparación') }}</span>
   </div>
   {% endfor %}

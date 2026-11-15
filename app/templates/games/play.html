@@ -107,7 +107,7 @@
   <article class="game-card">
     <header class="game-card__head">
       <div class="game-card__titles">
-        <p class="game-card__eyebrow">{{ game.name }} · {{ game.condition }}</p>
+        <p class="game-card__eyebrow">{{ game.name }}{% if not current_user.is_student %} · {{ game.condition }}{% endif %}</p>
         <h1 class="game-card__title">{{ activity_title }}</h1>
         <p class="game-card__meta">
           <span class="game-level-badge">{{ _('Nivel %(n)s', n=nivel) }} · {{ nivel_name }}</span>

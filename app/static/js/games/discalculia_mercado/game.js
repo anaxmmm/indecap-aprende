@@ -46,7 +46,7 @@
       ".dm-table tr:last-child td{border-bottom:0}",
       ".dm-svg{display:block}",
       ".dm-svg text{font-family:var(--font-ui);font-weight:700}",
-      ".game-shell.is-high-contrast .dm-svg .dm-fill{fill:#000!important;stroke:#fff!important}",
+      ".game-shell.is-high-contrast .dm-svg .dm-fill{fill:#061633!important;stroke:#fff!important}",
       ".game-shell.is-high-contrast .dm-svg text{fill:#fff!important}",
       ".game-shell.is-high-contrast .dm-svg .dm-ink{stroke:#fff!important}"
     ].join("");

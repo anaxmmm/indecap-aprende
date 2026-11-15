@@ -64,7 +64,6 @@
     <div class="dx-resume">
       <div>
         <p class="mb-0 small fw-semibold">{{ sesion.actividad.title }}</p>
-        <p class="mb-0 text-muted" style="font-size: 0.75rem;">{{ sesion.actividad.trastorno|condicion }}</p>
       </div>
       <a href="{{ url_for('dashboard.student_juego_detail', trastorno_id=sesion.actividad.trastorno_id) }}"
          class="dx-btn dx-btn--gold" style="padding: .35rem 1rem; font-size: .8rem;">
@@ -78,9 +77,9 @@
 
 <div class="dx-card dx-rise mb-3" style="--d:.25s">
   <p class="dx-eyebrow">{{ _('Tu plan') }}</p>
-  <h2 class="dx-card__title">{{ _('Mis trastornos asignados') }}</h2>
+  <h2 class="dx-card__title">{{ _('Mis juegos') }}</h2>
   {% if not trastornos %}
-  <p class="dx-empty">{{ _('Todavía no tienes trastornos asignados. Tu docente los configurará pronto.') }}</p>
+  <p class="dx-empty">{{ _('Todavía no tienes juegos asignados. Tu docente los configurará pronto.') }}</p>
   {% else %}
   <div class="dx-subjects">
     {% for item in trastornos %}
@@ -97,7 +96,7 @@
         <span class="dx-ring__label">{{ pct }}%</span>
       </div>
       <div>
-        <p class="dx-subject__name">{{ item.trastorno|condicion }}</p>
+        <p class="dx-subject__name">{{ item.juego.name if item.juego else _('Actividades') }}</p>
         <p class="dx-subject__meta">
           {{ _('%(done)s de %(total)s actividades completadas', done=item.completadas, total=item.total) }} ({{ item.porcentaje }}%)
         </p>
@@ -109,21 +108,4 @@
   {% endif %}
 </div>
 
-<div class="dx-card dx-rise" style="--d:.35s">
-  <p class="dx-eyebrow">{{ _('Avisos') }}</p>
-  <h2 class="dx-card__title">{{ _('Notificaciones') }}</h2>
-  <div class="dx-feed" data-live-feed
-       data-empty="{{ _('Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te asigne algo nuevo.') }}">
-    {% if not recent_notifications %}
-    <p class="dx-empty">{{ _('Todavía no tienes notificaciones. Aquí verás avisos cuando tu docente te asigne algo nuevo.') }}</p>
-    {% else %}
-    {% for n in recent_notifications %}
-    <div class="dx-feed__item{{ '' if n.is_read else ' is-unread' }}">
-      <p class="dx-feed__msg">{{ n|notif_text }}</p>
-      <span class="dx-feed__date">{{ n.created_at|local('%d/%m %H:%M') }}</span>
-    </div>
-    {% endfor %}
-    {% endif %}
-  </div>
-</div>
 {% endblock %}
