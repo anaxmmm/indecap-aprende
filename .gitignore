@@ -10,3 +10,4 @@ instance/
 *.egg-info/
 .DS_Store
 docs/MEJORAS.md
+messages.pot

@@ -23,8 +23,8 @@ Autora: Ana Melo · 2026
   | El Arquitecto del Mundo | Trastorno opositor desafiante |
   | La Estación de las Señales | Trastorno del espectro autista |
 
-- **Barra de accesibilidad común**: lectura en voz alta, alto contraste, tamaño de texto, reducción de movimiento, pistas y navegación completa por teclado.
-- **Panel del estudiante**: racha del mes, avance por condición, juegos y autoevaluación «¿Cómo te sentiste?».
+- **Barra de accesibilidad común**: lectura en voz alta, alto contraste (azul profundo y blanco), tamaño de texto, reducción de movimiento, pistas y navegación completa por teclado.
+- **Panel del estudiante**: racha del mes, avance de cada juego, juegos presentados por sus personajes y autoevaluación «¿Cómo te sentiste?». El estudiante no ve etiquetas clínicas; las condiciones solo aparecen en los paneles del docente y del administrador.
 - **Panel docente**: panel general con gráfica de rendimiento, registro de estudiantes por grupos, historial de cada estudiante con informe para imprimir o guardar como PDF, Modo maestro para proyectar cualquier actividad y ver sus respuestas, y guías de uso.
 - **Administración**: cuentas de administradores, docentes y estudiantes; cuentas archivadas que se pueden restaurar; exportación y borrado definitivo de los datos de un estudiante.
 - **Español e inglés** en toda la plataforma, incluidos los juegos.
