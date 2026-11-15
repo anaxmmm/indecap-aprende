@@ -258,3 +258,32 @@ def test_teachers_and_groups_page_is_admin_only(app, people):
     page = client.get("/dashboard/docentes-grupos")
     assert page.status_code == 200
     assert "Grupo A".encode() in page.data
+
+
+def test_teacher_cannot_move_a_student_from_another_teachers_group(app, people):
+    from app.blueprints.dashboard.services import move_student_to_group
+    ajeno = make("Estudiante Ajeno", "ajeno@prueba.co", RoleEnum.STUDENT)
+    grupo_otra = Grupo(name="Grupo B", teacher_id=people["other_teacher"].id)
+    grupo_otra.estudiantes.append(ajeno)
+    destino = Grupo(name="Grupo C", teacher_id=people["teacher"].id)
+    db.session.add_all([grupo_otra, destino])
+    db.session.commit()
+    with app.test_request_context(), pytest.raises(ValueError):
+        move_student_to_group(people["teacher"], ajeno.id, destino.id, people["group"].id)
+    assert ajeno not in destino.estudiantes
+    move_student_to_group(people["teacher"], people["student"].id, destino.id, people["group"].id)
+    assert people["student"] in destino.estudiantes
+    assert people["student"] not in people["group"].estudiantes
+
+
+def test_move_selector_starts_empty(app, people):
+    db.session.add(Grupo(name="Grupo C", teacher_id=people["teacher"].id))
+    db.session.commit()
+    client = app.test_client()
+    post_login(client, "docente@prueba.co", "docente")
+    html = client.get("/dashboard/registro-estudiantes").get_data(as_text=True)
+    assert 'value="" selected disabled' in html
+    response = client.post(f"/dashboard/registro-estudiantes/grupo/{people['group'].id}/mover",
+                           data={"student_id": people["student"].id, "target_group_id": ""})
+    assert response.status_code == 302
+    assert people["student"] in people["group"].estudiantes

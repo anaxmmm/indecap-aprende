@@ -132,7 +132,8 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="student_id" value="{{ estudiante.id }}">
           <label class="visually-hidden" for="mover-{{ estudiante.id }}">{{ _('Mover a otro grupo') }}</label>
-          <select name="target_group_id" id="mover-{{ estudiante.id }}" class="form-select form-select-sm">
+          <select name="target_group_id" id="mover-{{ estudiante.id }}" class="form-select form-select-sm" required>
+            <option value="" selected disabled>{{ _('Mover a…') }}</option>
             {% for otro in groups if otro.id != grupo.id %}
             <option value="{{ otro.id }}">{{ otro.name }}</option>
             {% endfor %}

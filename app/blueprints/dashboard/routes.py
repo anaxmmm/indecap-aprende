@@ -295,9 +295,11 @@ def mover_estudiante(group_id):
 
     student_id = request.form.get("student_id", type=int)
     target_group_id = request.form.get("target_group_id", type=int)
-    if student_id and target_group_id:
+    if not target_group_id:
+        flash(_("Elige el grupo al que quieres mover al estudiante."), "warning")
+    elif student_id:
         try:
-            move_student_to_group(current_user, student_id, target_group_id)
+            move_student_to_group(current_user, student_id, target_group_id, group_id)
             flash(_("Estudiante movido de grupo."), "success")
         except ValueError as exc:
             flash(str(exc), "danger")

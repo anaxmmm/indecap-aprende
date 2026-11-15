@@ -238,13 +238,14 @@ def update_student(
     return student
 
 
-def move_student_to_group(teacher: User, student_id: int, target_group_id: int) -> None:
+def move_student_to_group(teacher: User, student_id: int, target_group_id: int, source_group_id: int) -> None:
+    origen = _grupo_gestionable(teacher, source_group_id)
     target = _grupo_gestionable(teacher, target_group_id)
-    if target is None:
+    if origen is None or target is None:
         raise ValueError(_("El grupo destino no existe o no pertenece a este docente."))
 
     student = db.session.get(User, student_id)
-    if student is None:
+    if student is None or student not in origen.estudiantes:
         raise ValueError(_("El estudiante no existe."))
 
     for grupo in list(student.grupos):
@@ -497,6 +498,7 @@ def get_student_trastornos_con_progreso(student: User) -> List[dict]:
 
         resultado.append({
             "trastorno": trastorno,
+            "juego": juego,
             "total": total,
             "completadas": min(completadas, total) if total else completadas,
             "porcentaje": round((completadas / total * 100) if total > 0 else 0),
