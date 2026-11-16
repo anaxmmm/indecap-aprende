@@ -52,7 +52,7 @@ La lectura en voz alta usa la Web Speech API del navegador y las voces instalada
 | Archivo | Titular | Uso |
 |---|---|---|
 | `app/static/images/logo-indecap-aprende.png` y `logo-indecap-aprende-blanco.png` | Corporación Educativa INDECAP (marca del instituto, adaptada para la plataforma) | Usado con autorización del instituto, solo dentro de la plataforma |
-| `app/static/images/profesionaljpg.jpg` | Pendiente de registrar la fuente y la licencia | Foto de la página de inicio |
+| `app/static/images/profesionaljpg.jpg` | Fotografía propia de Ana Melo | Todos los derechos reservados; no se incluye en la licencia del código |
 
 ## Textos de licencia
 
