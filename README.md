@@ -1,152 +1,152 @@
 # INDECAP-APRENDE
 
-Plataforma educativa web inclusiva para la Corporación Educativa INDECAP — Instituto de Ciencias Aplicadas, sede Envigado. Proyecto final de grado del programa de Desarrollo de Software.
+Inclusive educational web platform for Corporación Educativa INDECAP (Instituto de Ciencias Aplicadas) in Envigado, Colombia. Degree project for the Software Development program.
 
-Acompaña a estudiantes de 15 a 26 años con ocho condiciones de aprendizaje mediante un juego por condición, diseñado bajo el Diseño Universal para el Aprendizaje (DUA). Es una herramienta de apoyo pedagógico: no hace diagnósticos ni reemplaza el acompañamiento del área de psicología.
+It supports students aged 15 to 26 with eight learning conditions through one game per condition, built on Universal Design for Learning (UDL). It is a teaching support tool: it does not diagnose and does not replace the guidance of the institute's psychology team.
 
-Autora: Ana Melo · 2026
+Author: Ana Melo · 2026
 
 ---
 
-## Qué incluye
+## What's included
 
-- **8 juegos web**, uno por condición, cada uno con 50 actividades en 5 niveles (Base, Media, Alta, Muy Alta y Súper Difícil):
+- **8 web games**, one per condition, each with 50 activities across 5 levels (Basic, Medium, High, Very High and Super Hard):
 
-  | Juego | Condición |
+  | Game | Condition |
   |---|---|
-  | Mercado Espacial | Discalculia |
-  | El Enigma Lingüístico | Discapacidad auditiva |
-  | Clasificador de Rutinas | Discapacidad cognitiva |
-  | Eco-Explorador Sonoro | Discapacidad visual |
-  | El Detector de Letras Rebeldes | Dislexia |
-  | Misión Ritmo y Enfoque | TDAH |
-  | El Arquitecto del Mundo | Trastorno opositor desafiante |
-  | La Estación de las Señales | Trastorno del espectro autista |
+  | Space Market | Dyscalculia |
+  | The Linguistic Enigma | Hearing impairment |
+  | Routine Sorter | Cognitive disability |
+  | Sound Eco-Explorer | Visual impairment |
+  | The Rebel Letter Detector | Dyslexia |
+  | Rhythm and Focus Mission | ADHD |
+  | The World Architect | Oppositional defiant disorder |
+  | The Signal Station | Autism spectrum disorder |
 
-- **Barra de accesibilidad común**: lectura en voz alta, alto contraste (azul profundo y blanco), tamaño de texto, reducción de movimiento, pistas y navegación completa por teclado.
-- **Panel del estudiante**: racha del mes, avance de cada juego, juegos presentados por sus personajes y autoevaluación «¿Cómo te sentiste?». El estudiante no ve etiquetas clínicas; las condiciones solo aparecen en los paneles del docente y del administrador.
-- **Panel docente**: panel general con gráfica de rendimiento, registro de estudiantes por grupos, historial de cada estudiante con informe para imprimir o guardar como PDF, Modo maestro para proyectar cualquier actividad y ver sus respuestas, y guías de uso.
-- **Administración**: cuentas de administradores, docentes y estudiantes; cuentas archivadas que se pueden restaurar; exportación y borrado definitivo de los datos de un estudiante.
-- **Español e inglés** en toda la plataforma, incluidos los juegos.
-- **Seguridad y datos personales**: límite de intentos de ingreso, recuperación de contraseña por correo, cierre de sesión por inactividad, autorización de tratamiento de datos y política de datos pública (Ley 1581 de 2012).
-- **Horas en hora de Colombia** en todos los paneles; la base guarda las fechas en UTC.
+- **Shared accessibility bar**: read-aloud, high contrast (deep blue and white), text size, reduced motion, hints and full keyboard navigation.
+- **Student dashboard**: monthly streak, progress in each game, games introduced by their characters, and a "How did you feel?" self-assessment. Students never see clinical labels; conditions only appear in the teacher and administrator dashboards.
+- **Teacher dashboard**: overview with a performance chart, student registry by group, each student's history with a report to print or save as PDF, Teacher Mode to project any activity and see its answers, and user guides.
+- **Administration**: administrator, teacher and student accounts; archived accounts that can be restored; export and permanent deletion of a student's data.
+- **Spanish and English** across the whole platform, games included.
+- **Security and personal data**: login attempt limits, password recovery by email, automatic logout after inactivity, data processing consent and a public data policy (Colombian Law 1581 of 2012).
+- **Colombia time zone** in every dashboard; the database stores dates in UTC.
 
-## Tecnología
+## Tech stack
 
-| Capa | Herramientas |
+| Layer | Tools |
 |---|---|
-| Servidor | Python 3.11 o superior, Flask 3 con blueprints |
-| Datos | SQLAlchemy 2 y migraciones con Alembic (Flask-Migrate). SQLite en desarrollo; PostgreSQL recomendado en producción |
-| Interfaz | Plantillas Jinja, HTML, CSS y JavaScript sin frameworks; Bootstrap 5 y Chart.js desde CDN |
-| Idiomas | Flask-Babel (catálogo en `app/translations`) y diccionarios por juego (`app/static/js/games/<juego>/en.json`) |
-| Accesibilidad | ARIA, teclado completo y Web Speech API |
-| Pruebas | pytest |
+| Server | Python 3.11 or later, Flask 3 with blueprints |
+| Data | SQLAlchemy 2 and Alembic migrations (Flask-Migrate). SQLite for development; PostgreSQL recommended for production |
+| Interface | Jinja templates, HTML, CSS and vanilla JavaScript; Bootstrap 5 and Chart.js from a CDN |
+| Languages | Flask-Babel (catalog in `app/translations`) and one dictionary per game (`app/static/js/games/<game>/en.json`) |
+| Accessibility | ARIA, full keyboard support and the Web Speech API |
+| Testing | pytest |
 
-## Estructura
+## Project structure
 
 ```
 indecap-aprende/
-├── run.py                  punto de entrada (flask y gunicorn)
+├── run.py                  entry point (flask and gunicorn)
 ├── requirements.txt
 ├── babel.cfg
 ├── app/
-│   ├── __init__.py         fábrica de la aplicación, seguridad e idiomas
-│   ├── config.py           configuración por entorno y variables
-│   ├── cli.py              comandos: create-admin, seed-trastornos, respaldo
+│   ├── __init__.py         application factory, security and languages
+│   ├── config.py           per-environment settings and variables
+│   ├── cli.py              commands: create-admin, seed-trastornos, respaldo
 │   ├── blueprints/         auth · dashboard · games · admin · inclusive · modules
-│   │                       (routes.py, services.py, forms.py en cada uno)
-│   ├── models/             modelos de datos
-│   ├── utils/              fechas (hora de Colombia) y correo
+│   │                       (routes.py, services.py, forms.py in each one)
+│   ├── models/             data models
+│   ├── utils/              dates (Colombia time) and email
 │   ├── templates/
 │   ├── static/
 │   │   ├── css/  images/
-│   │   └── js/games/core/  motor común (engine.js, a11y.js, session.js)
-│   │       └── <juego>/    lógica de cada juego y su diccionario en inglés
+│   │   └── js/games/core/  shared engine (engine.js, a11y.js, session.js)
+│   │       └── <game>/     each game's logic and its English dictionary
 │   └── translations/en/
-├── migrations/             historial de la base de datos (Alembic)
+├── migrations/             database history (Alembic)
 ├── tests/
-└── docs/                   despliegue y bitácoras
+└── docs/                   deployment guide and project logs
 ```
 
-## Poner el proyecto a correr en un computador
+## Running the project locally
 
 ```bash
-# 1. Entorno virtual
+# 1. Virtual environment
 python -m venv .venv
 .venv\Scripts\activate            # Windows
-source .venv/bin/activate         # Linux o macOS
+source .venv/bin/activate         # Linux or macOS
 
-# 2. Dependencias
+# 2. Dependencies
 pip install -r requirements.txt
 
-# 3. Variables de entorno
+# 3. Environment variables
 copy .env.example .env            # Windows
-cp .env.example .env              # Linux o macOS
+cp .env.example .env              # Linux or macOS
 
-# 4. Base de datos (crea o actualiza todas las tablas)
+# 4. Database (creates or updates every table)
 flask --app run.py db upgrade
 
-# 5. Condiciones base y primera cuenta de administrador
+# 5. Base conditions and the first administrator account
 flask --app run.py seed-trastornos
 flask --app run.py create-admin
 
-# 6. Servidor de desarrollo
+# 6. Development server
 flask --app run.py run
 ```
 
-Abre `http://127.0.0.1:5000`. La primera cuenta creada con `create-admin` queda como administrador principal: es la única que puede crear otros administradores.
+Open `http://127.0.0.1:5000`. The first account created with `create-admin` becomes the main administrator, the only one who can create other administrators.
 
-Sin `DATABASE_URL`, el proyecto usa el archivo `instance/indecap_dev.db` (SQLite).
+Without `DATABASE_URL`, the project uses the file `instance/indecap_dev.db` (SQLite).
 
-## Comandos útiles
+## Useful commands
 
-| Comando | Para qué |
+| Command | What it does |
 |---|---|
-| `flask --app run.py db upgrade` | Aplica las migraciones pendientes. Ejecútalo cada vez que actualices el código. |
-| `flask --app run.py db migrate -m "mensaje"` | Genera una migración nueva después de cambiar un modelo. |
-| `flask --app run.py create-admin` | Crea o promueve una cuenta de administrador. |
-| `flask --app run.py seed-trastornos` | Carga o actualiza las 8 condiciones base. |
-| `flask --app run.py respaldo` | Copia de seguridad de la base de datos (ver `docs/DESPLIEGUE.md`). |
-| `python -m pytest` | Ejecuta las pruebas. |
+| `flask --app run.py db upgrade` | Applies pending migrations. Run it every time you update the code. |
+| `flask --app run.py db migrate -m "message"` | Generates a new migration after changing a model. |
+| `flask --app run.py create-admin` | Creates or promotes an administrator account. |
+| `flask --app run.py seed-trastornos` | Loads or updates the 8 base conditions. |
+| `flask --app run.py respaldo` | Backs up the database (see `docs/DESPLIEGUE.md`). |
+| `python -m pytest` | Runs the tests. |
 
-## Traducciones
+## Translations
 
-Los textos de la plataforma se escriben en español dentro de `_()` y se traducen en `app/translations/en/LC_MESSAGES/messages.po`:
+Platform text is written in Spanish inside `_()` and translated in `app/translations/en/LC_MESSAGES/messages.po`:
 
 ```bash
 pybabel extract -F babel.cfg -k _l -k lazy_gettext -o messages.pot .
 pybabel update -i messages.pot -d app/translations
-# traducir las entradas nuevas en messages.po
+# translate the new entries in messages.po
 pybabel compile -d app/translations
 ```
 
-En los juegos, las consignas, pistas y explicaciones se marcan con `_t("...")` y su traducción va en el `en.json` de cada juego. Las palabras y frases que el estudiante practica en español (dictados, lecturas, cuentos) no se traducen.
+In the games, instructions, hints and explanations are marked with `_t("...")` and translated in each game's `en.json`. Words and sentences that students practice in Spanish (dictations, readings, stories) are not translated.
 
-## Variables de entorno
+## Environment variables
 
-| Variable | Para qué | Valor por defecto |
+| Variable | Purpose | Default |
 |---|---|---|
-| `FLASK_ENV` | `development` o `production` | `development` |
-| `SECRET_KEY` | Clave secreta de sesiones y enlaces. En producción es obligatoria (32 caracteres o más). | solo para desarrollo |
-| `DATABASE_URL` | Base de datos, por ejemplo `postgresql://usuario:clave@servidor:5432/indecap_aprende` | SQLite local |
-| `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_USE_TLS`, `MAIL_USE_SSL`, `MAIL_DEFAULT_SENDER` | Correo saliente para la recuperación de contraseña | sin correo |
-| `DATA_CONTACT_EMAIL` | Correo para ejercer derechos sobre los datos personales | `indecap@indecap.edu.co` |
-| `TRUSTED_PROXIES` | Servidores intermedios (por ejemplo nginx) delante de la aplicación | `0` |
-| `IDLE_TIMEOUT_MINUTES`, `IDLE_WARNING_MINUTES` | Cierre de sesión por inactividad y aviso previo | `30` y `5` |
-| `LOGIN_MAX_ATTEMPTS`, `LOGIN_MAX_ATTEMPTS_IP`, `LOGIN_LOCK_MINUTES` | Intentos fallidos de ingreso antes del bloqueo y su duración | `5`, `30` y `10` |
-| `RESET_MAX_REQUESTS` | Solicitudes de recuperación por correo y por hora | `3` |
-| `BACKUP_DIR`, `BACKUP_KEEP` | Carpeta de copias de seguridad y cuántas conservar | `instance/respaldos` y `14` |
+| `FLASK_ENV` | `development` or `production` | `development` |
+| `SECRET_KEY` | Secret key for sessions and links. Required in production (32 characters or more). | development only |
+| `DATABASE_URL` | Database, for example `postgresql://user:password@host:5432/indecap_aprende` | local SQLite |
+| `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_USE_TLS`, `MAIL_USE_SSL`, `MAIL_DEFAULT_SENDER` | Outgoing email for password recovery | no email |
+| `DATA_CONTACT_EMAIL` | Email for personal data requests | `indecap@indecap.edu.co` |
+| `TRUSTED_PROXIES` | Proxies (for example nginx) in front of the application | `0` |
+| `IDLE_TIMEOUT_MINUTES`, `IDLE_WARNING_MINUTES` | Logout after inactivity and the warning before it | `30` and `5` |
+| `LOGIN_MAX_ATTEMPTS`, `LOGIN_MAX_ATTEMPTS_IP`, `LOGIN_LOCK_MINUTES` | Failed login attempts before lockout, and its duration | `5`, `30` and `10` |
+| `RESET_MAX_REQUESTS` | Password recovery requests per email per hour | `3` |
+| `BACKUP_DIR`, `BACKUP_KEEP` | Backup folder and how many backups to keep | `instance/respaldos` and `14` |
 
-El archivo `.env` nunca se sube al repositorio.
+The `.env` file is never committed to the repository.
 
-## Publicar en un servidor
+## Deploying to a server
 
-La guía para el área de sistemas está en [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md): servidor, base de datos, HTTPS, correo, copias de seguridad y actualización.
+The guide for the IT team is in [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md): server, database, HTTPS, email, backups and updates.
 
-## Datos personales
+## Personal data
 
-La plataforma guarda datos de estudiantes, algunos menores de edad, y datos sensibles (condiciones de aprendizaje). La política de tratamiento de datos se publica en `/politica-de-datos`. INDECAP es el responsable del tratamiento y debe revisar y aprobar esa política antes de usar la plataforma con estudiantes reales.
+The platform stores student data, some of it about minors, and sensitive data (learning conditions). The data processing policy is published at `/politica-de-datos`. INDECAP is the data controller and must review and approve that policy before using the platform with real students.
 
-## Licencia
+## License
 
-El código es obra de Ana Melo. INDECAP lo usa bajo la licencia de [`LICENCIA.md`](LICENCIA.md). Las bibliotecas, fuentes y recursos de terceros, con sus licencias, están en [`LICENCIAS-TERCEROS.md`](LICENCIAS-TERCEROS.md). El logo y la marca INDECAP pertenecen al instituto.
+The code is the work of Ana Melo. INDECAP uses it under the license in [`LICENCIA.md`](LICENCIA.md). Third-party libraries, fonts and assets, with their licenses, are listed in [`LICENCIAS-TERCEROS.md`](LICENCIAS-TERCEROS.md). The INDECAP logo and brand belong to the institute.
